@@ -1,0 +1,65 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    # Default linters
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # Security
+    - gosec
+    # Style
+    - gofmt
+    - goimports
+    # Bugs
+    - bodyclose
+    - nilerr
+    - noctx
+    # Performance
+    - prealloc
+    # Code quality
+    - unconvert
+    - unparam
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
+
+  gosec:
+    excludes:
+      - G104 # Audit errors not checked (too noisy for CLI)
+
+  goimports:
+    local-prefixes: github.com/mateus/vibe-cli
+
+  prealloc:
+    simple: true
+    for-loops: true
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gosec
+        - noctx
+        - unparam
+
+    # Exclude main.go from some checks
+    - path: main\.go
+      linters:
+        - unparam
+
+  max-issues-per-linter: 50
+  max-same-issues: 5
