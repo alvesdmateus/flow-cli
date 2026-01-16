@@ -31,9 +31,9 @@ type ChatMessage struct {
 // ChatModel is the bubbletea model for the chat interface
 type ChatModel struct {
 	// UI Components
-	textarea  textarea.Model
-	viewport  viewport.Model
-	spinner   spinner.Model
+	textarea textarea.Model
+	viewport viewport.Model
+	spinner  spinner.Model
 
 	// State
 	state       ChatState

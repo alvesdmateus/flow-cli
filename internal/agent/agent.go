@@ -41,9 +41,9 @@ type DefaultHandler struct {
 	Writer io.Writer
 }
 
-func (h *DefaultHandler) OnStreamStart()              {}
-func (h *DefaultHandler) OnStreamChunk(chunk string)  { fmt.Fprint(h.Writer, chunk) }
-func (h *DefaultHandler) OnStreamEnd()                { fmt.Fprintln(h.Writer) }
+func (h *DefaultHandler) OnStreamStart()             {}
+func (h *DefaultHandler) OnStreamChunk(chunk string) { fmt.Fprint(h.Writer, chunk) }
+func (h *DefaultHandler) OnStreamEnd()               { fmt.Fprintln(h.Writer) }
 func (h *DefaultHandler) OnToolStart(name, desc string) {
 	fmt.Fprintf(h.Writer, "\n[Executing: %s] %s\n", name, desc)
 }
@@ -69,11 +69,11 @@ type Agent struct {
 
 // Config holds agent configuration
 type Config struct {
-	LLMClient   llm.Client
-	ToolReg     *tools.Registry
-	Model       string
-	Temperature float64
-	MaxTurns    int
+	LLMClient    llm.Client
+	ToolReg      *tools.Registry
+	Model        string
+	Temperature  float64
+	MaxTurns     int
 	SystemPrompt string
 }
 

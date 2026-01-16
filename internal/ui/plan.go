@@ -14,9 +14,9 @@ var (
 			MarginBottom(1)
 
 	planSectionStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("39")).
-			MarginTop(1)
+				Bold(true).
+				Foreground(lipgloss.Color("39")).
+				MarginTop(1)
 
 	planItemStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("252"))
@@ -44,9 +44,9 @@ var (
 				Padding(0, 1)
 
 	priorityLowStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("245")).
-			Foreground(lipgloss.Color("255")).
-			Padding(0, 1)
+				Background(lipgloss.Color("245")).
+				Foreground(lipgloss.Color("255")).
+				Padding(0, 1)
 
 	phaseIndicatorStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("205")).
