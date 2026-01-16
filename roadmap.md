@@ -23,12 +23,24 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 1: Foundation (Sprints 1-2)
 **Goal:** Core reliability and essential missing features
 
-### Sprint 1: Core Completeness
-- [ ] Implement `fetch_url` tool (HTML parsing, markdown extraction)
-- [ ] Add `edit_file` tool (patch-based edits instead of full rewrites)
-- [ ] Add `grep_search` tool (regex search across codebase)
-- [ ] Token counting and cost estimation display
+### Sprint 1: Core Completeness ✅
+- [x] Implement `fetch_url` tool (HTML parsing, markdown extraction)
+- [x] Add `edit_file` tool (patch-based edits instead of full rewrites)
+- [x] Add `grep_search` tool (regex search across codebase)
+- [x] Token counting and cost estimation display
+- [x] Add `insert_lines` and `delete_lines` tools
+
+### Sprint 1.5: Context & Token Management
 - [ ] Context window management with smart truncation
+- [ ] Conversation summarization (compress old messages)
+- [ ] Sliding window context (keep recent + important messages)
+- [ ] Token budget allocation (reserve tokens for response)
+- [ ] Context priority scoring (rank messages by relevance)
+- [ ] Automatic context pruning when approaching limits
+- [ ] Message importance tagging (system, tool results, user)
+- [ ] Context size display in UI (tokens used / max)
+- [ ] Configurable context strategies per model
+- [ ] Memory/facts extraction from conversations
 
 ### Sprint 2: Git Integration
 - [ ] `git_status`, `git_diff`, `git_commit` tools
@@ -139,18 +151,20 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 
 ## Priority Matrix
 
-| Feature | Impact | Effort | Priority |
-|---------|--------|--------|----------|
-| fetch_url completion | High | Low | **P0** |
-| Git integration | High | Medium | **P0** |
-| Token counting | Medium | Low | **P0** |
-| edit_file (patches) | High | Medium | **P1** |
-| grep_search | High | Low | **P1** |
-| Tree-sitter AST | High | High | **P1** |
-| Secrets detection | High | Medium | **P1** |
-| Semantic search | High | High | P2 |
-| LSP server mode | High | High | P2 |
-| Test generation | Medium | Medium | P2 |
+| Feature | Impact | Effort | Priority | Status |
+|---------|--------|--------|----------|--------|
+| fetch_url completion | High | Low | **P0** | ✅ Done |
+| Token counting | Medium | Low | **P0** | ✅ Done |
+| edit_file (patches) | High | Medium | **P0** | ✅ Done |
+| grep_search | High | Low | **P0** | ✅ Done |
+| Context management | High | High | **P0** | 🔄 Next |
+| Git integration | High | Medium | **P1** | Pending |
+| Context summarization | High | Medium | **P1** | Pending |
+| Tree-sitter AST | High | High | **P1** | Pending |
+| Secrets detection | High | Medium | **P1** | Pending |
+| Semantic search | High | High | P2 | Pending |
+| LSP server mode | High | High | P2 | Pending |
+| Test generation | Medium | Medium | P2 | Pending |
 
 ---
 
@@ -238,13 +252,48 @@ Use this section to track periodic progress reviews.
 
 ---
 
+### Check-in: 2026-01-16 (Sprint 1 Complete)
+
+#### Completed
+- **Sprint 1: Core Completeness** ✅
+  - `fetch_url` tool with HTML→markdown conversion
+  - `grep_search` tool with regex and context lines
+  - `edit_file` tool for surgical text replacement
+  - `insert_lines` and `delete_lines` tools
+  - Token counting module with usage tracking
+- Updated CI workflow to support `develop` branch
+- Established branching workflow: feature → develop → main
+
+#### In Progress
+- Sprint 1 PR to develop branch
+
+#### Next Sprint Focus
+- **Sprint 1.5: Context & Token Management** (high priority)
+  - Context window management
+  - Conversation summarization
+  - Token budget allocation
+- Sprint 2: Git Integration (parallel)
+
+#### Notes
+- Context management is critical for long conversations
+- Need to handle model-specific context limits (4K, 8K, 32K, 128K)
+
+---
+
 ## Contributing
 
+### Branching Workflow
+```
+feature/* → develop → main
+```
+
 When working on roadmap items:
-1. Create a feature branch from `main`
+1. Create a feature branch from `develop` (e.g., `feature/sprint-2-git`)
 2. Reference the sprint/item in commit messages
-3. Update this roadmap when items are completed
-4. Add tests for new functionality
+3. Create PR to merge into `develop`
+4. After testing in `develop`, create PR to merge into `main`
+5. Update this roadmap when items are completed
+6. Add tests for new functionality
 
 ## Version Milestones
 
