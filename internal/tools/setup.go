@@ -54,6 +54,12 @@ func SetupRegistry(opts SetupOptions) (*Registry, error) {
 	_ = registry.Register(NewGitBranchTool(opts.Permissions, opts.WorkDir))
 	_ = registry.Register(NewGitCheckoutTool(opts.Permissions, opts.WorkDir))
 
+	// Code analysis tools
+	_ = registry.Register(NewCodeOutlineTool(opts.WorkDir))
+	_ = registry.Register(NewFindDefinitionTool(opts.WorkDir))
+	_ = registry.Register(NewFindReferencesTool(opts.WorkDir))
+	_ = registry.Register(NewListSymbolsTool(opts.WorkDir))
+
 	return registry, nil
 }
 
@@ -83,6 +89,10 @@ func AllToolNames() []string {
 		"git_add",
 		"git_branch",
 		"git_checkout",
+		"code_outline",
+		"find_definition",
+		"find_references",
+		"list_symbols",
 	}
 }
 
@@ -112,5 +122,9 @@ func ToolDescriptions() map[string]string {
 		"git_add":          "Stage files for commit",
 		"git_branch":       "List, create, or delete branches",
 		"git_checkout":     "Switch branches or restore files",
+		"code_outline":     "Parse source file and show structure (functions, classes, types)",
+		"find_definition":  "Find where a symbol is defined in the codebase",
+		"find_references":  "Find all references to a symbol in the codebase",
+		"list_symbols":     "List all symbols (functions, classes, types) in a directory",
 	}
 }
