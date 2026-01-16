@@ -1,0 +1,144 @@
+# vibe-cli Configuration Example
+# Copy this file to ~/.vibe/config.yaml or ./.vibe.yaml
+
+# LLM Provider Configuration
+llm:
+  # Provider type. Supported providers:
+  #   - ollama           : Ollama (default, runs locally)
+  #   - openai-compatible: Any OpenAI-compatible API
+  #   - localai          : LocalAI
+  #   - lmstudio         : LM Studio
+  #   - vllm             : vLLM inference server
+  #   - textgen          : text-generation-webui
+  #   - openai           : OpenAI API (cloud, requires api_key)
+  provider: ollama
+
+  # Endpoint URL for the LLM service
+  # Default endpoints by provider:
+  #   - ollama:   http://localhost:11434
+  #   - localai:  http://localhost:8080
+  #   - lmstudio: http://localhost:1234
+  #   - vllm:     http://localhost:8000
+  #   - textgen:  http://localhost:5000
+  #   - openai:   https://api.openai.com
+  endpoint: http://localhost:11434
+
+  # Default model to use (leave empty to be prompted interactively)
+  model: ""
+
+  # API key (required for OpenAI and some providers)
+  # Can also be set via VIBE_LLM_API_KEY environment variable
+  api_key: ""
+
+  # Temperature for generation (0.0 - 1.0)
+  # Lower = more deterministic, higher = more creative
+  temperature: 0.7
+
+# Web Search Configuration (SearXNG)
+search:
+  # Enable web search capability
+  enabled: true
+
+  # Search provider: searxng
+  provider: searxng
+
+  # SearXNG instance URL
+  endpoint: http://localhost:8080
+
+  # Default language for search results
+  language: en
+
+  # Maximum number of results to return
+  limit: 10
+
+# Security Configuration
+security:
+  # Base directory for file operations (default: current directory)
+  project_dir: .
+
+  # Additional paths that can be read (outside project_dir)
+  trusted_paths: []
+
+  # Paths that should never be accessed
+  denied_paths:
+    - ~/.ssh
+    - ~/.gnupg
+    - ~/.aws
+    - ~/.azure
+    - ~/.config/gcloud
+
+  # Auto-approve all operations without prompting
+  # WARNING: Only enable this if you trust the AI completely
+  auto_approve: false
+
+# Command Execution Configuration
+commands:
+  # Commands that are always allowed (prefix matching)
+  allowed:
+    - go build
+    - go test
+    - go run
+    - go mod
+    - npm install
+    - npm test
+    - npm run
+    - npm start
+    - yarn install
+    - yarn test
+    - yarn run
+    - cargo build
+    - cargo test
+    - cargo run
+    - git status
+    - git diff
+    - git log
+    - git branch
+
+  # Commands that are never allowed (pattern matching)
+  blocked:
+    - rm -rf /
+    - rm -rf ~
+    - sudo
+    - chmod 777
+
+# ============================================================
+# Example configurations for different providers:
+# ============================================================
+
+# --- Ollama (default) ---
+# llm:
+#   provider: ollama
+#   endpoint: http://localhost:11434
+#   model: llama3:8b
+
+# --- LM Studio ---
+# llm:
+#   provider: lmstudio
+#   endpoint: http://localhost:1234
+#   model: local-model
+
+# --- LocalAI ---
+# llm:
+#   provider: localai
+#   endpoint: http://localhost:8080
+#   model: gpt-3.5-turbo
+
+# --- vLLM ---
+# llm:
+#   provider: vllm
+#   endpoint: http://localhost:8000
+#   model: meta-llama/Llama-3-8b-chat-hf
+
+# --- OpenAI (cloud) ---
+# llm:
+#   provider: openai
+#   endpoint: https://api.openai.com
+#   model: gpt-4
+#   api_key: sk-your-api-key-here
+
+# --- Custom OpenAI-compatible endpoint ---
+# llm:
+#   provider: openai-compatible
+#   endpoint: http://your-server:8080
+#   model: your-model
+#   api_key: optional-key
