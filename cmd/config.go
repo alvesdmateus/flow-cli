@@ -7,10 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/ui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/mateus/vibe-cli/internal/llm"
+	"github.com/mateus/vibe-cli/internal/ui"
 )
 
 var configCmd = &cobra.Command{

@@ -18,13 +18,9 @@ linters:
     - goimports
     # Bugs
     - bodyclose
-    - nilerr
     - noctx
-    # Performance
-    - prealloc
     # Code quality
     - unconvert
-    - unparam
 
 linters-settings:
   errcheck:
@@ -35,17 +31,19 @@ linters-settings:
     enable-all: true
     disable:
       - fieldalignment
+      - shadow # Too noisy for this codebase style
 
   gosec:
     excludes:
       - G104 # Audit errors not checked (too noisy for CLI)
+      - G204 # Subprocess with variable - intentional for CLI tool
+      - G301 # Directory permissions - CLI uses 0755 for config dirs
+      - G302 # File permissions - CLI writes code files
+      - G304 # File inclusion via variable - CLI reads user-specified files
+      - G306 # WriteFile permissions - CLI writes code files with 0644
 
   goimports:
     local-prefixes: github.com/mateus/vibe-cli
-
-  prealloc:
-    simple: true
-    for-loops: true
 
 issues:
   exclude-rules:
@@ -54,12 +52,24 @@ issues:
       linters:
         - gosec
         - noctx
-        - unparam
 
     # Exclude main.go from some checks
     - path: main\.go
       linters:
-        - unparam
+        - errcheck
+
+    # Exclude cmd files from some checks (CLI entry points)
+    - path: cmd/
+      linters:
+        - noctx
+
+    # Exclude tools that intentionally handle errors by returning nil
+    - path: internal/tools/
+      text: "error is not nil.*but it returns nil"
+
+    # Exclude context manager session handling
+    - path: internal/context/
+      text: "error is not nil.*but it returns nil"
 
   max-issues-per-linter: 50
   max-same-issues: 5

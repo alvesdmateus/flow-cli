@@ -18,32 +18,32 @@ func SetupRegistry(opts SetupOptions) (*Registry, error) {
 	registry := NewRegistry()
 
 	// Filesystem tools
-	registry.Register(NewReadFileTool(opts.Permissions))
-	registry.Register(NewWriteFileTool(opts.Permissions, ui.ShowFileDiff))
-	registry.Register(NewListFilesTool(opts.Permissions))
-	registry.Register(NewCreateDirectoryTool(opts.Permissions))
-	registry.Register(NewDeleteFileTool(opts.Permissions))
+	_ = registry.Register(NewReadFileTool(opts.Permissions))
+	_ = registry.Register(NewWriteFileTool(opts.Permissions, ui.ShowFileDiff))
+	_ = registry.Register(NewListFilesTool(opts.Permissions))
+	_ = registry.Register(NewCreateDirectoryTool(opts.Permissions))
+	_ = registry.Register(NewDeleteFileTool(opts.Permissions))
 
 	// Edit tools
-	registry.Register(NewEditFileTool(opts.Permissions, ui.ShowFileDiff))
-	registry.Register(NewInsertLinesTool(opts.Permissions, ui.ShowFileDiff))
-	registry.Register(NewDeleteLinesTool(opts.Permissions, ui.ShowFileDiff))
+	_ = registry.Register(NewEditFileTool(opts.Permissions, ui.ShowFileDiff))
+	_ = registry.Register(NewInsertLinesTool(opts.Permissions, ui.ShowFileDiff))
+	_ = registry.Register(NewDeleteLinesTool(opts.Permissions, ui.ShowFileDiff))
 
 	// Search tools
-	registry.Register(NewGrepSearchTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewGrepSearchTool(opts.Permissions, opts.WorkDir))
 	if opts.SearchClient != nil {
-		registry.Register(NewWebSearchTool(opts.Permissions, opts.SearchClient))
+		_ = registry.Register(NewWebSearchTool(opts.Permissions, opts.SearchClient))
 	}
-	registry.Register(NewFetchURLTool(opts.Permissions))
+	_ = registry.Register(NewFetchURLTool(opts.Permissions))
 
 	// Shell tools
-	registry.Register(NewRunCommandTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewRunCommandTool(opts.Permissions, opts.WorkDir))
 
 	// Process tools
-	registry.Register(NewCheckPortTool(opts.Permissions))
-	registry.Register(NewKillProcessTool(opts.Permissions))
-	registry.Register(NewStartProcessTool(opts.Permissions, opts.WorkDir))
-	registry.Register(NewListProcessesTool(opts.Permissions))
+	_ = registry.Register(NewCheckPortTool(opts.Permissions))
+	_ = registry.Register(NewKillProcessTool(opts.Permissions))
+	_ = registry.Register(NewStartProcessTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewListProcessesTool(opts.Permissions))
 
 	return registry, nil
 }

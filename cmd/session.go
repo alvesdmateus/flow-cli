@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/spf13/cobra"
+
 	"github.com/mateus/vibe-cli/internal/context"
 	"github.com/mateus/vibe-cli/internal/ui"
-	"github.com/spf13/cobra"
 )
 
 var sessionCmd = &cobra.Command{
