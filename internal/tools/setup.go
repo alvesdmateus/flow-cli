@@ -24,14 +24,20 @@ func SetupRegistry(opts SetupOptions) (*Registry, error) {
 	registry.Register(NewCreateDirectoryTool(opts.Permissions))
 	registry.Register(NewDeleteFileTool(opts.Permissions))
 
-	// Shell tools
-	registry.Register(NewRunCommandTool(opts.Permissions, opts.WorkDir))
+	// Edit tools
+	registry.Register(NewEditFileTool(opts.Permissions, ui.ShowFileDiff))
+	registry.Register(NewInsertLinesTool(opts.Permissions, ui.ShowFileDiff))
+	registry.Register(NewDeleteLinesTool(opts.Permissions, ui.ShowFileDiff))
 
 	// Search tools
+	registry.Register(NewGrepSearchTool(opts.Permissions, opts.WorkDir))
 	if opts.SearchClient != nil {
 		registry.Register(NewWebSearchTool(opts.Permissions, opts.SearchClient))
 	}
 	registry.Register(NewFetchURLTool(opts.Permissions))
+
+	// Shell tools
+	registry.Register(NewRunCommandTool(opts.Permissions, opts.WorkDir))
 
 	// Process tools
 	registry.Register(NewCheckPortTool(opts.Permissions))
@@ -50,6 +56,10 @@ func AllToolNames() []string {
 		"list_files",
 		"create_directory",
 		"delete_file",
+		"edit_file",
+		"insert_lines",
+		"delete_lines",
+		"grep_search",
 		"run_command",
 		"web_search",
 		"fetch_url",
@@ -68,9 +78,13 @@ func ToolDescriptions() map[string]string {
 		"list_files":       "List files in a directory",
 		"create_directory": "Create a new directory",
 		"delete_file":      "Delete a file or empty directory",
+		"edit_file":        "Make surgical text replacements in a file",
+		"insert_lines":     "Insert lines at a specific position in a file",
+		"delete_lines":     "Delete a range of lines from a file",
+		"grep_search":      "Search for regex patterns across the codebase",
 		"run_command":      "Execute a shell command",
 		"web_search":       "Search the web using SearXNG",
-		"fetch_url":        "Fetch content from a URL",
+		"fetch_url":        "Fetch and extract content from a URL",
 		"check_port":       "Check if a port is in use",
 		"kill_process":     "Kill a process by PID or port",
 		"start_process":    "Start a background process",
