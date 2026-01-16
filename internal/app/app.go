@@ -13,10 +13,10 @@ import (
 
 // App is the main application container that holds all dependencies
 type App struct {
-	Config      *config.Config
-	LLMClient   llm.Client
+	Config       *config.Config
+	LLMClient    llm.Client
 	SearchClient search.Client
-	Permissions *sandbox.Manager
+	Permissions  *sandbox.Manager
 }
 
 // New creates a new App instance with all dependencies initialized

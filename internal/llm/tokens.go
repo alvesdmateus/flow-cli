@@ -24,19 +24,19 @@ type UsageStats struct {
 	TotalTokens           int `json:"total_tokens"`
 
 	// Request counts
-	RequestCount   int `json:"request_count"`
-	SuccessCount   int `json:"success_count"`
-	ErrorCount     int `json:"error_count"`
+	RequestCount int `json:"request_count"`
+	SuccessCount int `json:"success_count"`
+	ErrorCount   int `json:"error_count"`
 
 	// Cost tracking (if pricing is configured)
 	EstimatedCost float64 `json:"estimated_cost"`
 
 	// Timing
-	StartTime     time.Time `json:"start_time"`
+	StartTime     time.Time     `json:"start_time"`
 	TotalDuration time.Duration `json:"total_duration"`
 
 	// Per-request history (limited to last N requests)
-	History []RequestStats `json:"history,omitempty"`
+	History    []RequestStats `json:"history,omitempty"`
 	maxHistory int
 }
 
@@ -58,12 +58,12 @@ type Pricing struct {
 
 // Common pricing (approximate, may vary)
 var PricingPresets = map[string]Pricing{
-	"gpt-4":        {PromptPricePerMillion: 30.0, CompletionPricePerMillion: 60.0},
-	"gpt-4-turbo":  {PromptPricePerMillion: 10.0, CompletionPricePerMillion: 30.0},
-	"gpt-3.5":      {PromptPricePerMillion: 0.5, CompletionPricePerMillion: 1.5},
-	"claude-3":     {PromptPricePerMillion: 15.0, CompletionPricePerMillion: 75.0},
-	"local":        {PromptPricePerMillion: 0.0, CompletionPricePerMillion: 0.0},
-	"ollama":       {PromptPricePerMillion: 0.0, CompletionPricePerMillion: 0.0},
+	"gpt-4":       {PromptPricePerMillion: 30.0, CompletionPricePerMillion: 60.0},
+	"gpt-4-turbo": {PromptPricePerMillion: 10.0, CompletionPricePerMillion: 30.0},
+	"gpt-3.5":     {PromptPricePerMillion: 0.5, CompletionPricePerMillion: 1.5},
+	"claude-3":    {PromptPricePerMillion: 15.0, CompletionPricePerMillion: 75.0},
+	"local":       {PromptPricePerMillion: 0.0, CompletionPricePerMillion: 0.0},
+	"ollama":      {PromptPricePerMillion: 0.0, CompletionPricePerMillion: 0.0},
 }
 
 // NewUsageStats creates a new usage stats tracker

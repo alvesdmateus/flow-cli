@@ -158,10 +158,10 @@ func autoDetectClient(endpoint, apiKey string) (Client, error) {
 // containsPort checks if endpoint contains a specific port
 func containsPort(endpoint, port string) bool {
 	return len(endpoint) > 0 && (
-		// Check for :port at end or :port/
-		len(endpoint) > len(port)+1 &&
-			(endpoint[len(endpoint)-len(port)-1:] == ":"+port ||
-				(len(endpoint) > len(port)+2 && endpoint[len(endpoint)-len(port)-2:len(endpoint)-1] == ":"+port)))
+	// Check for :port at end or :port/
+	len(endpoint) > len(port)+1 &&
+		(endpoint[len(endpoint)-len(port)-1:] == ":"+port ||
+			(len(endpoint) > len(port)+2 && endpoint[len(endpoint)-len(port)-2:len(endpoint)-1] == ":"+port)))
 }
 
 // containsHost checks if endpoint contains a specific host

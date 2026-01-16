@@ -43,13 +43,13 @@ func (p PlanPhase) String() string {
 
 // PlanTask represents a task in the implementation plan
 type PlanTask struct {
-	ID          string   `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Priority    string   `json:"priority"` // critical, high, medium, low
-	Files       []string `json:"files"`
+	ID           string   `json:"id"`
+	Title        string   `json:"title"`
+	Description  string   `json:"description"`
+	Priority     string   `json:"priority"` // critical, high, medium, low
+	Files        []string `json:"files"`
 	Dependencies []string `json:"dependencies"`
-	Completed   bool     `json:"completed"`
+	Completed    bool     `json:"completed"`
 }
 
 // Plan represents an architecture/implementation plan
@@ -401,7 +401,7 @@ func (p *Planner) parsePlan(response string) *Plan {
 			case "tasks":
 				// Check if this is a new task
 				if strings.HasPrefix(line, "-") || strings.HasPrefix(line, "•") ||
-				   strings.HasPrefix(line, "*") || isNumbered(line) {
+					strings.HasPrefix(line, "*") || isNumbered(line) {
 					taskCount++
 					task := PlanTask{
 						ID:       fmt.Sprintf("task_%d", taskCount),

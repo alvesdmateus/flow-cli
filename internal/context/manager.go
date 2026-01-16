@@ -32,13 +32,13 @@ type ToolCall struct {
 
 // Conversation represents a chat session
 type Conversation struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Messages  []Message `json:"messages"`
-	Model     string    `json:"model"`
-	ProjectDir string   `json:"project_dir"`
+	ID         string    `json:"id"`
+	Title      string    `json:"title"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	Messages   []Message `json:"messages"`
+	Model      string    `json:"model"`
+	ProjectDir string    `json:"project_dir"`
 }
 
 // Manager handles conversation history and context
