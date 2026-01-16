@@ -64,7 +64,7 @@ func (t *CheckPortTool) Execute(ctx context.Context, args map[string]any) (*Resu
 	host := GetStringArg(args, "host", "localhost")
 
 	// This is a low-risk operation, no permission needed for localhost
-	address := fmt.Sprintf("%s:%d", host, port)
+	address := net.JoinHostPort(host, strconv.Itoa(port))
 
 	// Try to connect to the port
 	conn, err := net.DialTimeout("tcp", address, 2*time.Second)

@@ -172,8 +172,8 @@ func (t *EditFileTool) Execute(ctx context.Context, args map[string]any) (*Resul
 	}
 
 	return NewSuccessResultWithData(result, map[string]any{
-		"path":               path,
-		"occurrences_found":  count,
+		"path":              path,
+		"occurrences_found": count,
 		"occurrences_replaced": func() int {
 			if occurrence == 0 {
 				return count
