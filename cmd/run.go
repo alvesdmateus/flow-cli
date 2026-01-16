@@ -8,10 +8,11 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/spf13/cobra"
+
 	"github.com/mateus/vibe-cli/internal/config"
 	"github.com/mateus/vibe-cli/internal/llm"
 	"github.com/mateus/vibe-cli/internal/ui"
-	"github.com/spf13/cobra"
 )
 
 var runCmd = &cobra.Command{

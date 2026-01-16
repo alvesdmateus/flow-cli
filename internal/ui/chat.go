@@ -40,7 +40,6 @@ type ChatModel struct {
 	messages    []ChatMessage
 	streamBuf   strings.Builder
 	currentTool string
-	err         error
 
 	// Dimensions
 	width  int

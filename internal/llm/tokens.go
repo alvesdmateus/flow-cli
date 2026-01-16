@@ -181,7 +181,7 @@ func (s *UsageStats) Summary() string {
 	sb.WriteString(fmt.Sprintf("Session Duration: %s\n", time.Since(s.StartTime).Round(time.Second)))
 	sb.WriteString(fmt.Sprintf("Requests: %d total (%d success, %d error)\n",
 		s.RequestCount, s.SuccessCount, s.ErrorCount))
-	sb.WriteString(fmt.Sprintf("Tokens Used:\n"))
+	sb.WriteString("Tokens Used:\n")
 	sb.WriteString(fmt.Sprintf("  Prompt:     %s\n", formatTokenCount(s.TotalPromptTokens)))
 	sb.WriteString(fmt.Sprintf("  Completion: %s\n", formatTokenCount(s.TotalCompletionTokens)))
 	sb.WriteString(fmt.Sprintf("  Total:      %s\n", formatTokenCount(s.TotalTokens)))
@@ -193,7 +193,7 @@ func (s *UsageStats) Summary() string {
 	if s.RequestCount > 0 {
 		avgTokens := s.TotalTokens / s.RequestCount
 		avgDuration := s.TotalDuration / time.Duration(s.RequestCount)
-		sb.WriteString(fmt.Sprintf("Average per request:\n"))
+		sb.WriteString("Average per request:\n")
 		sb.WriteString(fmt.Sprintf("  Tokens: %d\n", avgTokens))
 		sb.WriteString(fmt.Sprintf("  Duration: %s\n", avgDuration.Round(time.Millisecond)))
 	}

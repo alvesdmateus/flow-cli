@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/mateus/vibe-cli/internal/sandbox"
 )
 

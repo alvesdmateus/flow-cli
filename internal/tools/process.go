@@ -324,7 +324,7 @@ func (t *StartProcessTool) Execute(ctx context.Context, args map[string]any) (*R
 
 	// Detach the process
 	if cmd.Process != nil {
-		cmd.Process.Release()
+		_ = cmd.Process.Release()
 	}
 
 	return NewSuccessResultWithData(

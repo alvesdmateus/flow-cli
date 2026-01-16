@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mateus/vibe-cli/internal/config"
-	"github.com/mateus/vibe-cli/internal/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/mateus/vibe-cli/internal/config"
+	"github.com/mateus/vibe-cli/internal/logging"
 )
 
 var (
@@ -51,7 +52,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug output (more detailed than verbose)")
 	rootCmd.PersistentFlags().StringVarP(&modelFlag, "model", "m", "", "model to use for LLM requests")
 
-	viper.BindPFlag("security.auto_approve", rootCmd.PersistentFlags().Lookup("auto-approve"))
+	_ = viper.BindPFlag("security.auto_approve", rootCmd.PersistentFlags().Lookup("auto-approve"))
 }
 
 func initConfig() {
