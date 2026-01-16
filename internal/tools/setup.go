@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"github.com/mateus/vibe-cli/internal/indexing"
 	"github.com/mateus/vibe-cli/internal/sandbox"
 	"github.com/mateus/vibe-cli/internal/search"
 	"github.com/mateus/vibe-cli/internal/ui"
@@ -10,6 +11,7 @@ import (
 type SetupOptions struct {
 	Permissions  *sandbox.Manager
 	SearchClient search.Client
+	Indexer      *indexing.Indexer
 	WorkDir      string
 }
 
@@ -60,6 +62,13 @@ func SetupRegistry(opts SetupOptions) (*Registry, error) {
 	_ = registry.Register(NewFindReferencesTool(opts.WorkDir))
 	_ = registry.Register(NewListSymbolsTool(opts.WorkDir))
 
+	// Semantic search tools (requires indexer)
+	if opts.Indexer != nil {
+		_ = registry.Register(NewSemanticSearchTool(opts.Indexer))
+		_ = registry.Register(NewIndexStatusTool(opts.Indexer))
+		_ = registry.Register(NewReindexFileTool(opts.Indexer))
+	}
+
 	return registry, nil
 }
 
@@ -93,6 +102,9 @@ func AllToolNames() []string {
 		"find_definition",
 		"find_references",
 		"list_symbols",
+		"semantic_search",
+		"index_status",
+		"reindex_file",
 	}
 }
 
@@ -126,5 +138,8 @@ func ToolDescriptions() map[string]string {
 		"find_definition":  "Find where a symbol is defined in the codebase",
 		"find_references":  "Find all references to a symbol in the codebase",
 		"list_symbols":     "List all symbols (functions, classes, types) in a directory",
+		"semantic_search":  "Search the codebase using natural language queries",
+		"index_status":     "Show the status of the semantic search index",
+		"reindex_file":     "Re-index a specific file after modification",
 	}
 }
