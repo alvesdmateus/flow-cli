@@ -54,12 +54,13 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 2: Code Intelligence (Sprints 3-4)
 **Goal:** Semantic code understanding
 
-### Sprint 3: Code Analysis
-- [ ] Tree-sitter integration for AST parsing (Go, JS, Python, Rust)
-- [ ] Symbol extraction (functions, classes, types)
-- [ ] `find_definition`, `find_references` tools
-- [ ] Code outline/structure tool
-- [ ] Import/dependency analysis
+### Sprint 3: Code Analysis ✅
+- [x] AST parsing for Go (using go/ast), regex parsing for Python, JS, TS, Rust
+- [x] Symbol extraction (functions, classes, types, methods, interfaces, etc.)
+- [x] `find_definition`, `find_references` tools
+- [x] `code_outline` tool for file structure
+- [x] `list_symbols` tool for codebase exploration
+- [ ] Import/dependency analysis (future enhancement)
 
 ### Sprint 4: Codebase Indexing
 - [ ] Local embedding generation (with Ollama)
@@ -160,7 +161,7 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Context management | High | High | **P0** | ✅ Done |
 | Git integration | High | Medium | **P1** | ✅ Done |
 | Context summarization | High | Medium | **P1** | ✅ Done |
-| Tree-sitter AST | High | High | **P1** | 🔄 Next |
+| Code Analysis (AST/regex) | High | High | **P1** | ✅ Done |
 | Secrets detection | High | Medium | **P1** | Pending |
 | Semantic search | High | High | P2 | Pending |
 | LSP server mode | High | High | P2 | Pending |
@@ -313,6 +314,36 @@ Use this section to track periodic progress reviews.
 - Phase 1 complete with all core features
 - Moving to Phase 2: Code Intelligence
 - Consider secrets detection in parallel (security)
+
+---
+
+### Check-in: 2026-01-16 (Sprint 3 Complete)
+
+#### Completed
+- **Sprint 3: Code Analysis** ✅
+  - `internal/analysis` package with multi-language support
+  - Go parser using `go/ast` for accurate AST parsing
+  - Regex-based parsers for Python, JavaScript, TypeScript, Rust
+  - Symbol extraction: functions, methods, classes, types, interfaces, structs, consts, vars
+  - `code_outline` tool for file structure analysis
+  - `find_definition` tool to locate symbol definitions
+  - `find_references` tool for text-based reference search
+  - `list_symbols` tool for codebase exploration
+  - 10 tests for analysis package, 11 tests for tools
+  - Integrated with tool registry
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 4: Codebase Indexing**
+  - Local embedding generation
+  - Semantic search implementation
+
+#### Notes
+- Chose go/ast over tree-sitter for Go (native, zero dependencies)
+- Regex parsers provide good coverage for common patterns
+- Analysis tools ready for LLM use
 
 ---
 
