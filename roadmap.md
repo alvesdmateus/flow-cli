@@ -30,24 +30,24 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] Token counting and cost estimation display
 - [x] Add `insert_lines` and `delete_lines` tools
 
-### Sprint 1.5: Context & Token Management
-- [ ] Context window management with smart truncation
-- [ ] Conversation summarization (compress old messages)
-- [ ] Sliding window context (keep recent + important messages)
-- [ ] Token budget allocation (reserve tokens for response)
-- [ ] Context priority scoring (rank messages by relevance)
-- [ ] Automatic context pruning when approaching limits
-- [ ] Message importance tagging (system, tool results, user)
-- [ ] Context size display in UI (tokens used / max)
-- [ ] Configurable context strategies per model
-- [ ] Memory/facts extraction from conversations
+### Sprint 1.5: Context & Token Management ✅
+- [x] Context window management with smart truncation
+- [x] Conversation summarization (compress old messages)
+- [x] Sliding window context (keep recent + important messages)
+- [x] Token budget allocation (reserve tokens for response)
+- [x] Context priority scoring (rank messages by relevance)
+- [x] Automatic context pruning when approaching limits
+- [x] Message importance tagging (system, tool results, user)
+- [x] Context size display in UI (tokens used / max)
+- [x] Configurable context strategies per model
+- [ ] Memory/facts extraction from conversations (future)
 
-### Sprint 2: Git Integration
-- [ ] `git_status`, `git_diff`, `git_commit` tools
-- [ ] `git_log` with commit analysis
-- [ ] PR/MR description generation
-- [ ] Branch management helpers
-- [ ] Conflict detection and resolution suggestions
+### Sprint 2: Git Integration ✅
+- [x] `git_status`, `git_diff`, `git_commit` tools
+- [x] `git_log` with commit analysis
+- [x] `git_add`, `git_branch`, `git_checkout` tools
+- [ ] PR/MR description generation (future)
+- [ ] Conflict detection and resolution suggestions (future)
 
 ---
 
@@ -157,10 +157,10 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Token counting | Medium | Low | **P0** | ✅ Done |
 | edit_file (patches) | High | Medium | **P0** | ✅ Done |
 | grep_search | High | Low | **P0** | ✅ Done |
-| Context management | High | High | **P0** | 🔄 Next |
-| Git integration | High | Medium | **P1** | Pending |
-| Context summarization | High | Medium | **P1** | Pending |
-| Tree-sitter AST | High | High | **P1** | Pending |
+| Context management | High | High | **P0** | ✅ Done |
+| Git integration | High | Medium | **P1** | ✅ Done |
+| Context summarization | High | Medium | **P1** | ✅ Done |
+| Tree-sitter AST | High | High | **P1** | 🔄 Next |
 | Secrets detection | High | Medium | **P1** | Pending |
 | Semantic search | High | High | P2 | Pending |
 | LSP server mode | High | High | P2 | Pending |
@@ -277,6 +277,42 @@ Use this section to track periodic progress reviews.
 #### Notes
 - Context management is critical for long conversations
 - Need to handle model-specific context limits (4K, 8K, 32K, 128K)
+
+---
+
+### Check-in: 2026-01-16 (Sprint 1.5 & 2 Complete)
+
+#### Completed
+- **Sprint 1.5: Context & Token Management** ✅
+  - WindowManager with model-specific context limits
+  - 4 pruning strategies (oldest, low-priority, summarize, hybrid)
+  - Message priority scoring (Low, Medium, High, Critical)
+  - Automatic context pruning when approaching limits
+  - Context stats display (tokens used / max)
+  - 16 test cases for context management
+
+- **Sprint 2: Git Integration** ✅
+  - `git_status` with short format parsing
+  - `git_diff` with staged/unstaged support
+  - `git_log` with filtering (author, date, file)
+  - `git_commit` with auto-stage option
+  - `git_add`, `git_branch`, `git_checkout` tools
+  - MockGitRunner for comprehensive testing
+  - 21 test cases for git tools
+
+#### In Progress
+- Roadmap update and planning
+
+#### Next Sprint Focus
+- **Sprint 3: Code Analysis**
+  - Tree-sitter integration for AST parsing
+  - Symbol extraction (functions, classes, types)
+  - `find_definition`, `find_references` tools
+
+#### Notes
+- Phase 1 complete with all core features
+- Moving to Phase 2: Code Intelligence
+- Consider secrets detection in parallel (security)
 
 ---
 
