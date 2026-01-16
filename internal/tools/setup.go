@@ -45,6 +45,15 @@ func SetupRegistry(opts SetupOptions) (*Registry, error) {
 	_ = registry.Register(NewStartProcessTool(opts.Permissions, opts.WorkDir))
 	_ = registry.Register(NewListProcessesTool(opts.Permissions))
 
+	// Git tools
+	_ = registry.Register(NewGitStatusTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewGitDiffTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewGitLogTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewGitCommitTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewGitAddTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewGitBranchTool(opts.Permissions, opts.WorkDir))
+	_ = registry.Register(NewGitCheckoutTool(opts.Permissions, opts.WorkDir))
+
 	return registry, nil
 }
 
@@ -67,6 +76,13 @@ func AllToolNames() []string {
 		"kill_process",
 		"start_process",
 		"list_processes",
+		"git_status",
+		"git_diff",
+		"git_log",
+		"git_commit",
+		"git_add",
+		"git_branch",
+		"git_checkout",
 	}
 }
 
@@ -89,5 +105,12 @@ func ToolDescriptions() map[string]string {
 		"kill_process":     "Kill a process by PID or port",
 		"start_process":    "Start a background process",
 		"list_processes":   "List running processes",
+		"git_status":       "Show git working tree status",
+		"git_diff":         "Show changes between commits or working tree",
+		"git_log":          "Show commit history",
+		"git_commit":       "Create a new commit",
+		"git_add":          "Stage files for commit",
+		"git_branch":       "List, create, or delete branches",
+		"git_checkout":     "Switch branches or restore files",
 	}
 }
