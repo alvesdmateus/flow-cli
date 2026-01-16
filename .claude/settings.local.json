@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(go mod init:*)",
+      "Bash(go get:*)",
+      "Bash(go build:*)",
+      "Bash(./vibe.exe:*)",
+      "Bash(go mod tidy:*)"
+    ]
+  }
+}
