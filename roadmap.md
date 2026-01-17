@@ -98,13 +98,13 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 4: Security & Reliability (Sprints 7-8)
 **Goal:** Production-grade safety
 
-### Sprint 7: Security Hardening
-- [ ] Command injection prevention (shell escaping audit)
-- [ ] Path traversal protection (symlink resolution)
-- [ ] Secrets detection (block commits with API keys)
-- [ ] Audit logging (all file/command operations)
-- [ ] Rate limiting for LLM calls
-- [ ] Checksum verification for file writes
+### Sprint 7: Security Hardening ✅
+- [x] Command injection prevention (shell escaping audit)
+- [x] Path traversal protection (symlink resolution)
+- [x] Secrets detection (block commits with API keys)
+- [x] Audit logging (all file/command operations)
+- [x] Rate limiting for LLM calls
+- [x] Checksum verification for file writes
 
 ### Sprint 8: Reliability
 - [ ] Automatic retries with exponential backoff
