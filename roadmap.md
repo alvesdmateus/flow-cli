@@ -81,13 +81,13 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] `vibe fix` - Auto-fix linter errors
 - [x] `vibe explain` - Explain code/errors in detail
 
-### Sprint 6: Terminal UX
-- [ ] Multi-file edit preview with unified diff
-- [ ] Undo/redo for file changes
-- [ ] Keyboard shortcuts (Ctrl+C cancel, Ctrl+R retry)
-- [ ] Progress indicators for long operations
-- [ ] Command history with fuzzy search
-- [ ] Markdown rendering in terminal
+### Sprint 6: Terminal UX ✅
+- [x] Multi-file edit preview with unified diff
+- [x] Undo/redo for file changes
+- [x] Keyboard shortcuts (Ctrl+C cancel, Ctrl+R retry)
+- [x] Progress indicators for long operations
+- [x] Command history with fuzzy search
+- [x] Markdown rendering in terminal
 
 ---
 
@@ -465,6 +465,61 @@ Use this section to track periodic progress reviews.
 - All 5 enhanced workflow commands now implemented: init, review, test, fix, explain
 - Linter integration supports the most popular linters for each language
 - Explanation system uses function extraction with language-aware parsing
+
+---
+
+### Check-in: 2026-01-17 (Sprint 6 Complete)
+
+#### Completed
+- **Sprint 6: Terminal UX** ✅
+  - Multi-file edit preview with unified diff
+    - `EditPreview` manager for collecting and previewing file changes
+    - Unified diff generation with hunk support
+    - Summary view with added/removed line counts
+    - Interactive approval flow with per-file review option
+
+  - Undo/redo for file changes
+    - `ChangeHistory` manager with full undo/redo stack
+    - Records create, modify, and delete operations
+    - Automatic file restoration on undo
+    - Interactive undo/redo with confirmation
+
+  - Progress indicators for long operations
+    - `Spinner` with multiple animation styles
+    - `ProgressBar` with percentage and ETA
+    - `MultiProgress` for parallel operations
+    - `WithProgress` helper for easy integration
+
+  - Command history with fuzzy search
+    - `CommandHistory` with persistence to file
+    - Fuzzy matching with scoring (exact, contains, character)
+    - Frequency-based ranking
+    - `HistoryNavigator` for up/down navigation
+    - `FuzzyFinder` for interactive search
+
+  - Markdown rendering in terminal
+    - Headers (H1-H3), lists, blockquotes
+    - Code blocks with basic syntax highlighting
+    - Inline formatting (bold, italic, code, links)
+    - Table rendering with borders
+    - Support for Go, Python, JavaScript, TypeScript, Rust syntax
+
+  - 40+ tests for UI components
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 7: Security Hardening**
+  - Command injection prevention
+  - Path traversal protection
+  - Secrets detection
+
+#### Notes
+- Phase 3: Developer Experience is now complete
+- All UI components are reusable and well-tested
+- Progress indicators support multiple styles for different use cases
+- Markdown rendering provides good terminal experience for AI responses
 
 ---
 
