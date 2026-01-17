@@ -122,12 +122,12 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [ ] Automatic rollback on failure
 - [ ] Learning from corrections (session-based)
 
-### Sprint 10: Code Generation
-- [ ] Test generation from implementation
-- [ ] Documentation generation (JSDoc, GoDoc, etc.)
-- [ ] Boilerplate generation (CRUD, API endpoints)
-- [ ] Refactoring suggestions (extract function, rename)
-- [ ] Bug fix suggestions from error messages
+### Sprint 10: Code Generation ✅
+- [x] Test generation from implementation
+- [x] Documentation generation (JSDoc, GoDoc, etc.)
+- [x] Boilerplate generation (CRUD, API endpoints)
+- [x] Refactoring suggestions (extract function, rename)
+- [x] Bug fix suggestions from error messages
 
 ---
 
@@ -165,7 +165,7 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Secrets detection | High | Medium | **P1** | Pending |
 | Semantic search | High | High | P2 | Pending |
 | LSP server mode | High | High | P2 | Pending |
-| Test generation | Medium | Medium | P2 | Pending |
+| Test generation | Medium | Medium | P2 | ✅ Done |
 
 ---
 
@@ -344,6 +344,52 @@ Use this section to track periodic progress reviews.
 - Chose go/ast over tree-sitter for Go (native, zero dependencies)
 - Regex parsers provide good coverage for common patterns
 - Analysis tools ready for LLM use
+
+---
+
+### Check-in: 2026-01-17 (Sprint 10 Complete)
+
+#### Completed
+- **Sprint 10: Code Generation** ✅
+  - `internal/codegen/testgen.go` - Test generation from implementation
+    - Multi-language support (Go, Python, JavaScript, TypeScript)
+    - Table-driven test generation for Go
+    - Language-specific analyzers for function extraction
+  - `internal/codegen/docgen.go` - Documentation generation
+    - GoDoc, JSDoc, PyDoc, RustDoc styles
+    - Function and class documentation
+    - Auto-insertion of docs for undocumented functions
+  - `internal/codegen/boilerplate.go` - Boilerplate generation
+    - CRUD operations for entities
+    - Model, Repository, Service, Handler patterns
+    - Multi-language support (Go, Python, TypeScript)
+  - `internal/codegen/refactor.go` - Refactoring suggestions
+    - Long function detection
+    - Duplicate code detection
+    - Magic number detection
+    - Deep nesting detection
+    - Large class detection
+    - Extract function, rename, extract variable operations
+  - `internal/codegen/bugfix.go` - Bug fix suggestions
+    - Error message pattern matching
+    - Language-specific error patterns (Go, Python, JS, TS)
+    - Generic error patterns (timeout, permission denied, etc.)
+    - Compiler output parsing
+  - `internal/codegen/codegen_test.go` - 44 tests
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 11: External Tools** (Phase 6)
+  - Docker tools
+  - Database tools
+  - HTTP client tool
+
+#### Notes
+- Phase 5 (Advanced AI) complete
+- Code generation package provides comprehensive tooling
+- Ready for Phase 6: Integrations
 
 ---
 
