@@ -1,6 +1,6 @@
 # vibe-cli Development Roadmap
 
-> Last updated: 2026-01-16
+> Last updated: 2026-01-17
 > Status: Phase 1 - Foundation
 
 ## Overview
@@ -62,24 +62,24 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] `list_symbols` tool for codebase exploration
 - [ ] Import/dependency analysis (future enhancement)
 
-### Sprint 4: Codebase Indexing
-- [ ] Local embedding generation (with Ollama)
-- [ ] Vector store for semantic search (SQLite + vector extension)
-- [ ] `semantic_search` tool for natural language code queries
-- [ ] Automatic re-indexing on file changes
-- [ ] `.vibeignore` for excluding files from indexing
+### Sprint 4: Codebase Indexing ✅
+- [x] Local embedding generation (with Ollama)
+- [x] Vector store for semantic search (SQLite with pure-Go driver)
+- [x] `semantic_search` tool for natural language code queries
+- [x] Automatic re-indexing on file changes
+- [x] `.vibeignore` for excluding files from indexing
 
 ---
 
 ## Phase 3: Developer Experience (Sprints 5-6)
 **Goal:** Productivity features
 
-### Sprint 5: Enhanced Workflows
-- [ ] `vibe init` - Project scaffolding with templates
-- [ ] `vibe review` - Code review mode (diff analysis)
-- [ ] `vibe test` - Test generation and execution
-- [ ] `vibe fix` - Auto-fix linter errors
-- [ ] `vibe explain` - Explain code/errors in detail
+### Sprint 5: Enhanced Workflows ✅
+- [x] `vibe init` - Project scaffolding with templates
+- [x] `vibe review` - Code review mode (diff analysis)
+- [x] `vibe test` - Test generation and execution
+- [x] `vibe fix` - Auto-fix linter errors
+- [x] `vibe explain` - Explain code/errors in detail
 
 ### Sprint 6: Terminal UX
 - [ ] Multi-file edit preview with unified diff
@@ -163,7 +163,7 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Context summarization | High | Medium | **P1** | ✅ Done |
 | Code Analysis (AST/regex) | High | High | **P1** | ✅ Done |
 | Secrets detection | High | Medium | **P1** | Pending |
-| Semantic search | High | High | P2 | Pending |
+| Semantic search | High | High | P2 | ✅ Done |
 | LSP server mode | High | High | P2 | Pending |
 | Test generation | Medium | Medium | P2 | Pending |
 
@@ -344,6 +344,127 @@ Use this section to track periodic progress reviews.
 - Chose go/ast over tree-sitter for Go (native, zero dependencies)
 - Regex parsers provide good coverage for common patterns
 - Analysis tools ready for LLM use
+
+---
+
+### Check-in: 2026-01-16 (Sprint 4 Complete)
+
+#### Completed
+- **Sprint 4: Codebase Indexing** ✅
+  - `internal/indexing` package with embedding and vector store support
+  - `EmbeddingClient` using Ollama for local embedding generation
+  - `VectorStore` with SQLite persistence using pure-Go driver (modernc.org/sqlite)
+  - Cosine similarity search for semantic matching
+  - `semantic_search` tool for natural language code queries
+  - `index_status` tool to view index statistics
+  - `reindex_file` tool for updating specific files
+  - `.vibeignore` support for excluding files from indexing
+  - File hash-based change detection for incremental re-indexing
+  - 23 tests for indexing package, tools integrated with registry
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 5: Enhanced Workflows**
+  - `vibe init` - Project scaffolding
+  - `vibe review` - Code review mode
+  - `vibe test` - Test generation
+
+#### Notes
+- Used pure-Go SQLite driver to avoid CGO dependency
+- Embeddings converted from float32 (Ollama) to float64 for search
+- Phase 2: Code Intelligence now complete
+
+---
+
+### Check-in: 2026-01-17 (Sprint 5 - vibe init & review)
+
+#### Completed
+- **Sprint 5: `vibe init`** ✅
+  - `cmd/init.go` - New CLI command with flags: `--template`, `--list-templates`, `--existing`, `--yes`
+  - `internal/templates` package with scaffolding support
+  - 5 project templates: Go, Python, Node.js/TypeScript, Rust, Empty
+  - Interactive project initialization with name, description, author prompts
+  - `.vibe/config.yaml` and `.vibeignore` generation for all templates
+  - Template variable substitution ({{.Name}}, {{.Description}}, {{.Author}})
+  - 12 tests for templates package
+
+- **Sprint 5: `vibe review`** ✅
+  - `cmd/review.go` - AI-powered code review command
+  - `internal/review` package with diff parsing and LLM integration
+  - Flags: `--staged`, `--commit`, `--pr`, `--focus`, `--detailed`
+  - Focus areas: security, performance, bugs, style, all
+  - Unified diff parser with hunk-level analysis
+  - Language detection for 25+ languages
+  - Structured JSON output from LLM with severity levels
+  - PR review support via gh CLI
+  - 12 tests for diff parser
+
+- **Sprint 5: `vibe test`** ✅
+  - `cmd/test.go` - Test running and generation command
+  - `internal/testing` package with runner, generator, analyzer
+  - Flags: `--generate`, `--coverage`, `--fix`, `--watch`, `--timeout`
+  - Multi-language support: Go, Python, Node.js, Rust
+  - Project type auto-detection
+  - Test output parsing for each language
+  - AI-powered test generation from source code
+  - Failure analysis with fix suggestions
+  - 17 tests for testing package
+
+#### In Progress
+- Sprint 5: Remaining enhanced workflows
+
+#### Next Sprint Focus
+- `vibe fix` - Auto-fix linter errors
+- `vibe explain` - Explain code/errors in detail
+
+#### Notes
+- Templates include language-specific tooling configs (Makefile, pyproject.toml, tsconfig.json, Cargo.toml)
+- Project-level vibe config allows per-project LLM and security settings
+- Review command outputs issues by severity (critical, high, medium, low)
+- Test command supports go test -json, pytest, Jest, cargo test output formats
+
+---
+
+### Check-in: 2026-01-17 (Sprint 5 Complete)
+
+#### Completed
+- **Sprint 5: Enhanced Workflows** ✅
+  - `vibe fix` - Auto-fix linter errors with AI
+    - `cmd/fix.go` - CLI command with flags: `--dry-run`, `--lint-only`, `--auto`
+    - `internal/fixer` package with linter integration and fix generation
+    - Multi-language linter support: golangci-lint, go vet, ruff, pylint, eslint, cargo clippy
+    - JSON output parsing for each linter
+    - LLM-powered fix generation
+    - Interactive fix approval with diff preview
+    - 10 tests for fixer package
+
+  - `vibe explain` - Explain code/errors in detail
+    - `cmd/explain.go` - CLI command with flags: `--error`, `--function`, `--stdin`, `--detailed`
+    - `internal/explainer` package with code explanation capabilities
+    - File explanation with line range support (file:42 or file:10-50)
+    - Function extraction for targeted explanations
+    - Error message analysis with fix suggestions
+    - Stdin support for piped input
+    - Language detection for 25+ file extensions
+    - 10 tests for explainer package
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 6: Terminal UX**
+  - Multi-file edit preview with unified diff
+  - Undo/redo for file changes
+  - Keyboard shortcuts
+  - Progress indicators
+
+#### Notes
+- Sprint 5 completes Phase 3: Developer Experience (Enhanced Workflows portion)
+- All 5 enhanced workflow commands now implemented: init, review, test, fix, explain
+- Linter integration supports the most popular linters for each language
+- Explanation system uses function extraction with language-aware parsing
 
 ---
 
