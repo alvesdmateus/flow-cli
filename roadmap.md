@@ -115,12 +115,12 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 5: Advanced AI (Sprints 9-10)
 **Goal:** Intelligent assistance
 
-### Sprint 9: Planning & Reasoning
-- [ ] Multi-step task decomposition
-- [ ] Dependency graph for task ordering
-- [ ] Self-validation (verify changes work)
-- [ ] Automatic rollback on failure
-- [ ] Learning from corrections (session-based)
+### Sprint 9: Planning & Reasoning ✅
+- [x] Multi-step task decomposition
+- [x] Dependency graph for task ordering
+- [x] Self-validation (verify changes work)
+- [x] Automatic rollback on failure
+- [x] Learning from corrections (session-based)
 
 ### Sprint 10: Code Generation
 - [ ] Test generation from implementation
@@ -371,3 +371,30 @@ When working on roadmap items:
 | v0.3.0 | Phase 3-4 complete | Enhanced UX, security hardening |
 | v0.5.0 | Phase 5 complete | Advanced AI features |
 | v1.0.0 | Phase 6 complete | Full IDE integration, production ready |
+
+---
+
+### Check-in: 2026-01-17 (Sprint 9 Complete)
+
+#### Completed
+- **Sprint 9: Planning & Reasoning** ✅
+  - `internal/planner` package with AI planning and reasoning capabilities
+  - `task.go` - Multi-step task decomposition with strategies for file_edit, refactor, feature, bug_fix
+  - `graph.go` - Dependency graph with topological sort, cycle detection, execution levels
+  - `executor.go` - Plan executor with validation, retries, and automatic rollback
+  - `learning.go` - Session-based learning from user corrections with pattern detection
+  - 27 tests for planner package
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 10: Code Generation**
+  - Test generation from implementation
+  - Documentation generation
+  - Boilerplate generation
+
+#### Notes
+- Planning system supports parallel execution at each dependency level
+- Circuit breaker pattern from reliability integrates with executor retries
+- Learning system builds patterns from user corrections for future suggestions
