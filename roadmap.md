@@ -134,12 +134,12 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 6: Integrations (Sprints 11-12)
 **Goal:** Ecosystem connectivity
 
-### Sprint 11: External Tools
-- [ ] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
-- [ ] Database tools (`query_db` for SQLite/Postgres)
-- [ ] HTTP client tool (`http_request`)
-- [ ] Package manager tools (npm, pip, cargo info)
-- [ ] CI/CD status checking (GitHub Actions)
+### Sprint 11: External Tools ✅
+- [x] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
+- [x] Database tools (`query_db` for SQLite/Postgres)
+- [x] HTTP client tool (`http_request`)
+- [x] Package manager tools (npm, pip, cargo info)
+- [x] CI/CD status checking (GitHub Actions)
 
 ### Sprint 12: IDE & Editor
 - [ ] LSP server mode (integrate with any editor)
@@ -344,6 +344,46 @@ Use this section to track periodic progress reviews.
 - Chose go/ast over tree-sitter for Go (native, zero dependencies)
 - Regex parsers provide good coverage for common patterns
 - Analysis tools ready for LLM use
+
+---
+
+### Check-in: 2026-01-17 (Sprint 11 Complete)
+
+#### Completed
+- **Sprint 11: External Tools** ✅
+  - `internal/external/docker.go` - Docker tools
+    - Build, run, logs, stop, remove operations
+    - Container and image management
+    - Docker Compose support
+  - `internal/external/database.go` - Database tools
+    - SQLite and PostgreSQL support
+    - Query execution with JSON results
+    - Table inspection and schema exploration
+  - `internal/external/http.go` - HTTP client
+    - Full HTTP method support (GET, POST, PUT, PATCH, DELETE)
+    - Form data and file uploads
+    - API client with JSON helpers
+  - `internal/external/packages.go` - Package manager tools
+    - npm, yarn, pnpm, pip, cargo, go support
+    - Package info, install, search, outdated
+  - `internal/external/cicd.go` - CI/CD status checking
+    - GitHub Actions integration
+    - Workflow runs, jobs, logs, artifacts
+    - Trigger and cancel workflows
+  - `internal/external/external_test.go` - 27 tests
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 12: IDE & Editor** (Phase 6)
+  - LSP server mode
+  - VS Code extension
+
+#### Notes
+- Phase 6 (Integrations) 50% complete
+- External tools ready for LLM agent use
+- Database drivers are optional imports for portability
 
 ---
 
