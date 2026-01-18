@@ -134,19 +134,19 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 6: Integrations (Sprints 11-12)
 **Goal:** Ecosystem connectivity
 
-### Sprint 11: External Tools
-- [ ] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
-- [ ] Database tools (`query_db` for SQLite/Postgres)
-- [ ] HTTP client tool (`http_request`)
-- [ ] Package manager tools (npm, pip, cargo info)
-- [ ] CI/CD status checking (GitHub Actions)
+### Sprint 11: External Tools ✅
+- [x] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
+- [x] Database tools (`query_db` for SQLite/Postgres)
+- [x] HTTP client tool (`http_request`)
+- [x] Package manager tools (npm, pip, cargo info)
+- [x] CI/CD status checking (GitHub Actions)
 
-### Sprint 12: IDE & Editor
-- [ ] LSP server mode (integrate with any editor)
-- [ ] VS Code extension
-- [ ] Neovim plugin
-- [ ] JetBrains plugin (basic)
-- [ ] `.vibe/config.yaml` project-level settings
+### Sprint 12: IDE & Editor ✅
+- [x] LSP server mode (integrate with any editor)
+- [x] VS Code extension
+- [x] Neovim plugin
+- [x] JetBrains plugin (basic)
+- [x] `.vibe/config.yaml` project-level settings
 
 ---
 
@@ -164,8 +164,10 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Code Analysis (AST/regex) | High | High | **P1** | ✅ Done |
 | Secrets detection | High | Medium | **P1** | Pending |
 | Semantic search | High | High | P2 | Pending |
-| LSP server mode | High | High | P2 | Pending |
+| LSP server mode | High | High | P2 | ✅ Done |
 | Test generation | Medium | Medium | P2 | Pending |
+| External tools | High | High | P2 | ✅ Done |
+| IDE plugins | High | High | P2 | ✅ Done |
 
 ---
 
@@ -344,6 +346,55 @@ Use this section to track periodic progress reviews.
 - Chose go/ast over tree-sitter for Go (native, zero dependencies)
 - Regex parsers provide good coverage for common patterns
 - Analysis tools ready for LLM use
+
+---
+
+### Check-in: 2026-01-17 (Sprint 11 & 12 Complete)
+
+#### Completed
+- **Sprint 11: External Tools** ✅
+  - `internal/external/docker.go` - Docker container management
+  - `internal/external/database.go` - Database tools (SQLite/Postgres)
+  - `internal/external/http.go` - HTTP client with form uploads
+  - `internal/external/packages.go` - Package manager tools (npm, pip, cargo, etc.)
+  - `internal/external/cicd.go` - GitHub Actions integration
+  - 27 tests for external tools
+
+- **Sprint 12: IDE & Editor** ✅
+  - `internal/lsp/` - Full LSP server implementation
+    - `server.go` - JSON-RPC protocol handling
+    - `types.go` - LSP protocol types
+    - `handler.go` - Vibe handler with document management
+  - `editors/vscode/` - VS Code extension
+    - TypeScript extension with LSP client
+    - Chat webview panel
+    - All Vibe commands integrated
+  - `editors/neovim/` - Neovim plugin
+    - Lua plugin with LSP integration
+    - Floating window output
+    - Custom keybindings
+  - `editors/jetbrains/` - JetBrains plugin
+    - Kotlin plugin with LSP support
+    - Settings configurable
+    - Tool window for chat
+  - `internal/config/project.go` - Project-level config
+    - `.vibe/config.yaml` support
+    - Custom prompts per project
+    - Tool-specific settings
+  - 19 tests for LSP package
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 4: Codebase Indexing** (pending)
+- **Security hardening** (ongoing)
+
+#### Notes
+- Phase 6 (Integrations) complete
+- All IDE/editor plugins provide basic functionality
+- LSP server enables integration with any LSP-compatible editor
+- Project config allows per-project customization
 
 ---
 

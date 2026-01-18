@@ -1,0 +1,112 @@
+# Vibe Project Configuration
+# Place this file in .vibe/config.yaml in your project root
+
+# Project metadata (helps AI understand your project)
+project:
+  name: "my-project"
+  description: "A web application built with Go"
+  language: "go"         # go, python, javascript, typescript, rust, etc.
+  framework: "gin"       # Optional: gin, echo, django, react, etc.
+  test_command: "go test ./..."
+  build_command: "go build ./..."
+  lint_command: "golangci-lint run"
+  ignore_files:
+    - "*.exe"
+    - "*.dll"
+    - "node_modules/"
+    - "vendor/"
+    - ".git/"
+    - "*.log"
+
+# LLM configuration (overrides global settings)
+llm:
+  # provider: "ollama"
+  # endpoint: "http://localhost:11434"
+  # model: "codellama:13b"
+  # temperature: 0.7
+
+# Security settings for this project
+security:
+  trusted_paths:
+    - "./src"
+    - "./cmd"
+    - "./internal"
+  # denied_paths:
+  #   - "./secrets"
+
+# Allowed/blocked commands for this project
+commands:
+  allowed:
+    - "make build"
+    - "make test"
+    - "docker-compose up"
+  blocked:
+    - "rm -rf"
+
+# Custom prompts for AI interactions
+prompts:
+  # Override the default system prompt
+  system_prompt: |
+    You are a helpful coding assistant for this Go project.
+    Follow the project's coding conventions and patterns.
+    Always write idiomatic Go code.
+
+  # Custom prompt for code review
+  code_review: |
+    Review this code for:
+    - Correctness and potential bugs
+    - Performance issues
+    - Security vulnerabilities
+    - Go idioms and best practices
+
+  # Custom prompt for test generation
+  test_generation: |
+    Generate comprehensive tests that:
+    - Use table-driven tests
+    - Cover edge cases
+    - Follow Go testing conventions
+    - Include meaningful test names
+
+  # Custom prompt for documentation
+  documentation: |
+    Generate GoDoc-style documentation that:
+    - Starts with the function/type name
+    - Explains parameters and return values
+    - Includes usage examples
+
+  # Custom named prompts (use with @vibe prompt:name)
+  custom:
+    api_endpoint: |
+      Create a RESTful API endpoint that follows our conventions:
+      - Use gin framework
+      - Return JSON responses
+      - Include proper error handling
+
+    database_migration: |
+      Create a database migration that:
+      - Uses our migration framework
+      - Is reversible (up and down)
+      - Follows naming conventions
+
+# Tool-specific configurations
+tools:
+  git:
+    auto_stage: false
+    sign_commits: false
+    default_branch: "main"
+
+  analysis:
+    include_tests: true
+    max_file_size: 1048576  # 1MB
+    ignore_patterns:
+      - "*_test.go"
+      - "mock_*.go"
+      - "*_mock.go"
+
+  filesystem:
+    max_read_size: 10485760  # 10MB
+    allowed_write:
+      - "."
+    denied_write:
+      - ".git/"
+      - ".vibe/"

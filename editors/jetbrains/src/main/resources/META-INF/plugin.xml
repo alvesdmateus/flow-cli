@@ -1,0 +1,88 @@
+<idea-plugin>
+    <id>com.vibe.plugin</id>
+    <name>Vibe - AI Coding Assistant</name>
+    <vendor email="support@vibe-cli.dev" url="https://github.com/mateus/vibe-cli">vibe-cli</vendor>
+
+    <description><![CDATA[
+        AI-powered coding assistant using self-hosted LLMs.
+        <br/><br/>
+        Features:
+        <ul>
+            <li>Code explanation</li>
+            <li>Test generation</li>
+            <li>Code refactoring suggestions</li>
+            <li>Error fixing</li>
+            <li>Documentation generation</li>
+            <li>AI chat interface</li>
+        </ul>
+        <br/>
+        Supports Ollama and OpenAI-compatible LLM providers.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Tool Window -->
+        <toolWindow id="Vibe Chat"
+                    secondary="true"
+                    icon="/icons/vibe.svg"
+                    anchor="right"
+                    factoryClass="com.vibe.plugin.ui.VibeChatToolWindowFactory"/>
+
+        <!-- Settings -->
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.vibe.plugin.settings.VibeSettingsConfigurable"
+                id="com.vibe.plugin.settings"
+                displayName="Vibe"/>
+        <applicationService
+                serviceImplementation="com.vibe.plugin.settings.VibeSettings"/>
+
+        <!-- LSP Support -->
+        <lsp.serverSupportProvider
+                implementation="com.vibe.plugin.lsp.VibeLspServerSupportProvider"/>
+
+        <!-- Notifications -->
+        <notificationGroup id="Vibe Notifications"
+                          displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <group id="VibeActions" text="Vibe AI" popup="true">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <action id="Vibe.ExplainCode"
+                    class="com.vibe.plugin.actions.ExplainCodeAction"
+                    text="Explain Code"
+                    description="Explain the selected code using AI"/>
+            <action id="Vibe.GenerateTests"
+                    class="com.vibe.plugin.actions.GenerateTestsAction"
+                    text="Generate Tests"
+                    description="Generate tests for the selected code"/>
+            <action id="Vibe.Refactor"
+                    class="com.vibe.plugin.actions.RefactorAction"
+                    text="Refactor"
+                    description="Get refactoring suggestions"/>
+            <action id="Vibe.FixError"
+                    class="com.vibe.plugin.actions.FixErrorAction"
+                    text="Fix Error"
+                    description="Fix the error at cursor"/>
+            <action id="Vibe.GenerateDocs"
+                    class="com.vibe.plugin.actions.GenerateDocsAction"
+                    text="Generate Documentation"
+                    description="Generate documentation for the selected code"/>
+            <separator/>
+            <action id="Vibe.OpenChat"
+                    class="com.vibe.plugin.actions.OpenChatAction"
+                    text="Open Chat"
+                    description="Open Vibe chat window"/>
+        </group>
+
+        <action id="Vibe.RunPrompt"
+                class="com.vibe.plugin.actions.RunPromptAction"
+                text="Run Vibe Prompt"
+                description="Run a custom prompt">
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift V"/>
+        </action>
+    </actions>
+</idea-plugin>

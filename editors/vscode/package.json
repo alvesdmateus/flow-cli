@@ -1,0 +1,199 @@
+{
+  "name": "vibe-vscode",
+  "displayName": "Vibe - AI Coding Assistant",
+  "description": "AI-powered coding assistant using self-hosted LLMs",
+  "version": "0.1.0",
+  "publisher": "vibe-cli",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateus/vibe-cli"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "assistant",
+    "llm",
+    "ollama",
+    "coding"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vibe.startServer",
+        "title": "Vibe: Start Language Server"
+      },
+      {
+        "command": "vibe.stopServer",
+        "title": "Vibe: Stop Language Server"
+      },
+      {
+        "command": "vibe.explainCode",
+        "title": "Vibe: Explain Selected Code"
+      },
+      {
+        "command": "vibe.generateTests",
+        "title": "Vibe: Generate Tests"
+      },
+      {
+        "command": "vibe.refactor",
+        "title": "Vibe: Refactor Code"
+      },
+      {
+        "command": "vibe.fixError",
+        "title": "Vibe: Fix Error"
+      },
+      {
+        "command": "vibe.generateDocs",
+        "title": "Vibe: Generate Documentation"
+      },
+      {
+        "command": "vibe.chat",
+        "title": "Vibe: Open Chat"
+      },
+      {
+        "command": "vibe.runPrompt",
+        "title": "Vibe: Run Custom Prompt"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "vibe.submenu",
+          "group": "vibe"
+        }
+      ],
+      "vibe.submenu": [
+        {
+          "command": "vibe.explainCode",
+          "group": "1_actions"
+        },
+        {
+          "command": "vibe.generateTests",
+          "group": "1_actions"
+        },
+        {
+          "command": "vibe.refactor",
+          "group": "1_actions"
+        },
+        {
+          "command": "vibe.fixError",
+          "group": "1_actions"
+        },
+        {
+          "command": "vibe.generateDocs",
+          "group": "1_actions"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "vibe.submenu",
+        "label": "Vibe AI"
+      }
+    ],
+    "configuration": {
+      "title": "Vibe",
+      "properties": {
+        "vibe.serverPath": {
+          "type": "string",
+          "default": "vibe",
+          "description": "Path to the vibe CLI executable"
+        },
+        "vibe.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start the language server when VS Code opens"
+        },
+        "vibe.model": {
+          "type": "string",
+          "default": "",
+          "description": "LLM model to use (leave empty for default)"
+        },
+        "vibe.provider": {
+          "type": "string",
+          "enum": ["ollama", "openai-compatible", "localai", "lmstudio", "vllm"],
+          "default": "ollama",
+          "description": "LLM provider to use"
+        },
+        "vibe.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server URL"
+        },
+        "vibe.showInlineHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline AI hints and suggestions"
+        },
+        "vibe.logLevel": {
+          "type": "string",
+          "enum": ["error", "warn", "info", "debug"],
+          "default": "info",
+          "description": "Logging level for the extension"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "vibe.explainCode",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vibe.chat",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v"
+      },
+      {
+        "command": "vibe.runPrompt",
+        "key": "ctrl+shift+p",
+        "mac": "cmd+shift+p",
+        "when": "editorFocus"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "vibeChat",
+          "name": "Vibe Chat",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  }
+}
