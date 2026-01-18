@@ -9,7 +9,7 @@ import (
 )
 
 // ProjectConfig holds project-specific configuration
-// loaded from .vibe/config.yaml in the project root
+// loaded from .flow/config.yaml in the project root
 type ProjectConfig struct {
 	// Inherits from global config but can override
 	LLM      *LLMConfig      `yaml:"llm,omitempty"`
@@ -79,7 +79,7 @@ type FileSystemConfig struct {
 
 // ProjectConfigPath returns the path to the project config file
 func ProjectConfigPath(projectDir string) string {
-	return filepath.Join(projectDir, ".vibe", "config.yaml")
+	return filepath.Join(projectDir, ".flow", "config.yaml")
 }
 
 // ProjectConfigExists checks if a project config exists
@@ -108,10 +108,10 @@ func LoadProjectConfig(projectDir string) (*ProjectConfig, error) {
 	return &cfg, nil
 }
 
-// SaveProjectConfig saves project configuration to .vibe/config.yaml
+// SaveProjectConfig saves project configuration to .flow/config.yaml
 func SaveProjectConfig(projectDir string, cfg *ProjectConfig) error {
-	vibeDir := filepath.Join(projectDir, ".vibe")
-	if err := os.MkdirAll(vibeDir, 0755); err != nil {
+	flowDir := filepath.Join(projectDir, ".flow")
+	if err := os.MkdirAll(flowDir, 0755); err != nil {
 		return err
 	}
 
@@ -233,7 +233,7 @@ func InitProjectConfig(projectDir string) error {
 			FileSystem: FileSystemConfig{
 				MaxReadSize: 10 * 1024 * 1024, // 10MB
 				AllowedWrite: []string{"."},
-				DeniedWrite:  []string{".git/", ".vibe/"},
+				DeniedWrite:  []string{".git/", ".flow/"},
 			},
 		},
 	}

@@ -1,4 +1,4 @@
-package com.vibe.plugin.ui
+package com.flow.plugin.ui
 
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -10,7 +10,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.content.ContentFactory
-import com.vibe.plugin.VibeService
+import com.flow.plugin.FlowService
 import java.awt.BorderLayout
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
@@ -19,7 +19,7 @@ import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 
-class VibeChatToolWindowFactory : ToolWindowFactory, DumbAware {
+class FlowChatToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val chatPanel = VibeChatPanel(project)
         val content = ContentFactory.getInstance().createContent(chatPanel, "", false)
@@ -87,7 +87,7 @@ class VibeChatPanel(private val project: Project) : SimpleToolWindowPanel(true, 
         inputField.text = ""
         appendMessage("You", message)
 
-        val service = VibeService.getInstance(project)
+        val service = FlowService.getInstance(project)
         if (!service.isRunning) {
             appendMessage("System", "Server not running. Starting...")
             service.start()
@@ -97,7 +97,7 @@ class VibeChatPanel(private val project: Project) : SimpleToolWindowPanel(true, 
             SwingUtilities.invokeLater {
                 val response = (result as? Map<*, *>)?.get("message")?.toString()
                     ?: "No response received"
-                appendMessage("Vibe", response)
+                appendMessage("Flow", response)
             }
         }.exceptionally { error ->
             SwingUtilities.invokeLater {

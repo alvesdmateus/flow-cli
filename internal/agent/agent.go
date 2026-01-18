@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	vibeContext "github.com/mateus/vibe-cli/internal/context"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/tools"
+	flowContext "github.com/mateus/flow-cli/internal/context"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/tools"
 )
 
 // ResponseHandler handles streaming responses from the agent
@@ -61,7 +61,7 @@ func (h *DefaultHandler) OnError(err error)     { fmt.Fprintf(h.Writer, "Error: 
 type Agent struct {
 	llmClient   llm.Client
 	toolReg     *tools.Registry
-	ctxManager  *vibeContext.Manager
+	ctxManager  *flowContext.Manager
 	model       string
 	temperature float64
 	maxTurns    int // Maximum tool execution turns per request
@@ -89,7 +89,7 @@ func New(cfg Config) *Agent {
 		cfg.SystemPrompt = DefaultSystemPrompt()
 	}
 
-	ctxManager := vibeContext.NewManager(cfg.SystemPrompt, 100)
+	ctxManager := flowContext.NewManager(cfg.SystemPrompt, 100)
 	ctxManager.SetModel(cfg.Model)
 
 	return &Agent{
@@ -155,7 +155,7 @@ func (a *Agent) ProcessMessage(ctx context.Context, userMessage string, handler 
 		}
 
 		// Execute tool calls
-		var executedCalls []vibeContext.ToolCall
+		var executedCalls []flowContext.ToolCall
 		var toolResults strings.Builder
 		toolResults.WriteString("\n\nTool Results:\n")
 
@@ -173,7 +173,7 @@ func (a *Agent) ProcessMessage(ctx context.Context, userMessage string, handler 
 			result, err := tool.Execute(ctx, tc.Arguments)
 			duration := time.Since(startTime)
 
-			execCall := vibeContext.ToolCall{
+			execCall := flowContext.ToolCall{
 				ID:        tc.ID,
 				Name:      tc.Name,
 				Arguments: tc.Arguments,
@@ -288,7 +288,7 @@ func (a *Agent) parseToolCalls(response string) ([]ToolCallRequest, bool) {
 }
 
 // GetContextManager returns the context manager
-func (a *Agent) GetContextManager() *vibeContext.Manager {
+func (a *Agent) GetContextManager() *flowContext.Manager {
 	return a.ctxManager
 }
 
@@ -313,7 +313,7 @@ func truncateResult(s string, maxLen int) string {
 
 // DefaultSystemPrompt returns the default system prompt
 func DefaultSystemPrompt() string {
-	return `You are vibe-cli, an AI coding assistant running in a terminal.
+	return `You are flow-cli, an AI coding assistant running in a terminal.
 
 Your capabilities:
 - Read and write files in the project directory

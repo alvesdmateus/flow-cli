@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mateus/vibe-cli/internal/analysis"
+	"github.com/mateus/flow-cli/internal/analysis"
 )
 
 // Indexer manages codebase indexing with embeddings
@@ -46,7 +46,7 @@ func NewIndexer(cfg IndexerConfig) (*Indexer, error) {
 	}
 
 	if cfg.DBPath == "" {
-		cfg.DBPath = filepath.Join(cfg.WorkDir, ".vibe", "index.db")
+		cfg.DBPath = filepath.Join(cfg.WorkDir, ".flow", "index.db")
 	}
 
 	embedClient, err := NewEmbeddingClient(cfg.Endpoint, cfg.EmbeddingModel)
@@ -67,18 +67,18 @@ func NewIndexer(cfg IndexerConfig) (*Indexer, error) {
 		fileHashes:  make(map[string]string),
 	}
 
-	// Load .vibeignore rules
+	// Load .flowignore rules
 	indexer.loadIgnoreRules()
 
 	return indexer, nil
 }
 
-// loadIgnoreRules loads ignore patterns from .vibeignore
+// loadIgnoreRules loads ignore patterns from .flowignore
 func (idx *Indexer) loadIgnoreRules() {
 	// Default ignore patterns
 	idx.ignoreRules = []string{
 		".git",
-		".vibe",
+		".flow",
 		"node_modules",
 		"vendor",
 		"__pycache__",
@@ -96,11 +96,11 @@ func (idx *Indexer) loadIgnoreRules() {
 		"go.sum",
 	}
 
-	// Load custom rules from .vibeignore
-	ignorePath := filepath.Join(idx.workDir, ".vibeignore")
+	// Load custom rules from .flowignore
+	ignorePath := filepath.Join(idx.workDir, ".flowignore")
 	file, err := os.Open(ignorePath)
 	if err != nil {
-		return // No .vibeignore file
+		return // No .flowignore file
 	}
 	defer file.Close()
 

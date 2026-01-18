@@ -1,13 +1,13 @@
 {
-  "name": "vibe-vscode",
-  "displayName": "Vibe - AI Coding Assistant",
+  "name": "flow-vscode",
+  "displayName": "Flow - AI Coding Assistant",
   "description": "AI-powered coding assistant using self-hosted LLMs",
   "version": "0.1.0",
-  "publisher": "vibe-cli",
+  "publisher": "flow-cli",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mateus/vibe-cli"
+    "url": "https://github.com/mateus/flow-cli"
   },
   "engines": {
     "vscode": "^1.74.0"
@@ -31,113 +31,113 @@
   "contributes": {
     "commands": [
       {
-        "command": "vibe.startServer",
-        "title": "Vibe: Start Language Server"
+        "command": "flow.startServer",
+        "title": "Flow: Start Language Server"
       },
       {
-        "command": "vibe.stopServer",
-        "title": "Vibe: Stop Language Server"
+        "command": "flow.stopServer",
+        "title": "Flow: Stop Language Server"
       },
       {
-        "command": "vibe.explainCode",
-        "title": "Vibe: Explain Selected Code"
+        "command": "flow.explainCode",
+        "title": "Flow: Explain Selected Code"
       },
       {
-        "command": "vibe.generateTests",
-        "title": "Vibe: Generate Tests"
+        "command": "flow.generateTests",
+        "title": "Flow: Generate Tests"
       },
       {
-        "command": "vibe.refactor",
-        "title": "Vibe: Refactor Code"
+        "command": "flow.refactor",
+        "title": "Flow: Refactor Code"
       },
       {
-        "command": "vibe.fixError",
-        "title": "Vibe: Fix Error"
+        "command": "flow.fixError",
+        "title": "Flow: Fix Error"
       },
       {
-        "command": "vibe.generateDocs",
-        "title": "Vibe: Generate Documentation"
+        "command": "flow.generateDocs",
+        "title": "Flow: Generate Documentation"
       },
       {
-        "command": "vibe.chat",
-        "title": "Vibe: Open Chat"
+        "command": "flow.chat",
+        "title": "Flow: Open Chat"
       },
       {
-        "command": "vibe.runPrompt",
-        "title": "Vibe: Run Custom Prompt"
+        "command": "flow.runPrompt",
+        "title": "Flow: Run Custom Prompt"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "submenu": "vibe.submenu",
-          "group": "vibe"
+          "submenu": "flow.submenu",
+          "group": "flow"
         }
       ],
-      "vibe.submenu": [
+      "flow.submenu": [
         {
-          "command": "vibe.explainCode",
+          "command": "flow.explainCode",
           "group": "1_actions"
         },
         {
-          "command": "vibe.generateTests",
+          "command": "flow.generateTests",
           "group": "1_actions"
         },
         {
-          "command": "vibe.refactor",
+          "command": "flow.refactor",
           "group": "1_actions"
         },
         {
-          "command": "vibe.fixError",
+          "command": "flow.fixError",
           "group": "1_actions"
         },
         {
-          "command": "vibe.generateDocs",
+          "command": "flow.generateDocs",
           "group": "1_actions"
         }
       ]
     },
     "submenus": [
       {
-        "id": "vibe.submenu",
-        "label": "Vibe AI"
+        "id": "flow.submenu",
+        "label": "Flow AI"
       }
     ],
     "configuration": {
-      "title": "Vibe",
+      "title": "Flow",
       "properties": {
-        "vibe.serverPath": {
+        "flow.serverPath": {
           "type": "string",
-          "default": "vibe",
-          "description": "Path to the vibe CLI executable"
+          "default": "flow",
+          "description": "Path to the flow CLI executable"
         },
-        "vibe.autoStart": {
+        "flow.autoStart": {
           "type": "boolean",
           "default": true,
           "description": "Automatically start the language server when VS Code opens"
         },
-        "vibe.model": {
+        "flow.model": {
           "type": "string",
           "default": "",
           "description": "LLM model to use (leave empty for default)"
         },
-        "vibe.provider": {
+        "flow.provider": {
           "type": "string",
           "enum": ["ollama", "openai-compatible", "localai", "lmstudio", "vllm"],
           "default": "ollama",
           "description": "LLM provider to use"
         },
-        "vibe.ollamaUrl": {
+        "flow.ollamaUrl": {
           "type": "string",
           "default": "http://localhost:11434",
           "description": "Ollama server URL"
         },
-        "vibe.showInlineHints": {
+        "flow.showInlineHints": {
           "type": "boolean",
           "default": true,
           "description": "Show inline AI hints and suggestions"
         },
-        "vibe.logLevel": {
+        "flow.logLevel": {
           "type": "string",
           "enum": ["error", "warn", "info", "debug"],
           "default": "info",
@@ -147,18 +147,18 @@
     },
     "keybindings": [
       {
-        "command": "vibe.explainCode",
+        "command": "flow.explainCode",
         "key": "ctrl+shift+e",
         "mac": "cmd+shift+e",
         "when": "editorHasSelection"
       },
       {
-        "command": "vibe.chat",
+        "command": "flow.chat",
         "key": "ctrl+shift+v",
         "mac": "cmd+shift+v"
       },
       {
-        "command": "vibe.runPrompt",
+        "command": "flow.runPrompt",
         "key": "ctrl+shift+p",
         "mac": "cmd+shift+p",
         "when": "editorFocus"
@@ -167,8 +167,8 @@
     "views": {
       "explorer": [
         {
-          "id": "vibeChat",
-          "name": "Vibe Chat",
+          "id": "flowChat",
+          "name": "Flow Chat",
           "type": "webview"
         }
       ]

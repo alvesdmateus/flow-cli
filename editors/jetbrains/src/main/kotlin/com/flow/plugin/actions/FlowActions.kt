@@ -1,4 +1,4 @@
-package com.vibe.plugin.actions
+package com.flow.plugin.actions
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -7,7 +7,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
-import com.vibe.plugin.VibeService
+import com.flow.plugin.FlowService
 
 abstract class BaseVibeAction : AnAction() {
     protected fun getSelection(editor: Editor): String? {
@@ -24,12 +24,12 @@ abstract class BaseVibeAction : AnAction() {
     }
 
     protected fun ensureServerRunning(project: Project): Boolean {
-        val service = VibeService.getInstance(project)
+        val service = FlowService.getInstance(project)
         if (!service.isRunning) {
             val result = Messages.showYesNoDialog(
                 project,
                 "Vibe server is not running. Start it now?",
-                "Vibe",
+                "Flow",
                 Messages.getQuestionIcon()
             )
             if (result == Messages.YES) {
@@ -49,14 +49,14 @@ class ExplainCodeAction : BaseVibeAction() {
 
         val selection = getSelection(editor)
         if (selection.isNullOrEmpty()) {
-            Messages.showWarningDialog(project, "Please select code to explain", "Vibe")
+            Messages.showWarningDialog(project, "Please select code to explain", "Flow")
             return
         }
 
         if (!ensureServerRunning(project)) return
 
-        val service = VibeService.getInstance(project)
-        service.executeCommand("vibe.explainCode", listOf(selection)).thenAccept { result ->
+        val service = FlowService.getInstance(project)
+        service.executeCommand("flow.explainCode", listOf(selection)).thenAccept { result ->
             val message = (result as? Map<*, *>)?.get("message")?.toString() ?: "No explanation available"
             showResult(project, "Code Explanation", message)
         }
@@ -77,8 +77,8 @@ class GenerateTestsAction : BaseVibeAction() {
 
         if (!ensureServerRunning(project)) return
 
-        val service = VibeService.getInstance(project)
-        service.executeCommand("vibe.generateTests", listOf(selection)).thenAccept { result ->
+        val service = FlowService.getInstance(project)
+        service.executeCommand("flow.generateTests", listOf(selection)).thenAccept { result ->
             val message = (result as? Map<*, *>)?.get("message")?.toString() ?: "No tests generated"
             showResult(project, "Generated Tests", message)
         }
@@ -92,13 +92,13 @@ class RefactorAction : BaseVibeAction() {
 
         val selection = getSelection(editor)
         if (selection.isNullOrEmpty()) {
-            Messages.showWarningDialog(project, "Please select code to refactor", "Vibe")
+            Messages.showWarningDialog(project, "Please select code to refactor", "Flow")
             return
         }
 
         if (!ensureServerRunning(project)) return
 
-        val service = VibeService.getInstance(project)
+        val service = FlowService.getInstance(project)
         service.executeCommand("vibe.refactor", listOf(selection)).thenAccept { result ->
             val message = (result as? Map<*, *>)?.get("message")?.toString() ?: "No suggestions available"
             showResult(project, "Refactoring Suggestions", message)
@@ -123,8 +123,8 @@ class FixErrorAction : BaseVibeAction() {
 
         if (!ensureServerRunning(project)) return
 
-        val service = VibeService.getInstance(project)
-        service.executeCommand("vibe.fixError", listOf(lineNumber)).thenAccept { result ->
+        val service = FlowService.getInstance(project)
+        service.executeCommand("flow.fixError", listOf(lineNumber)).thenAccept { result ->
             val message = (result as? Map<*, *>)?.get("message")?.toString() ?: "No fix available"
             showResult(project, "Fix Suggestion", message)
         }
@@ -140,8 +140,8 @@ class GenerateDocsAction : BaseVibeAction() {
 
         if (!ensureServerRunning(project)) return
 
-        val service = VibeService.getInstance(project)
-        service.executeCommand("vibe.generateDocs", listOf(selection)).thenAccept { result ->
+        val service = FlowService.getInstance(project)
+        service.executeCommand("flow.generateDocs", listOf(selection)).thenAccept { result ->
             val message = (result as? Map<*, *>)?.get("message")?.toString() ?: "No documentation generated"
             showResult(project, "Generated Documentation", message)
         }
@@ -171,7 +171,7 @@ class RunPromptAction : BaseVibeAction() {
 
         if (!ensureServerRunning(project)) return
 
-        val service = VibeService.getInstance(project)
+        val service = FlowService.getInstance(project)
         service.executeCommand("vibe.runPrompt", listOf(prompt)).thenAccept { result ->
             val message = (result as? Map<*, *>)?.get("message")?.toString() ?: "No response"
             showResult(project, "Vibe Response", message)

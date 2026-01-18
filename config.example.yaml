@@ -1,5 +1,5 @@
-# vibe-cli Configuration Example
-# Copy this file to ~/.vibe/config.yaml or ./.vibe.yaml
+# flow-cli Configuration Example
+# Copy this file to ~/.flow/config.yaml or ./.flow.yaml
 
 # LLM Provider Configuration
 llm:
@@ -27,7 +27,7 @@ llm:
   model: ""
 
   # API key (required for OpenAI and some providers)
-  # Can also be set via VIBE_LLM_API_KEY environment variable
+  # Can also be set via FLOW_LLM_API_KEY environment variable
   api_key: ""
 
   # Temperature for generation (0.0 - 1.0)

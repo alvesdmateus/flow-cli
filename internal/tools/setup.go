@@ -1,10 +1,10 @@
 package tools
 
 import (
-	"github.com/mateus/vibe-cli/internal/indexing"
-	"github.com/mateus/vibe-cli/internal/sandbox"
-	"github.com/mateus/vibe-cli/internal/search"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/indexing"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/search"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 // SetupOptions contains options for setting up the tool registry

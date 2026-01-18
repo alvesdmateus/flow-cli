@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mateus/vibe-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
 // Message extends llm.Message with metadata
@@ -456,7 +456,7 @@ func GetSessionsDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".vibe", "sessions"), nil
+	return filepath.Join(home, ".flow", "sessions"), nil
 }
 
 // ListSessions returns all saved sessions

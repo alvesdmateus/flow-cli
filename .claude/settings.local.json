@@ -15,7 +15,24 @@
       "Bash(git commit:*)",
       "Bash(gh pr create --base develop --head feature/sprint-1-core-tools --title \"Sprint 1: Core Tools Implementation\" --body \"$\\(cat <<''EOF''\n## Summary\n\nImplements Sprint 1 from the roadmap - Core Completeness features:\n\n### New Tools\n- **`fetch_url`** - Fetch and extract readable content from URLs with HTML to markdown conversion\n- **`grep_search`** - Regex search across codebase with include/exclude patterns and context lines\n- **`edit_file`** - Surgical text replacement with occurrence selection\n- **`insert_lines`** - Insert content at specific line numbers\n- **`delete_lines`** - Remove line ranges from files\n\n### Token Counting Module\n- Token estimation using ~4 chars/token heuristic\n- Usage tracking for prompt, completion, and total tokens\n- Cost estimation with pricing presets for common models\n- Session statistics with formatted summaries\n\n### Dependencies\n- Added `golang.org/x/net/html` for HTML parsing\n\n## Test plan\n- [ ] Build project with `make build`\n- [ ] Verify `fetch_url` works with HTML pages\n- [ ] Verify `grep_search` finds patterns in codebase\n- [ ] Verify `edit_file` replaces text correctly\n- [ ] Verify token counting estimates are reasonable\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\nEOF\n\\)\")",
       "WebFetch(domain:github.com)",
-      "Bash(gofmt:*)"
+      "Bash(gofmt:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(go install:*)",
+      "Bash(~/go/bin/golangci-lint run ./...)",
+      "Bash(~/go/bin/goimports:*)",
+      "Bash(make build:*)",
+      "Bash(go run:*)",
+      "Bash(./vibe version:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(where:*)",
+      "Bash(git pull:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)",
+      "Bash(./flow.exe:*)"
     ]
   }
 }

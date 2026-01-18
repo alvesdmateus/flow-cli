@@ -9,29 +9,29 @@ import {
 
 let client: LanguageClient | undefined;
 let outputChannel: vscode.OutputChannel;
-let chatViewProvider: VibeChatViewProvider;
+let chatViewProvider: FlowChatViewProvider;
 
 export function activate(context: vscode.ExtensionContext) {
-    outputChannel = vscode.window.createOutputChannel('Vibe');
-    outputChannel.appendLine('Vibe extension activating...');
+    outputChannel = vscode.window.createOutputChannel('Flow');
+    outputChannel.appendLine('Flow extension activating...');
 
     // Initialize chat view provider
-    chatViewProvider = new VibeChatViewProvider(context.extensionUri);
+    chatViewProvider = new FlowChatViewProvider(context.extensionUri);
     context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider('vibeChat', chatViewProvider)
+        vscode.window.registerWebviewViewProvider('flowChat', chatViewProvider)
     );
 
     // Register commands
     context.subscriptions.push(
-        vscode.commands.registerCommand('vibe.startServer', startServer),
-        vscode.commands.registerCommand('vibe.stopServer', stopServer),
-        vscode.commands.registerCommand('vibe.explainCode', explainCode),
-        vscode.commands.registerCommand('vibe.generateTests', generateTests),
-        vscode.commands.registerCommand('vibe.refactor', refactorCode),
-        vscode.commands.registerCommand('vibe.fixError', fixError),
-        vscode.commands.registerCommand('vibe.generateDocs', generateDocs),
-        vscode.commands.registerCommand('vibe.chat', openChat),
-        vscode.commands.registerCommand('vibe.runPrompt', runPrompt)
+        vscode.commands.registerCommand('flow.startServer', startServer),
+        vscode.commands.registerCommand('flow.stopServer', stopServer),
+        vscode.commands.registerCommand('flow.explainCode', explainCode),
+        vscode.commands.registerCommand('flow.generateTests', generateTests),
+        vscode.commands.registerCommand('flow.refactor', refactorCode),
+        vscode.commands.registerCommand('flow.fixError', fixError),
+        vscode.commands.registerCommand('flow.generateDocs', generateDocs),
+        vscode.commands.registerCommand('flow.chat', openChat),
+        vscode.commands.registerCommand('flow.runPrompt', runPrompt)
     );
 
     // Auto-start if configured
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
         startServer();
     }
 
-    outputChannel.appendLine('Vibe extension activated');
+    outputChannel.appendLine('Flow extension activated');
 }
 
 export function deactivate(): Thenable<void> | undefined {
@@ -52,7 +52,7 @@ export function deactivate(): Thenable<void> | undefined {
 
 async function startServer(): Promise<void> {
     if (client) {
-        vscode.window.showInformationMessage('Vibe server is already running');
+        vscode.window.showInformationMessage('Flow server is already running');
         return;
     }
 
@@ -102,32 +102,32 @@ async function startServer(): Promise<void> {
 
     client = new LanguageClient(
         'vibe',
-        'Vibe Language Server',
+        'Flow Language Server',
         serverOptions,
         clientOptions
     );
 
     try {
         await client.start();
-        outputChannel.appendLine('Vibe language server started');
-        vscode.window.showInformationMessage('Vibe language server started');
+        outputChannel.appendLine('Flow language server started');
+        vscode.window.showInformationMessage('Flow language server started');
     } catch (error) {
         outputChannel.appendLine(`Failed to start server: ${error}`);
-        vscode.window.showErrorMessage(`Failed to start Vibe server: ${error}`);
+        vscode.window.showErrorMessage(`Failed to start Flow server: ${error}`);
         client = undefined;
     }
 }
 
 async function stopServer(): Promise<void> {
     if (!client) {
-        vscode.window.showInformationMessage('Vibe server is not running');
+        vscode.window.showInformationMessage('Flow server is not running');
         return;
     }
 
     await client.stop();
     client = undefined;
-    outputChannel.appendLine('Vibe language server stopped');
-    vscode.window.showInformationMessage('Vibe language server stopped');
+    outputChannel.appendLine('Flow language server stopped');
+    vscode.window.showInformationMessage('Flow language server stopped');
 }
 
 async function explainCode(): Promise<void> {
@@ -144,7 +144,7 @@ async function explainCode(): Promise<void> {
     }
 
     const selectedText = editor.document.getText(selection);
-    await executeVibeCommand('vibe.explainCode', editor.document.uri.toString(), {
+    await executeFlowCommand('flow.explainCode', editor.document.uri.toString(), {
         start: { line: selection.start.line, character: selection.start.character },
         end: { line: selection.end.line, character: selection.end.character }
     }, selectedText);
@@ -162,7 +162,7 @@ async function generateTests(): Promise<void> {
         ? editor.document.getText()
         : editor.document.getText(selection);
 
-    await executeVibeCommand('vibe.generateTests', editor.document.uri.toString(), {
+    await executeFlowCommand('flow.generateTests', editor.document.uri.toString(), {
         start: { line: selection.start.line, character: selection.start.character },
         end: { line: selection.end.line, character: selection.end.character }
     }, selectedText);
@@ -182,7 +182,7 @@ async function refactorCode(): Promise<void> {
     }
 
     const selectedText = editor.document.getText(selection);
-    await executeVibeCommand('vibe.refactor', editor.document.uri.toString(), {
+    await executeFlowCommand('flow.refactor', editor.document.uri.toString(), {
         start: { line: selection.start.line, character: selection.start.character },
         end: { line: selection.end.line, character: selection.end.character }
     }, selectedText);
@@ -209,7 +209,7 @@ async function fixError(): Promise<void> {
         targetDiagnostic = diagnostics[0];
     }
 
-    await executeVibeCommand('vibe.fixError', editor.document.uri.toString(), {
+    await executeFlowCommand('flow.fixError', editor.document.uri.toString(), {
         start: { line: targetDiagnostic.range.start.line, character: targetDiagnostic.range.start.character },
         end: { line: targetDiagnostic.range.end.line, character: targetDiagnostic.range.end.character }
     }, targetDiagnostic.message);
@@ -227,19 +227,19 @@ async function generateDocs(): Promise<void> {
         ? editor.document.getText()
         : editor.document.getText(selection);
 
-    await executeVibeCommand('vibe.generateDocs', editor.document.uri.toString(), {
+    await executeFlowCommand('flow.generateDocs', editor.document.uri.toString(), {
         start: { line: selection.start.line, character: selection.start.character },
         end: { line: selection.end.line, character: selection.end.character }
     }, selectedText);
 }
 
 async function openChat(): Promise<void> {
-    vscode.commands.executeCommand('vibeChat.focus');
+    vscode.commands.executeCommand('flowChat.focus');
 }
 
 async function runPrompt(): Promise<void> {
     const prompt = await vscode.window.showInputBox({
-        prompt: 'Enter your prompt for Vibe',
+        prompt: 'Enter your prompt for Flow',
         placeHolder: 'e.g., Optimize this function for performance'
     });
 
@@ -254,13 +254,13 @@ async function runPrompt(): Promise<void> {
         language: editor.document.languageId
     } : null;
 
-    await executeVibeCommand('vibe.runPrompt', prompt, context);
+    await executeFlowCommand('flow.runPrompt', prompt, context);
 }
 
-async function executeVibeCommand(command: string, ...args: any[]): Promise<void> {
+async function executeFlowCommand(command: string, ...args: any[]): Promise<void> {
     if (!client) {
         const start = await vscode.window.showWarningMessage(
-            'Vibe server is not running. Start it now?',
+            'Flow server is not running. Start it now?',
             'Yes', 'No'
         );
         if (start === 'Yes') {
@@ -279,15 +279,15 @@ async function executeVibeCommand(command: string, ...args: any[]): Promise<void
         // Display result in chat or output
         if (result && typeof result === 'object' && 'message' in result) {
             chatViewProvider.addMessage('assistant', (result as any).message);
-            vscode.commands.executeCommand('vibeChat.focus');
+            vscode.commands.executeCommand('flowChat.focus');
         }
     } catch (error) {
         outputChannel.appendLine(`Command execution failed: ${error}`);
-        vscode.window.showErrorMessage(`Vibe command failed: ${error}`);
+        vscode.window.showErrorMessage(`Flow command failed: ${error}`);
     }
 }
 
-class VibeChatViewProvider implements vscode.WebviewViewProvider {
+class FlowChatViewProvider implements vscode.WebviewViewProvider {
     private _view?: vscode.WebviewView;
     private _messages: Array<{ role: string; content: string }> = [];
 
@@ -311,7 +311,7 @@ class VibeChatViewProvider implements vscode.WebviewViewProvider {
             switch (data.type) {
                 case 'sendMessage':
                     this.addMessage('user', data.message);
-                    await this._sendToVibe(data.message);
+                    await this._sendToFlow(data.message);
                     break;
                 case 'clear':
                     this._messages = [];
@@ -326,15 +326,15 @@ class VibeChatViewProvider implements vscode.WebviewViewProvider {
         this._updateWebview();
     }
 
-    private async _sendToVibe(message: string): Promise<void> {
+    private async _sendToFlow(message: string): Promise<void> {
         if (!client) {
-            this.addMessage('system', 'Vibe server is not running. Please start it first.');
+            this.addMessage('system', 'Flow server is not running. Please start it first.');
             return;
         }
 
         try {
             const result = await client.sendRequest('workspace/executeCommand', {
-                command: 'vibe.runPrompt',
+                command: 'flow.runPrompt',
                 arguments: [message]
             });
 
@@ -361,7 +361,7 @@ class VibeChatViewProvider implements vscode.WebviewViewProvider {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Chat</title>
+    <title>Flow Chat</title>
     <style>
         body {
             font-family: var(--vscode-font-family);
@@ -442,7 +442,7 @@ class VibeChatViewProvider implements vscode.WebviewViewProvider {
 <body>
     <div id="messages"></div>
     <div id="input-area">
-        <input type="text" id="input" placeholder="Ask Vibe anything..." />
+        <input type="text" id="input" placeholder="Ask Flow anything..." />
         <button id="send">Send</button>
         <button id="clear">Clear</button>
     </div>

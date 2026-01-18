@@ -1,4 +1,4 @@
-package com.vibe.plugin.settings
+package com.flow.plugin.settings
 
 import com.intellij.openapi.options.Configurable
 import com.intellij.ui.components.JBCheckBox
@@ -9,7 +9,7 @@ import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-class VibeSettingsConfigurable : Configurable {
+class FlowSettingsConfigurable : Configurable {
     private var settingsPanel: JPanel? = null
     private var serverPathField: JBTextField? = null
     private var modelField: JBTextField? = null
@@ -18,7 +18,7 @@ class VibeSettingsConfigurable : Configurable {
     private var autoStartCheckbox: JBCheckBox? = null
     private var logLevelCombo: JComboBox<String>? = null
 
-    override fun getDisplayName(): String = "Vibe"
+    override fun getDisplayName(): String = "Flow"
 
     override fun createComponent(): JComponent {
         serverPathField = JBTextField()
@@ -42,7 +42,7 @@ class VibeSettingsConfigurable : Configurable {
     }
 
     override fun isModified(): Boolean {
-        val settings = VibeSettings.getInstance()
+        val settings = FlowSettings.getInstance()
         return serverPathField?.text != settings.serverPath ||
                 modelField?.text != settings.model ||
                 providerCombo?.selectedItem != settings.provider ||
@@ -52,8 +52,8 @@ class VibeSettingsConfigurable : Configurable {
     }
 
     override fun apply() {
-        val settings = VibeSettings.getInstance()
-        settings.serverPath = serverPathField?.text ?: "vibe"
+        val settings = FlowSettings.getInstance()
+        settings.serverPath = serverPathField?.text ?: "flow"
         settings.model = modelField?.text ?: ""
         settings.provider = providerCombo?.selectedItem as? String ?: "ollama"
         settings.ollamaUrl = ollamaUrlField?.text ?: "http://localhost:11434"
@@ -62,7 +62,7 @@ class VibeSettingsConfigurable : Configurable {
     }
 
     override fun reset() {
-        val settings = VibeSettings.getInstance()
+        val settings = FlowSettings.getInstance()
         serverPathField?.text = settings.serverPath
         modelField?.text = settings.model
         providerCombo?.selectedItem = settings.provider

@@ -1,4 +1,4 @@
-package com.vibe.plugin.settings
+package com.flow.plugin.settings
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
@@ -6,19 +6,19 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 @State(
-    name = "VibeSettings",
+    name = "FlowSettings",
     storages = [Storage("vibe.xml")]
 )
-class VibeSettings : PersistentStateComponent<VibeSettings.State> {
+class FlowSettings : PersistentStateComponent<FlowSettings.State> {
     private var myState = State()
 
     companion object {
-        fun getInstance(): VibeSettings =
-            ApplicationManager.getApplication().getService(VibeSettings::class.java)
+        fun getInstance(): FlowSettings =
+            ApplicationManager.getApplication().getService(FlowSettings::class.java)
     }
 
     data class State(
-        var serverPath: String = "vibe",
+        var serverPath: String = "flow",
         var model: String = "",
         var provider: String = "ollama",
         var ollamaUrl: String = "http://localhost:11434",

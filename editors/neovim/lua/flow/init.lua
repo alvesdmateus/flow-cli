@@ -1,11 +1,11 @@
--- vibe.nvim - AI coding assistant for Neovim
--- Uses vibe-cli's LSP server for AI-powered coding assistance
+-- flow.nvim - AI coding assistant for Neovim
+-- Uses flow-cli's LSP server for AI-powered coding assistance
 
 local M = {}
 
 -- Default configuration
 M.config = {
-    server_path = "vibe",
+    server_path = "flow",
     model = "",
     provider = "ollama",
     auto_start = true,
@@ -46,15 +46,15 @@ function M.setup(opts)
     M.setup_commands()
 
     -- Setup user commands
-    vim.api.nvim_create_user_command("VibeStart", M.start_server, {})
-    vim.api.nvim_create_user_command("VibeStop", M.stop_server, {})
-    vim.api.nvim_create_user_command("VibeExplain", M.explain_code, { range = true })
-    vim.api.nvim_create_user_command("VibeTests", M.generate_tests, { range = true })
-    vim.api.nvim_create_user_command("VibeRefactor", M.refactor_code, { range = true })
-    vim.api.nvim_create_user_command("VibeFix", M.fix_error, {})
-    vim.api.nvim_create_user_command("VibeDocs", M.generate_docs, { range = true })
-    vim.api.nvim_create_user_command("VibeChat", M.open_chat, {})
-    vim.api.nvim_create_user_command("VibePrompt", function(args)
+    vim.api.nvim_create_user_command("FlowStart", M.start_server, {})
+    vim.api.nvim_create_user_command("FlowStop", M.stop_server, {})
+    vim.api.nvim_create_user_command("FlowExplain", M.explain_code, { range = true })
+    vim.api.nvim_create_user_command("FlowTests", M.generate_tests, { range = true })
+    vim.api.nvim_create_user_command("FlowRefactor", M.refactor_code, { range = true })
+    vim.api.nvim_create_user_command("FlowFix", M.fix_error, {})
+    vim.api.nvim_create_user_command("FlowDocs", M.generate_docs, { range = true })
+    vim.api.nvim_create_user_command("FlowChat", M.open_chat, {})
+    vim.api.nvim_create_user_command("FlowPrompt", function(args)
         M.run_prompt(args.args)
     end, { nargs = "?" })
 end
@@ -62,7 +62,7 @@ end
 -- Start the LSP server
 function M.start_server()
     if client_id then
-        vim.notify("Vibe server is already running", vim.log.levels.INFO)
+        vim.notify("Flow server is already running", vim.log.levels.INFO)
         return
     end
 
@@ -73,7 +73,7 @@ function M.start_server()
     end
 
     local config = {
-        name = "vibe",
+        name = "flow",
         cmd = cmd,
         root_dir = vim.fn.getcwd(),
         filetypes = M.config.filetypes,
@@ -83,10 +83,10 @@ function M.start_server()
             M.on_attach(client, bufnr)
         end,
         on_init = function(client)
-            vim.notify("Vibe language server initialized", vim.log.levels.INFO)
+            vim.notify("Flow language server initialized", vim.log.levels.INFO)
         end,
         on_exit = function(code, signal, client_id)
-            vim.notify("Vibe language server stopped", vim.log.levels.INFO)
+            vim.notify("Flow language server stopped", vim.log.levels.INFO)
         end,
     }
 
@@ -99,16 +99,16 @@ function M.start_server()
                 vim.lsp.buf_attach_client(bufnr, client_id)
             end
         end
-        vim.notify("Vibe language server started", vim.log.levels.INFO)
+        vim.notify("Flow language server started", vim.log.levels.INFO)
     else
-        vim.notify("Failed to start Vibe language server", vim.log.levels.ERROR)
+        vim.notify("Failed to start Flow language server", vim.log.levels.ERROR)
     end
 end
 
 -- Stop the LSP server
 function M.stop_server()
     if not client_id then
-        vim.notify("Vibe server is not running", vim.log.levels.INFO)
+        vim.notify("Flow server is not running", vim.log.levels.INFO)
         return
     end
 
@@ -147,7 +147,7 @@ function M.setup_keymaps()
     end
     if M.config.keymaps.prompt then
         vim.keymap.set("n", M.config.keymaps.prompt, function()
-            vim.ui.input({ prompt = "Vibe: " }, function(input)
+            vim.ui.input({ prompt = "Flow: " }, function(input)
                 if input then
                     M.run_prompt(input)
                 end
@@ -186,10 +186,10 @@ local function get_visual_selection()
     return table.concat(lines, "\n")
 end
 
--- Execute a Vibe command
+-- Execute a Flow command
 local function execute_command(command, args)
     if not client_id then
-        vim.notify("Vibe server is not running. Use :VibeStart to start it.", vim.log.levels.WARN)
+        vim.notify("Flow server is not running. Use :FlowStart to start it.", vim.log.levels.WARN)
         return
     end
 
@@ -200,7 +200,7 @@ local function execute_command(command, args)
 
     vim.lsp.buf_request(0, "workspace/executeCommand", params, function(err, result)
         if err then
-            vim.notify("Vibe command failed: " .. vim.inspect(err), vim.log.levels.ERROR)
+            vim.notify("Flow command failed: " .. vim.inspect(err), vim.log.levels.ERROR)
             return
         end
 
@@ -237,7 +237,7 @@ function M.show_output(content)
         row = math.floor((vim.o.lines - height) / 2),
         style = "minimal",
         border = "rounded",
-        title = " Vibe ",
+        title = " Flow ",
         title_pos = "center",
     }
 
@@ -269,7 +269,7 @@ function M.explain_code()
         return
     end
 
-    execute_command("vibe.explainCode", {
+    execute_command("flow.explainCode", {
         vim.uri_from_bufnr(0),
         { start = vim.fn.getpos("'<"), ["end"] = vim.fn.getpos("'>") },
         selection
@@ -283,7 +283,7 @@ function M.generate_tests()
         content = table.concat(content, "\n")
     end
 
-    execute_command("vibe.generateTests", {
+    execute_command("flow.generateTests", {
         vim.uri_from_bufnr(0),
         {},
         content
@@ -297,7 +297,7 @@ function M.refactor_code()
         return
     end
 
-    execute_command("vibe.refactor", {
+    execute_command("flow.refactor", {
         vim.uri_from_bufnr(0),
         { start = vim.fn.getpos("'<"), ["end"] = vim.fn.getpos("'>") },
         selection
@@ -313,7 +313,7 @@ function M.fix_error()
     end
 
     local diag = diagnostics[1]
-    execute_command("vibe.fixError", {
+    execute_command("flow.fixError", {
         vim.uri_from_bufnr(0),
         diag
     })
@@ -326,7 +326,7 @@ function M.generate_docs()
         content = table.concat(content, "\n")
     end
 
-    execute_command("vibe.generateDocs", {
+    execute_command("flow.generateDocs", {
         vim.uri_from_bufnr(0),
         {},
         content
@@ -350,7 +350,7 @@ function M.open_chat()
 
             table.insert(history, { role = "user", content = input })
 
-            execute_command("vibe.runPrompt", { input })
+            execute_command("flow.runPrompt", { input })
             -- Note: Response will be shown in floating window
 
             -- Continue chat
@@ -358,19 +358,19 @@ function M.open_chat()
         end)
     end
 
-    vim.notify("Vibe Chat started. Type /quit to exit.", vim.log.levels.INFO)
+    vim.notify("Flow Chat started. Type /quit to exit.", vim.log.levels.INFO)
     chat_loop()
 end
 
 function M.run_prompt(prompt)
     if not prompt or prompt == "" then
-        vim.ui.input({ prompt = "Vibe: " }, function(input)
+        vim.ui.input({ prompt = "Flow: " }, function(input)
             if input and input ~= "" then
-                execute_command("vibe.runPrompt", { input })
+                execute_command("flow.runPrompt", { input })
             end
         end)
     else
-        execute_command("vibe.runPrompt", { prompt })
+        execute_command("flow.runPrompt", { prompt })
     end
 end
 

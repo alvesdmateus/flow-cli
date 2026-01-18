@@ -96,11 +96,11 @@ func NewServer(handler Handler) *Server {
 			DocumentFormattingProvider: true,
 			ExecuteCommandProvider: &ExecuteCommandOptions{
 				Commands: []string{
-					"vibe.runPrompt",
-					"vibe.explainCode",
-					"vibe.generateTests",
-					"vibe.fixError",
-					"vibe.refactor",
+					"flow.runPrompt",
+					"flow.explainCode",
+					"flow.generateTests",
+					"flow.fixError",
+					"flow.refactor",
 				},
 			},
 		},
@@ -262,7 +262,7 @@ func (s *Server) handleInitialize(msg *Message) *Message {
 		result = &InitializeResult{
 			Capabilities: s.capabilities,
 			ServerInfo: &ServerInfo{
-				Name:    "vibe-lsp",
+				Name:    "flow-lsp",
 				Version: "0.1.0",
 			},
 		}

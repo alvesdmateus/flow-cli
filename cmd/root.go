@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/mateus/vibe-cli/internal/config"
-	"github.com/mateus/vibe-cli/internal/logging"
+	"github.com/mateus/flow-cli/internal/config"
+	"github.com/mateus/flow-cli/internal/logging"
 )
 
 var (
@@ -20,9 +20,9 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "vibe",
+	Use:   "flow",
 	Short: "A self-hosted AI coding assistant",
-	Long: `vibe-cli is a coding assistant CLI that uses self-hosted LLMs
+	Long: `flow-cli is a coding assistant CLI that uses self-hosted LLMs
 to suggest, architect, plan, and create artifacts for your projects.
 
 It operates with a permission-first model, always asking for approval
@@ -46,7 +46,7 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vibe.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.flow.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&autoApprove, "auto-approve", false, "automatically approve all actions without prompting")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug output (more detailed than verbose)")
@@ -68,10 +68,10 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".vibe")
+		viper.SetConfigName(".flow")
 	}
 
-	viper.SetEnvPrefix("VIBE")
+	viper.SetEnvPrefix("FLOW")
 	viper.AutomaticEnv()
 
 	config.SetDefaults()

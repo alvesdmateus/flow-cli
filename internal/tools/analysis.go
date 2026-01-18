@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mateus/vibe-cli/internal/analysis"
-	"github.com/mateus/vibe-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/analysis"
+	"github.com/mateus/flow-cli/internal/sandbox"
 )
 
 // CodeOutlineTool returns the structure of a source file

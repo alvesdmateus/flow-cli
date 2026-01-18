@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-vibe-cli is a coding assistant CLI that uses self-hosted LLMs to suggest, architect, plan, and create artifacts for projects.
+flow-cli is a coding assistant CLI that uses self-hosted LLMs to suggest, architect, plan, and create artifacts for projects.
 
 ## Technology Stack
 
@@ -41,6 +41,7 @@ cmd/                       # Cobra commands
   session.go               # Session management commands
   completion.go            # Shell completion generation
   version.go               # Version information
+  lsp.go                   # Language Server Protocol server
 internal/
   agent/                   # Agent orchestration
     agent.go               # Main agent loop, tool execution
@@ -56,6 +57,10 @@ internal/
     openai_compat.go       # OpenAI-compatible (LocalAI, LM Studio, vLLM)
   logging/                 # Logging infrastructure
     logger.go              # Structured logging with levels
+  lsp/                     # Language Server Protocol
+    server.go              # LSP server, JSON-RPC handling
+    handler.go             # Request handlers, document management
+    types.go               # LSP protocol type definitions
   sandbox/                 # Permission & security system
     policy.go              # Security policy definitions
     validator.go           # Path and command validation
@@ -79,18 +84,19 @@ internal/
 ## CLI Commands
 
 ```bash
-vibe run "prompt"          # Single prompt execution
-vibe chat                  # Interactive chat session
-vibe arch                  # Architecture planning mode
-vibe config show           # Show current configuration
-vibe config set key value  # Set configuration value
-vibe config provider       # Interactive provider setup
-vibe config init           # Create default config file
-vibe session list          # List saved sessions
-vibe session resume [id]   # Resume a saved session
-vibe session delete <id>   # Delete a session
-vibe completion bash       # Generate shell completion
-vibe version               # Show version info
+flow run "prompt"          # Single prompt execution
+flow chat                  # Interactive chat session
+flow arch                  # Architecture planning mode
+flow lsp                   # Start LSP server for editor integration
+flow config show           # Show current configuration
+flow config set key value  # Set configuration value
+flow config provider       # Interactive provider setup
+flow config init           # Create default config file
+flow session list          # List saved sessions
+flow session resume [id]   # Resume a saved session
+flow session delete <id>   # Delete a session
+flow completion bash       # Generate shell completion
+flow version               # Show version info
 ```
 
 ## Global Flags
@@ -105,7 +111,7 @@ vibe version               # Show version info
 
 ## Chat Commands
 
-Inside `vibe chat`:
+Inside `flow chat`:
 - `/help` - Show help
 - `/clear` - Clear conversation
 - `/status` - Show conversation status
@@ -117,8 +123,8 @@ Inside `vibe chat`:
 
 Configuration loads from (in order of precedence):
 1. Command-line flags
-2. Environment variables (VIBE_ prefix)
-3. `~/.vibe/config.yaml` or `./.vibe.yaml`
+2. Environment variables (FLOW_ prefix)
+3. `~/.flow/config.yaml` or `./.flow.yaml`
 4. Built-in defaults
 
 ### Supported LLM Providers
@@ -171,7 +177,7 @@ The CLI can execute development-related commands:
 ### Session Persistence
 - Chat sessions are auto-saved on exit
 - Sessions can be listed, resumed, and deleted
-- Stored in `~/.vibe/sessions/`
+- Stored in `~/.flow/sessions/`
 
 ## Adding New Features
 
@@ -189,3 +195,34 @@ When adding new LLM providers:
 1. Implement `Client` interface from `internal/llm/client.go`
 2. Add to provider switch in `NewClientWithConfig`
 3. Add preset in `openai_compat.go` if applicable
+
+## IDE & Editor Integration
+
+flow-cli includes a Language Server Protocol (LSP) server for editor integration.
+
+### LSP Server
+
+Start with `flow lsp`. The server communicates via stdin/stdout.
+
+**Supported Features:**
+- Document synchronization (open, change, close, save)
+- Code completion with `@flow` triggers
+- Hover information (AI-powered with LLM)
+- Code actions (Explain, Generate Tests, Refactor, Fix Error)
+- Execute commands (flow.runPrompt, flow.explainCode, etc.)
+
+### Editor Extensions
+
+Extensions are provided in `editors/`:
+- **VS Code** (`editors/vscode/`) - Full extension with chat panel
+- **Neovim** (`editors/neovim/`) - Lua plugin with LSP integration
+- **JetBrains** (`editors/jetbrains/`) - IntelliJ platform plugin
+
+### Project Configuration
+
+Project-specific settings in `.flow/config.yaml`:
+- Custom prompts and templates
+- Tool configurations
+- Build/test command overrides
+
+See `editors/config.yaml.example` for full options.

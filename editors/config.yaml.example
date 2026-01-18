@@ -1,5 +1,5 @@
 # Vibe Project Configuration
-# Place this file in .vibe/config.yaml in your project root
+# Place this file in .flow/config.yaml in your project root
 
 # Project metadata (helps AI understand your project)
 project:
@@ -74,7 +74,7 @@ prompts:
     - Explains parameters and return values
     - Includes usage examples
 
-  # Custom named prompts (use with @vibe prompt:name)
+  # Custom named prompts (use with @flow prompt:name)
   custom:
     api_endpoint: |
       Create a RESTful API endpoint that follows our conventions:
@@ -109,4 +109,4 @@ tools:
       - "."
     denied_write:
       - ".git/"
-      - ".vibe/"
+      - ".flow/"

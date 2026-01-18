@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 
 	if server == nil {
@@ -23,7 +23,7 @@ func TestNewServer(t *testing.T) {
 }
 
 func TestServerSetIO(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 
 	input := &bytes.Buffer{}
@@ -40,7 +40,7 @@ func TestServerSetIO(t *testing.T) {
 }
 
 func TestServerReadWriteMessage(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 
 	output := &bytes.Buffer{}
@@ -68,7 +68,7 @@ func TestServerReadWriteMessage(t *testing.T) {
 }
 
 func TestServerHandleInitialize(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 
 	params := InitializeParams{
@@ -98,13 +98,13 @@ func TestServerHandleInitialize(t *testing.T) {
 		t.Fatalf("Failed to parse result: %v", err)
 	}
 
-	if result.ServerInfo == nil || result.ServerInfo.Name != "vibe-lsp" {
-		t.Error("Expected server info with name vibe-lsp")
+	if result.ServerInfo == nil || result.ServerInfo.Name != "flow-lsp" {
+		t.Error("Expected server info with name flow-lsp")
 	}
 }
 
 func TestServerNotInitialized(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 
 	id := json.RawMessage(`1`)
@@ -129,7 +129,7 @@ func TestServerNotInitialized(t *testing.T) {
 }
 
 func TestServerMethodNotFound(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 	server.initialized = true
 
@@ -153,8 +153,8 @@ func TestServerMethodNotFound(t *testing.T) {
 	}
 }
 
-func TestVibeHandlerDocumentLifecycle(t *testing.T) {
-	handler := NewVibeHandler()
+func TestFlowHandlerDocumentLifecycle(t *testing.T) {
+	handler := NewFlowHandler()
 
 	uri := URI("file:///test/file.go")
 
@@ -229,8 +229,8 @@ func TestVibeHandlerDocumentLifecycle(t *testing.T) {
 	}
 }
 
-func TestVibeHandlerCompletion(t *testing.T) {
-	handler := NewVibeHandler()
+func TestFlowHandlerCompletion(t *testing.T) {
+	handler := NewFlowHandler()
 
 	uri := URI("file:///test/file.go")
 	handler.TextDocumentDidOpen(DidOpenTextDocumentParams{
@@ -238,7 +238,7 @@ func TestVibeHandlerCompletion(t *testing.T) {
 			URI:        uri,
 			LanguageID: "go",
 			Version:    1,
-			Text:       "// @vibe\n",
+			Text:       "// @flow\n",
 		},
 	})
 
@@ -256,21 +256,21 @@ func TestVibeHandlerCompletion(t *testing.T) {
 		t.Fatal("Expected completion result")
 	}
 
-	// Should have vibe completions
+	// Should have flow completions
 	found := false
 	for _, item := range result.Items {
-		if strings.Contains(item.Label, "@vibe") {
+		if strings.Contains(item.Label, "@flow") {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected @vibe completion items")
+		t.Error("Expected @flow completion items")
 	}
 }
 
-func TestVibeHandlerHover(t *testing.T) {
-	handler := NewVibeHandler()
+func TestFlowHandlerHover(t *testing.T) {
+	handler := NewFlowHandler()
 
 	uri := URI("file:///test/file.go")
 	handler.TextDocumentDidOpen(DidOpenTextDocumentParams{
@@ -300,8 +300,8 @@ func TestVibeHandlerHover(t *testing.T) {
 	}
 }
 
-func TestVibeHandlerCodeAction(t *testing.T) {
-	handler := NewVibeHandler()
+func TestFlowHandlerCodeAction(t *testing.T) {
+	handler := NewFlowHandler()
 
 	uri := URI("file:///test/file.go")
 
@@ -320,7 +320,7 @@ func TestVibeHandlerCodeAction(t *testing.T) {
 		t.Fatalf("Failed to get code actions: %v", err)
 	}
 
-	// Should have vibe code actions
+	// Should have flow code actions
 	if len(result) < 3 {
 		t.Errorf("Expected at least 3 code actions, got %d", len(result))
 	}
@@ -338,19 +338,19 @@ func TestVibeHandlerCodeAction(t *testing.T) {
 	}
 }
 
-func TestVibeHandlerExecuteCommand(t *testing.T) {
-	handler := NewVibeHandler()
+func TestFlowHandlerExecuteCommand(t *testing.T) {
+	handler := NewFlowHandler()
 
 	tests := []struct {
 		command   string
 		args      []interface{}
 		expectErr bool
 	}{
-		{"vibe.runPrompt", []interface{}{"test prompt"}, false},
-		{"vibe.explainCode", []interface{}{}, false},
-		{"vibe.generateTests", []interface{}{}, false},
-		{"vibe.fixError", []interface{}{}, false},
-		{"vibe.refactor", []interface{}{}, false},
+		{"flow.runPrompt", []interface{}{"test prompt"}, false},
+		{"flow.explainCode", []interface{}{}, false},
+		{"flow.generateTests", []interface{}{}, false},
+		{"flow.fixError", []interface{}{}, false},
+		{"flow.refactor", []interface{}{}, false},
 		{"unknown.command", []interface{}{}, true},
 	}
 
@@ -462,7 +462,7 @@ func TestIsWordChar(t *testing.T) {
 }
 
 func TestServerRun(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 
 	// Create a simple initialize request
@@ -495,13 +495,13 @@ func TestServerRun(t *testing.T) {
 	if !strings.Contains(response, "Content-Length:") {
 		t.Error("Expected response to be written")
 	}
-	if !strings.Contains(response, "vibe-lsp") {
+	if !strings.Contains(response, "flow-lsp") {
 		t.Error("Expected response to contain server name")
 	}
 }
 
 func TestServerNotifications(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 	server := NewServer(handler)
 
 	output := &bytes.Buffer{}
@@ -549,8 +549,8 @@ func TestServerNotifications(t *testing.T) {
 	}
 }
 
-func TestVibeHandlerShutdown(t *testing.T) {
-	handler := NewVibeHandler()
+func TestFlowHandlerShutdown(t *testing.T) {
+	handler := NewFlowHandler()
 
 	// Add a document
 	uri := URI("file:///test/file.go")
@@ -579,7 +579,7 @@ func TestVibeHandlerShutdown(t *testing.T) {
 }
 
 func TestIncrementalChange(t *testing.T) {
-	handler := NewVibeHandler()
+	handler := NewFlowHandler()
 
 	uri := URI("file:///test/file.go")
 	handler.TextDocumentDidOpen(DidOpenTextDocumentParams{

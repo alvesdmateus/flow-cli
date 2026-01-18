@@ -1,7 +1,7 @@
 <idea-plugin>
-    <id>com.vibe.plugin</id>
-    <name>Vibe - AI Coding Assistant</name>
-    <vendor email="support@vibe-cli.dev" url="https://github.com/mateus/vibe-cli">vibe-cli</vendor>
+    <id>com.flow.plugin</id>
+    <name>Flow - AI Coding Assistant</name>
+    <vendor email="support@flow-cli.dev" url="https://github.com/mateus/flow-cli">flow-cli</vendor>
 
     <description><![CDATA[
         AI-powered coding assistant using self-hosted LLMs.
@@ -28,20 +28,20 @@
                     secondary="true"
                     icon="/icons/vibe.svg"
                     anchor="right"
-                    factoryClass="com.vibe.plugin.ui.VibeChatToolWindowFactory"/>
+                    factoryClass="com.flow.plugin.ui.FlowChatToolWindowFactory"/>
 
         <!-- Settings -->
         <applicationConfigurable
                 parentId="tools"
-                instance="com.vibe.plugin.settings.VibeSettingsConfigurable"
-                id="com.vibe.plugin.settings"
-                displayName="Vibe"/>
+                instance="com.flow.plugin.settings.FlowSettingsConfigurable"
+                id="com.flow.plugin.settings"
+                displayName="Flow"/>
         <applicationService
-                serviceImplementation="com.vibe.plugin.settings.VibeSettings"/>
+                serviceImplementation="com.flow.plugin.settings.FlowSettings"/>
 
         <!-- LSP Support -->
         <lsp.serverSupportProvider
-                implementation="com.vibe.plugin.lsp.VibeLspServerSupportProvider"/>
+                implementation="com.flow.plugin.lsp.FlowLspServerSupportProvider"/>
 
         <!-- Notifications -->
         <notificationGroup id="Vibe Notifications"
@@ -49,37 +49,37 @@
     </extensions>
 
     <actions>
-        <group id="VibeActions" text="Vibe AI" popup="true">
+        <group id="FlowActions" text="Flow AI" popup="true">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <action id="Vibe.ExplainCode"
-                    class="com.vibe.plugin.actions.ExplainCodeAction"
+                    class="com.flow.plugin.actions.ExplainCodeAction"
                     text="Explain Code"
                     description="Explain the selected code using AI"/>
             <action id="Vibe.GenerateTests"
-                    class="com.vibe.plugin.actions.GenerateTestsAction"
+                    class="com.flow.plugin.actions.GenerateTestsAction"
                     text="Generate Tests"
                     description="Generate tests for the selected code"/>
             <action id="Vibe.Refactor"
-                    class="com.vibe.plugin.actions.RefactorAction"
+                    class="com.flow.plugin.actions.RefactorAction"
                     text="Refactor"
                     description="Get refactoring suggestions"/>
             <action id="Vibe.FixError"
-                    class="com.vibe.plugin.actions.FixErrorAction"
+                    class="com.flow.plugin.actions.FixErrorAction"
                     text="Fix Error"
                     description="Fix the error at cursor"/>
             <action id="Vibe.GenerateDocs"
-                    class="com.vibe.plugin.actions.GenerateDocsAction"
+                    class="com.flow.plugin.actions.GenerateDocsAction"
                     text="Generate Documentation"
                     description="Generate documentation for the selected code"/>
             <separator/>
             <action id="Vibe.OpenChat"
-                    class="com.vibe.plugin.actions.OpenChatAction"
+                    class="com.flow.plugin.actions.OpenChatAction"
                     text="Open Chat"
                     description="Open Vibe chat window"/>
         </group>
 
         <action id="Vibe.RunPrompt"
-                class="com.vibe.plugin.actions.RunPromptAction"
+                class="com.flow.plugin.actions.RunPromptAction"
                 text="Run Vibe Prompt"
                 description="Run a custom prompt">
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift V"/>

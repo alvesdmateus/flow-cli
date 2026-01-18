@@ -1,11 +1,11 @@
-package com.vibe.plugin
+package com.flow.plugin
 
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.vibe.plugin.settings.VibeSettings
+import com.flow.plugin.settings.FlowSettings
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -15,7 +15,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 
 @Service(Service.Level.PROJECT)
-class VibeService(private val project: Project) {
+class FlowService(private val project: Project) {
     private var process: Process? = null
     private var writer: BufferedWriter? = null
     private var reader: BufferedReader? = null
@@ -23,7 +23,7 @@ class VibeService(private val project: Project) {
     private var messageId = 0
 
     companion object {
-        fun getInstance(project: Project): VibeService = project.service()
+        fun getInstance(project: Project): FlowService = project.service()
     }
 
     val isRunning: Boolean
@@ -35,7 +35,7 @@ class VibeService(private val project: Project) {
             return
         }
 
-        val settings = VibeSettings.getInstance()
+        val settings = FlowSettings.getInstance()
         val cmd = mutableListOf(settings.serverPath, "lsp")
         if (settings.model.isNotEmpty()) {
             cmd.add("--model")

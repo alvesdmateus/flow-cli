@@ -1,18 +1,26 @@
 package lsp
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
-// VibeHandler implements the LSP Handler interface for vibe.
-type VibeHandler struct {
+// FlowHandler implements the LSP Handler interface for flow.
+type FlowHandler struct {
 	documents     map[URI]*Document
 	mu            sync.RWMutex
 	workspacePath string
 	server        *Server
+
+	// LLM integration
+	llmClient llm.Client
+	model     string
 }
 
 // Document represents an open document.
@@ -24,20 +32,41 @@ type Document struct {
 	Lines      []string
 }
 
-// NewVibeHandler creates a new vibe handler.
-func NewVibeHandler() *VibeHandler {
-	return &VibeHandler{
+// HandlerConfig holds configuration for the FlowHandler.
+type HandlerConfig struct {
+	LLMClient llm.Client
+	Model     string
+}
+
+// NewFlowHandler creates a new flow handler.
+func NewFlowHandler() *FlowHandler {
+	return &FlowHandler{
 		documents: make(map[URI]*Document),
 	}
 }
 
+// NewFlowHandlerWithConfig creates a new flow handler with LLM support.
+func NewFlowHandlerWithConfig(cfg HandlerConfig) *FlowHandler {
+	return &FlowHandler{
+		documents: make(map[URI]*Document),
+		llmClient: cfg.LLMClient,
+		model:     cfg.Model,
+	}
+}
+
+// SetLLMClient sets the LLM client for AI-powered features.
+func (h *FlowHandler) SetLLMClient(client llm.Client, model string) {
+	h.llmClient = client
+	h.model = model
+}
+
 // SetServer sets the server reference for sending notifications.
-func (h *VibeHandler) SetServer(server *Server) {
+func (h *FlowHandler) SetServer(server *Server) {
 	h.server = server
 }
 
 // Initialize handles the initialize request.
-func (h *VibeHandler) Initialize(params InitializeParams) (*InitializeResult, error) {
+func (h *FlowHandler) Initialize(params InitializeParams) (*InitializeResult, error) {
 	if len(params.WorkspaceFolders) > 0 {
 		h.workspacePath = uriToPath(params.WorkspaceFolders[0].URI)
 	} else if params.RootURI != "" {
@@ -50,12 +79,12 @@ func (h *VibeHandler) Initialize(params InitializeParams) (*InitializeResult, er
 }
 
 // Initialized handles the initialized notification.
-func (h *VibeHandler) Initialized(params InitializedParams) error {
+func (h *FlowHandler) Initialized(params InitializedParams) error {
 	return nil
 }
 
 // Shutdown handles the shutdown request.
-func (h *VibeHandler) Shutdown() error {
+func (h *FlowHandler) Shutdown() error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.documents = make(map[URI]*Document)
@@ -63,7 +92,7 @@ func (h *VibeHandler) Shutdown() error {
 }
 
 // TextDocumentDidOpen handles textDocument/didOpen.
-func (h *VibeHandler) TextDocumentDidOpen(params DidOpenTextDocumentParams) error {
+func (h *FlowHandler) TextDocumentDidOpen(params DidOpenTextDocumentParams) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -80,7 +109,7 @@ func (h *VibeHandler) TextDocumentDidOpen(params DidOpenTextDocumentParams) erro
 }
 
 // TextDocumentDidChange handles textDocument/didChange.
-func (h *VibeHandler) TextDocumentDidChange(params DidChangeTextDocumentParams) error {
+func (h *FlowHandler) TextDocumentDidChange(params DidChangeTextDocumentParams) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -107,7 +136,7 @@ func (h *VibeHandler) TextDocumentDidChange(params DidChangeTextDocumentParams) 
 }
 
 // TextDocumentDidClose handles textDocument/didClose.
-func (h *VibeHandler) TextDocumentDidClose(params DidCloseTextDocumentParams) error {
+func (h *FlowHandler) TextDocumentDidClose(params DidCloseTextDocumentParams) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	delete(h.documents, params.TextDocument.URI)
@@ -115,13 +144,13 @@ func (h *VibeHandler) TextDocumentDidClose(params DidCloseTextDocumentParams) er
 }
 
 // TextDocumentDidSave handles textDocument/didSave.
-func (h *VibeHandler) TextDocumentDidSave(params DidSaveTextDocumentParams) error {
+func (h *FlowHandler) TextDocumentDidSave(params DidSaveTextDocumentParams) error {
 	// Could trigger analysis or other operations on save
 	return nil
 }
 
 // TextDocumentCompletion handles textDocument/completion.
-func (h *VibeHandler) TextDocumentCompletion(params CompletionParams) (*CompletionList, error) {
+func (h *FlowHandler) TextDocumentCompletion(params CompletionParams) (*CompletionList, error) {
 	h.mu.RLock()
 	doc, ok := h.documents[params.TextDocument.URI]
 	h.mu.RUnlock()
@@ -144,8 +173,8 @@ func (h *VibeHandler) TextDocumentCompletion(params CompletionParams) (*Completi
 
 	items := []CompletionItem{}
 
-	// Check for vibe command trigger
-	if strings.Contains(prefix, "@vibe") || strings.HasSuffix(prefix, "@") {
+	// Check for flow command trigger
+	if strings.Contains(prefix, "@flow") || strings.HasSuffix(prefix, "@") {
 		items = append(items, h.getVibeCompletions()...)
 	}
 
@@ -158,53 +187,53 @@ func (h *VibeHandler) TextDocumentCompletion(params CompletionParams) (*Completi
 	}, nil
 }
 
-func (h *VibeHandler) getVibeCompletions() []CompletionItem {
+func (h *FlowHandler) getVibeCompletions() []CompletionItem {
 	return []CompletionItem{
 		{
-			Label:      "@vibe explain",
+			Label:      "@flow explain",
 			Kind:       CompletionItemKindSnippet,
 			Detail:     "Explain this code",
-			InsertText: "@vibe explain",
+			InsertText: "@flow explain",
 			Documentation: MarkupContent{
 				Kind:  MarkupKindMarkdown,
-				Value: "Ask vibe to explain the selected code",
+				Value: "Ask flow to explain the selected code",
 			},
 		},
 		{
-			Label:      "@vibe fix",
+			Label:      "@flow fix",
 			Kind:       CompletionItemKindSnippet,
 			Detail:     "Fix this issue",
-			InsertText: "@vibe fix",
+			InsertText: "@flow fix",
 			Documentation: MarkupContent{
 				Kind:  MarkupKindMarkdown,
-				Value: "Ask vibe to fix the current issue",
+				Value: "Ask flow to fix the current issue",
 			},
 		},
 		{
-			Label:      "@vibe test",
+			Label:      "@flow test",
 			Kind:       CompletionItemKindSnippet,
 			Detail:     "Generate tests",
-			InsertText: "@vibe test",
+			InsertText: "@flow test",
 			Documentation: MarkupContent{
 				Kind:  MarkupKindMarkdown,
 				Value: "Generate tests for this code",
 			},
 		},
 		{
-			Label:      "@vibe refactor",
+			Label:      "@flow refactor",
 			Kind:       CompletionItemKindSnippet,
 			Detail:     "Refactor code",
-			InsertText: "@vibe refactor",
+			InsertText: "@flow refactor",
 			Documentation: MarkupContent{
 				Kind:  MarkupKindMarkdown,
 				Value: "Suggest refactoring for this code",
 			},
 		},
 		{
-			Label:      "@vibe doc",
+			Label:      "@flow doc",
 			Kind:       CompletionItemKindSnippet,
 			Detail:     "Generate documentation",
-			InsertText: "@vibe doc",
+			InsertText: "@flow doc",
 			Documentation: MarkupContent{
 				Kind:  MarkupKindMarkdown,
 				Value: "Generate documentation for this code",
@@ -213,14 +242,14 @@ func (h *VibeHandler) getVibeCompletions() []CompletionItem {
 	}
 }
 
-func (h *VibeHandler) getLanguageCompletions(languageID, prefix string) []CompletionItem {
+func (h *FlowHandler) getLanguageCompletions(languageID, prefix string) []CompletionItem {
 	// Basic completions based on language
-	// In a real implementation, this would integrate with vibe's LLM
+	// In a real implementation, this would integrate with flow's LLM
 	return []CompletionItem{}
 }
 
 // TextDocumentHover handles textDocument/hover.
-func (h *VibeHandler) TextDocumentHover(params HoverParams) (*Hover, error) {
+func (h *FlowHandler) TextDocumentHover(params HoverParams) (*Hover, error) {
 	h.mu.RLock()
 	doc, ok := h.documents[params.TextDocument.URI]
 	h.mu.RUnlock()
@@ -235,40 +264,89 @@ func (h *VibeHandler) TextDocumentHover(params HoverParams) (*Hover, error) {
 		return nil, nil
 	}
 
-	// For now, return basic info
-	// In a real implementation, this would use vibe's LLM for explanations
+	// Get surrounding context for better explanations
+	codeContext := h.getSurroundingContext(doc, params.Position, 3)
+
+	// If LLM is available and word looks significant, provide AI explanation
+	if h.llmClient != nil && len(word) > 2 {
+		// Use a short timeout for hover to keep UI responsive
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		messages := []llm.Message{
+			{Role: llm.RoleSystem, Content: "You are a helpful coding assistant. Provide a brief, one-paragraph explanation of the code element. Be concise."},
+			{Role: llm.RoleUser, Content: fmt.Sprintf("Briefly explain what '%s' does in this context:\n\n```%s\n%s\n```", word, doc.LanguageID, codeContext)},
+		}
+
+		response, err := h.llmClient.ChatSync(ctx, messages, llm.ChatOptions{
+			Model:       h.model,
+			Temperature: 0.2,
+			MaxTokens:   150,
+		})
+		if err == nil && response != "" {
+			return &Hover{
+				Contents: MarkupContent{
+					Kind:  MarkupKindMarkdown,
+					Value: fmt.Sprintf("**%s**\n\n%s", word, response),
+				},
+			}, nil
+		}
+	}
+
+	// Fallback to basic info
 	return &Hover{
 		Contents: MarkupContent{
 			Kind:  MarkupKindMarkdown,
-			Value: fmt.Sprintf("**%s**\n\nUse `@vibe explain` for AI-powered explanation.", word),
+			Value: fmt.Sprintf("**%s**\n\nUse `@flow explain` for AI-powered explanation.", word),
 		},
 	}, nil
 }
 
+// getSurroundingContext gets lines around a position for context.
+func (h *FlowHandler) getSurroundingContext(doc *Document, pos Position, linesBefore int) string {
+	startLine := pos.Line - linesBefore
+	if startLine < 0 {
+		startLine = 0
+	}
+	endLine := pos.Line + linesBefore
+	if endLine >= len(doc.Lines) {
+		endLine = len(doc.Lines) - 1
+	}
+
+	var result strings.Builder
+	for i := startLine; i <= endLine; i++ {
+		result.WriteString(doc.Lines[i])
+		if i < endLine {
+			result.WriteString("\n")
+		}
+	}
+	return result.String()
+}
+
 // TextDocumentDefinition handles textDocument/definition.
-func (h *VibeHandler) TextDocumentDefinition(params DefinitionParams) ([]Location, error) {
+func (h *FlowHandler) TextDocumentDefinition(params DefinitionParams) ([]Location, error) {
 	// In a real implementation, this would search the codebase
-	// using vibe's analysis tools
+	// using flow's analysis tools
 	return nil, nil
 }
 
 // TextDocumentReferences handles textDocument/references.
-func (h *VibeHandler) TextDocumentReferences(params ReferenceParams) ([]Location, error) {
+func (h *FlowHandler) TextDocumentReferences(params ReferenceParams) ([]Location, error) {
 	// In a real implementation, this would search the codebase
 	return nil, nil
 }
 
 // TextDocumentCodeAction handles textDocument/codeAction.
-func (h *VibeHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAction, error) {
+func (h *FlowHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAction, error) {
 	actions := []CodeAction{}
 
-	// Add vibe-powered code actions
+	// Add flow-powered code actions
 	actions = append(actions, CodeAction{
 		Title: "Explain with Vibe",
 		Kind:  CodeActionKindQuickFix,
 		Command: &Command{
 			Title:   "Explain with Vibe",
-			Command: "vibe.explainCode",
+			Command: "flow.explainCode",
 			Arguments: []interface{}{
 				string(params.TextDocument.URI),
 				params.Range,
@@ -281,7 +359,7 @@ func (h *VibeHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 		Kind:  CodeActionKindRefactor,
 		Command: &Command{
 			Title:   "Generate Tests",
-			Command: "vibe.generateTests",
+			Command: "flow.generateTests",
 			Arguments: []interface{}{
 				string(params.TextDocument.URI),
 				params.Range,
@@ -294,7 +372,7 @@ func (h *VibeHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 		Kind:  CodeActionKindRefactor,
 		Command: &Command{
 			Title:   "Refactor Code",
-			Command: "vibe.refactor",
+			Command: "flow.refactor",
 			Arguments: []interface{}{
 				string(params.TextDocument.URI),
 				params.Range,
@@ -310,7 +388,7 @@ func (h *VibeHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 			Diagnostics: []Diagnostic{diag},
 			Command: &Command{
 				Title:   "Fix with Vibe",
-				Command: "vibe.fixError",
+				Command: "flow.fixError",
 				Arguments: []interface{}{
 					string(params.TextDocument.URI),
 					diag,
@@ -323,30 +401,30 @@ func (h *VibeHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 }
 
 // TextDocumentFormatting handles textDocument/formatting.
-func (h *VibeHandler) TextDocumentFormatting(params DocumentFormattingParams) ([]TextEdit, error) {
+func (h *FlowHandler) TextDocumentFormatting(params DocumentFormattingParams) ([]TextEdit, error) {
 	// In a real implementation, this would use language-specific formatters
 	return nil, nil
 }
 
 // ExecuteCommand handles workspace/executeCommand.
-func (h *VibeHandler) ExecuteCommand(params ExecuteCommandParams) (interface{}, error) {
+func (h *FlowHandler) ExecuteCommand(params ExecuteCommandParams) (interface{}, error) {
 	switch params.Command {
-	case "vibe.runPrompt":
+	case "flow.runPrompt":
 		return h.executeRunPrompt(params.Arguments)
-	case "vibe.explainCode":
+	case "flow.explainCode":
 		return h.executeExplainCode(params.Arguments)
-	case "vibe.generateTests":
+	case "flow.generateTests":
 		return h.executeGenerateTests(params.Arguments)
-	case "vibe.fixError":
+	case "flow.fixError":
 		return h.executeFixError(params.Arguments)
-	case "vibe.refactor":
+	case "flow.refactor":
 		return h.executeRefactor(params.Arguments)
 	default:
 		return nil, fmt.Errorf("unknown command: %s", params.Command)
 	}
 }
 
-func (h *VibeHandler) executeRunPrompt(args []interface{}) (interface{}, error) {
+func (h *FlowHandler) executeRunPrompt(args []interface{}) (interface{}, error) {
 	if len(args) < 1 {
 		return nil, fmt.Errorf("missing prompt argument")
 	}
@@ -356,43 +434,301 @@ func (h *VibeHandler) executeRunPrompt(args []interface{}) (interface{}, error) 
 		return nil, fmt.Errorf("invalid prompt argument")
 	}
 
-	// In a real implementation, this would call vibe's LLM
+	// Use LLM if available
+	if h.llmClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+
+		messages := []llm.Message{
+			{Role: llm.RoleSystem, Content: "You are a helpful coding assistant integrated into an IDE."},
+			{Role: llm.RoleUser, Content: prompt},
+		}
+
+		response, err := h.llmClient.ChatSync(ctx, messages, llm.ChatOptions{
+			Model:       h.model,
+			Temperature: 0.7,
+		})
+		if err != nil {
+			return map[string]interface{}{
+				"status": "error",
+				"error":  err.Error(),
+			}, nil
+		}
+
+		return map[string]interface{}{
+			"status":   "ok",
+			"response": response,
+		}, nil
+	}
+
 	return map[string]string{
-		"status": "ok",
-		"prompt": prompt,
+		"status":  "error",
+		"message": "LLM client not configured",
 	}, nil
 }
 
-func (h *VibeHandler) executeExplainCode(args []interface{}) (interface{}, error) {
-	// In a real implementation, this would use vibe's LLM to explain code
+func (h *FlowHandler) executeExplainCode(args []interface{}) (interface{}, error) {
+	// Extract URI and range from arguments
+	var uri string
+	var code string
+
+	if len(args) >= 1 {
+		uri, _ = args[0].(string)
+	}
+
+	// Get code from document if we have a URI
+	if uri != "" {
+		h.mu.RLock()
+		doc, ok := h.documents[URI(uri)]
+		h.mu.RUnlock()
+		if ok {
+			// If range provided, extract that portion; otherwise use full content
+			if len(args) >= 2 {
+				if rng, ok := args[1].(map[string]interface{}); ok {
+					code = h.extractCodeFromRange(doc, rng)
+				}
+			}
+			if code == "" {
+				code = doc.Content
+			}
+		}
+	}
+
+	if h.llmClient != nil && code != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+
+		messages := []llm.Message{
+			{Role: llm.RoleSystem, Content: "You are a helpful coding assistant. Explain the following code clearly and concisely."},
+			{Role: llm.RoleUser, Content: fmt.Sprintf("Please explain this code:\n\n```\n%s\n```", code)},
+		}
+
+		response, err := h.llmClient.ChatSync(ctx, messages, llm.ChatOptions{
+			Model:       h.model,
+			Temperature: 0.3,
+		})
+		if err != nil {
+			return map[string]interface{}{
+				"status": "error",
+				"error":  err.Error(),
+			}, nil
+		}
+
+		return map[string]interface{}{
+			"status":      "ok",
+			"explanation": response,
+		}, nil
+	}
+
 	return map[string]string{
-		"status":  "ok",
-		"message": "Code explanation would appear here",
+		"status":  "error",
+		"message": "LLM client not configured or no code provided",
 	}, nil
 }
 
-func (h *VibeHandler) executeGenerateTests(args []interface{}) (interface{}, error) {
-	// In a real implementation, this would use vibe's test generation
+func (h *FlowHandler) executeGenerateTests(args []interface{}) (interface{}, error) {
+	code := h.extractCodeFromArgs(args)
+
+	if h.llmClient != nil && code != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		defer cancel()
+
+		messages := []llm.Message{
+			{Role: llm.RoleSystem, Content: "You are a helpful coding assistant. Generate comprehensive unit tests for the provided code. Include edge cases and use appropriate testing patterns for the language."},
+			{Role: llm.RoleUser, Content: fmt.Sprintf("Generate tests for this code:\n\n```\n%s\n```", code)},
+		}
+
+		response, err := h.llmClient.ChatSync(ctx, messages, llm.ChatOptions{
+			Model:       h.model,
+			Temperature: 0.3,
+		})
+		if err != nil {
+			return map[string]interface{}{
+				"status": "error",
+				"error":  err.Error(),
+			}, nil
+		}
+
+		return map[string]interface{}{
+			"status": "ok",
+			"tests":  response,
+		}, nil
+	}
+
 	return map[string]string{
-		"status":  "ok",
-		"message": "Generated tests would appear here",
+		"status":  "error",
+		"message": "LLM client not configured or no code provided",
 	}, nil
 }
 
-func (h *VibeHandler) executeFixError(args []interface{}) (interface{}, error) {
-	// In a real implementation, this would use vibe's bug fix suggestions
+func (h *FlowHandler) executeFixError(args []interface{}) (interface{}, error) {
+	code := h.extractCodeFromArgs(args)
+
+	// Extract diagnostic info if available
+	var diagnostic string
+	if len(args) >= 2 {
+		if diag, ok := args[1].(map[string]interface{}); ok {
+			if msg, ok := diag["message"].(string); ok {
+				diagnostic = msg
+			}
+		}
+	}
+
+	if h.llmClient != nil && code != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+
+		prompt := fmt.Sprintf("Fix the following code:\n\n```\n%s\n```", code)
+		if diagnostic != "" {
+			prompt = fmt.Sprintf("Fix the following error in the code:\n\nError: %s\n\nCode:\n```\n%s\n```", diagnostic, code)
+		}
+
+		messages := []llm.Message{
+			{Role: llm.RoleSystem, Content: "You are a helpful coding assistant. Analyze the code and provide a fix. Show the corrected code and explain what was wrong."},
+			{Role: llm.RoleUser, Content: prompt},
+		}
+
+		response, err := h.llmClient.ChatSync(ctx, messages, llm.ChatOptions{
+			Model:       h.model,
+			Temperature: 0.2,
+		})
+		if err != nil {
+			return map[string]interface{}{
+				"status": "error",
+				"error":  err.Error(),
+			}, nil
+		}
+
+		return map[string]interface{}{
+			"status": "ok",
+			"fix":    response,
+		}, nil
+	}
+
 	return map[string]string{
-		"status":  "ok",
-		"message": "Fix suggestion would appear here",
+		"status":  "error",
+		"message": "LLM client not configured or no code provided",
 	}, nil
 }
 
-func (h *VibeHandler) executeRefactor(args []interface{}) (interface{}, error) {
-	// In a real implementation, this would use vibe's refactoring tools
+func (h *FlowHandler) executeRefactor(args []interface{}) (interface{}, error) {
+	code := h.extractCodeFromArgs(args)
+
+	if h.llmClient != nil && code != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		defer cancel()
+
+		messages := []llm.Message{
+			{Role: llm.RoleSystem, Content: "You are a helpful coding assistant. Suggest refactoring improvements for the provided code. Focus on readability, maintainability, and best practices. Show the refactored code and explain the changes."},
+			{Role: llm.RoleUser, Content: fmt.Sprintf("Suggest refactoring for this code:\n\n```\n%s\n```", code)},
+		}
+
+		response, err := h.llmClient.ChatSync(ctx, messages, llm.ChatOptions{
+			Model:       h.model,
+			Temperature: 0.4,
+		})
+		if err != nil {
+			return map[string]interface{}{
+				"status": "error",
+				"error":  err.Error(),
+			}, nil
+		}
+
+		return map[string]interface{}{
+			"status":      "ok",
+			"refactoring": response,
+		}, nil
+	}
+
 	return map[string]string{
-		"status":  "ok",
-		"message": "Refactoring suggestion would appear here",
+		"status":  "error",
+		"message": "LLM client not configured or no code provided",
 	}, nil
+}
+
+// extractCodeFromArgs extracts code from command arguments.
+func (h *FlowHandler) extractCodeFromArgs(args []interface{}) string {
+	if len(args) < 1 {
+		return ""
+	}
+
+	uri, ok := args[0].(string)
+	if !ok {
+		return ""
+	}
+
+	h.mu.RLock()
+	doc, ok := h.documents[URI(uri)]
+	h.mu.RUnlock()
+	if !ok {
+		return ""
+	}
+
+	// If range provided, extract that portion
+	if len(args) >= 2 {
+		if rng, ok := args[1].(map[string]interface{}); ok {
+			code := h.extractCodeFromRange(doc, rng)
+			if code != "" {
+				return code
+			}
+		}
+	}
+
+	return doc.Content
+}
+
+// extractCodeFromRange extracts code from a document given a range.
+func (h *FlowHandler) extractCodeFromRange(doc *Document, rng map[string]interface{}) string {
+	start, ok := rng["start"].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	end, ok := rng["end"].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+
+	startLine := int(start["line"].(float64))
+	startChar := int(start["character"].(float64))
+	endLine := int(end["line"].(float64))
+	endChar := int(end["character"].(float64))
+
+	if startLine >= len(doc.Lines) || endLine >= len(doc.Lines) {
+		return ""
+	}
+
+	if startLine == endLine {
+		line := doc.Lines[startLine]
+		if startChar > len(line) {
+			startChar = len(line)
+		}
+		if endChar > len(line) {
+			endChar = len(line)
+		}
+		return line[startChar:endChar]
+	}
+
+	var result strings.Builder
+	for i := startLine; i <= endLine; i++ {
+		line := doc.Lines[i]
+		if i == startLine {
+			if startChar < len(line) {
+				result.WriteString(line[startChar:])
+			}
+		} else if i == endLine {
+			if endChar > len(line) {
+				endChar = len(line)
+			}
+			result.WriteString(line[:endChar])
+		} else {
+			result.WriteString(line)
+		}
+		if i < endLine {
+			result.WriteString("\n")
+		}
+	}
+
+	return result.String()
 }
 
 // Helper functions

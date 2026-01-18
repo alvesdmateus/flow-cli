@@ -9,18 +9,18 @@ import (
 var completionCmd = &cobra.Command{
 	Use:   "completion [bash|zsh|fish|powershell]",
 	Short: "Generate shell completion scripts",
-	Long: `Generate shell completion scripts for vibe.
+	Long: `Generate shell completion scripts for flow.
 
 To load completions:
 
 Bash:
-  $ source <(vibe completion bash)
+  $ source <(flow completion bash)
 
   # To load completions for each session, execute once:
   # Linux:
-  $ vibe completion bash > /etc/bash_completion.d/vibe
+  $ flow completion bash > /etc/bash_completion.d/flow
   # macOS:
-  $ vibe completion bash > $(brew --prefix)/etc/bash_completion.d/vibe
+  $ flow completion bash > $(brew --prefix)/etc/bash_completion.d/flow
 
 Zsh:
   # If shell completion is not already enabled in your environment,
@@ -28,21 +28,21 @@ Zsh:
   $ echo "autoload -U compinit; compinit" >> ~/.zshrc
 
   # To load completions for each session, execute once:
-  $ vibe completion zsh > "${fpath[1]}/_vibe"
+  $ flow completion zsh > "${fpath[1]}/_flow"
 
   # You will need to start a new shell for this setup to take effect.
 
 Fish:
-  $ vibe completion fish | source
+  $ flow completion fish | source
 
   # To load completions for each session, execute once:
-  $ vibe completion fish > ~/.config/fish/completions/vibe.fish
+  $ flow completion fish > ~/.config/fish/completions/flow.fish
 
 PowerShell:
-  PS> vibe completion powershell | Out-String | Invoke-Expression
+  PS> flow completion powershell | Out-String | Invoke-Expression
 
   # To load completions for every new session, run:
-  PS> vibe completion powershell > vibe.ps1
+  PS> flow completion powershell > flow.ps1
   # and source this file from your PowerShell profile.
 `,
 	DisableFlagsInUseLine: true,
