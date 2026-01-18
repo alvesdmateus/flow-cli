@@ -40,7 +40,6 @@ type ChatModel struct {
 	messages    []ChatMessage
 	streamBuf   strings.Builder
 	currentTool string
-	err         error
 
 	// Dimensions
 	width  int
@@ -232,7 +231,7 @@ func (m *ChatModel) View() string {
 	var b strings.Builder
 
 	// Header
-	header := m.headerStyle.Render(" vibe-cli ")
+	header := m.headerStyle.Render(" flow-cli ")
 	statusInfo := m.getStatusInfo()
 	headerLine := lipgloss.JoinHorizontal(
 		lipgloss.Left,
@@ -419,7 +418,7 @@ func (m *ChatModel) getStatusInfo() string {
 func (m *ChatModel) getHelpText() string {
 	return `
 ╭─────────────────────────────────────────────────────────╮
-│                    vibe-cli Help                        │
+│                    flow-cli Help                        │
 ├─────────────────────────────────────────────────────────┤
 │ Commands:                                               │
 │   /clear    - Clear conversation history                │

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mateus/vibe-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/sandbox"
 )
 
 // CheckPortTool checks if a port is in use
@@ -324,7 +324,7 @@ func (t *StartProcessTool) Execute(ctx context.Context, args map[string]any) (*R
 
 	// Detach the process
 	if cmd.Process != nil {
-		cmd.Process.Release()
+		_ = cmd.Process.Release()
 	}
 
 	return NewSuccessResultWithData(

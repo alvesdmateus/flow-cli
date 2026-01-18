@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	vibeContext "github.com/mateus/vibe-cli/internal/context"
-	"github.com/mateus/vibe-cli/internal/llm"
+	flowContext "github.com/mateus/flow-cli/internal/context"
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
 // PlanPhase represents a phase in the planning workflow
@@ -87,7 +87,7 @@ type PlannerHandler interface {
 // Planner orchestrates the architecture planning workflow
 type Planner struct {
 	llmClient  llm.Client
-	ctxManager *vibeContext.Manager
+	ctxManager *flowContext.Manager
 	model      string
 	plan       *Plan
 	phase      PlanPhase
@@ -102,7 +102,7 @@ type PlannerConfig struct {
 
 // NewPlanner creates a new planner
 func NewPlanner(cfg PlannerConfig) *Planner {
-	ctxManager := vibeContext.NewManager(ArchitectureSystemPrompt(), 100)
+	ctxManager := flowContext.NewManager(ArchitectureSystemPrompt(), 100)
 	ctxManager.SetModel(cfg.Model)
 
 	return &Planner{
@@ -468,7 +468,7 @@ func (p *Planner) ApprovePlan() {
 
 // ArchitectureSystemPrompt returns the system prompt for architecture mode
 func ArchitectureSystemPrompt() string {
-	return `You are vibe-cli in Architecture Mode - a specialized planning assistant.
+	return `You are flow-cli in Architecture Mode - a specialized planning assistant.
 
 Your role is to help users plan and design software implementations BEFORE writing code.
 

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/mateus/vibe-cli/cmd"
+	"github.com/mateus/flow-cli/cmd"
 )
 
 func main() {

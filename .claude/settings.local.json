@@ -7,11 +7,30 @@
       "Bash(go build:*)",
       "Bash(./vibe.exe:*)",
       "Bash(go mod tidy:*)",
-      "Bash(gofmt:*)",
+      "Bash(go test:*)",
       "Bash(go vet:*)",
-      "Bash(git add:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "WebFetch(domain:github.com)",
+      "Bash(gofmt:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(go install:*)",
+      "Bash(~/go/bin/golangci-lint run ./...)",
+      "Bash(~/go/bin/goimports:*)",
+      "Bash(make build:*)",
+      "Bash(go run:*)",
+      "Bash(./vibe version:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(where:*)",
+      "Bash(git pull:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)",
+      "Bash(./flow.exe:*)"
     ]
   }
 }

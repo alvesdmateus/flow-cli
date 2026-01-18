@@ -9,15 +9,16 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/mateus/vibe-cli/internal/agent"
-	"github.com/mateus/vibe-cli/internal/config"
-	vibecontext "github.com/mateus/vibe-cli/internal/context"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/sandbox"
-	"github.com/mateus/vibe-cli/internal/search"
-	"github.com/mateus/vibe-cli/internal/tools"
-	"github.com/mateus/vibe-cli/internal/ui"
 	"github.com/spf13/cobra"
+
+	"github.com/mateus/flow-cli/internal/agent"
+	"github.com/mateus/flow-cli/internal/config"
+	flowcontext "github.com/mateus/flow-cli/internal/context"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/search"
+	"github.com/mateus/flow-cli/internal/tools"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var chatCmd = &cobra.Command{
@@ -29,8 +30,8 @@ The assistant can help you with coding tasks, answer questions,
 read and write files, execute commands, and search the web.
 
 Examples:
-  vibe chat
-  vibe chat --model llama3:8b`,
+  flow chat
+  flow chat --model llama3:8b`,
 	RunE: runChat,
 }
 
@@ -155,7 +156,7 @@ func runChat(cmd *cobra.Command, args []string) error {
 func printWelcome(model, workDir string) {
 	fmt.Println()
 	ui.PrintTitle("╭─────────────────────────────────────────────╮")
-	ui.PrintTitle("│           Welcome to vibe-cli               │")
+	ui.PrintTitle("│           Welcome to flow-cli               │")
 	ui.PrintTitle("╰─────────────────────────────────────────────╯")
 	fmt.Println()
 	ui.PrintInfo(fmt.Sprintf("  Model:   %s", model))
@@ -245,7 +246,7 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 
 	case "/model", "/m":
 		fmt.Println("Model selection not yet implemented in this version.")
-		fmt.Println("Restart with: vibe chat --model <model_name>")
+		fmt.Println("Restart with: flow chat --model <model_name>")
 		return true
 
 	case "/status", "/s":
@@ -271,7 +272,7 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 		return true
 
 	case "/sessions":
-		sessions, err := vibecontext.ListSessions("")
+		sessions, err := flowcontext.ListSessions("")
 		if err != nil {
 			ui.PrintError(fmt.Sprintf("Failed to list sessions: %v", err))
 			return true
@@ -282,7 +283,7 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 			fmt.Printf("\nSaved sessions (%d):\n", len(sessions))
 			for i, s := range sessions {
 				if i >= 5 {
-					fmt.Printf("  ... and %d more. Use 'vibe session list' to see all.\n", len(sessions)-5)
+					fmt.Printf("  ... and %d more. Use 'flow session list' to see all.\n", len(sessions)-5)
 					break
 				}
 				fmt.Printf("  [%s] %s\n", s.ID[:8], s.Title)
@@ -304,7 +305,7 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 func printHelp() {
 	help := `
 ╭─────────────────────────────────────────────────────────╮
-│                    vibe-cli Help                        │
+│                    flow-cli Help                        │
 ├─────────────────────────────────────────────────────────┤
 │ Commands:                                               │
 │   /help, /h     - Show this help message                │
@@ -317,8 +318,8 @@ func printHelp() {
 │                                                         │
 │ Session Management:                                     │
 │   Sessions are auto-saved when you exit.                │
-│   Use 'vibe session list' to see all sessions.          │
-│   Use 'vibe session resume' to continue a session.      │
+│   Use 'flow session list' to see all sessions.          │
+│   Use 'flow session resume' to continue a session.      │
 │                                                         │
 │ Tips:                                                   │
 │   • Be specific about what you want to accomplish       │

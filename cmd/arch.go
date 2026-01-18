@@ -9,14 +9,15 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/mateus/vibe-cli/internal/agent"
-	"github.com/mateus/vibe-cli/internal/config"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/sandbox"
-	"github.com/mateus/vibe-cli/internal/search"
-	"github.com/mateus/vibe-cli/internal/tools"
-	"github.com/mateus/vibe-cli/internal/ui"
 	"github.com/spf13/cobra"
+
+	"github.com/mateus/flow-cli/internal/agent"
+	"github.com/mateus/flow-cli/internal/config"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/search"
+	"github.com/mateus/flow-cli/internal/tools"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var archCmd = &cobra.Command{
@@ -31,9 +32,9 @@ In this mode, the AI will:
 4. Wait for your approval before making changes
 
 Examples:
-  vibe arch "Add user authentication"
-  vibe arch "Refactor the database layer"
-  vibe arch "Create a REST API for products"`,
+  flow arch "Add user authentication"
+  flow arch "Refactor the database layer"
+  flow arch "Create a REST API for products"`,
 	RunE: runArch,
 }
 
@@ -160,7 +161,7 @@ func runArch(cmd *cobra.Command, args []string) error {
 		return runPlanExecution(ctx, llmClient, model, plan)
 	}
 
-	ui.PrintInfo("Plan saved. Run 'vibe chat' to continue implementation later.")
+	ui.PrintInfo("Plan saved. Run 'flow chat' to continue implementation later.")
 	return nil
 }
 

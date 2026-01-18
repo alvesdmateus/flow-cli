@@ -128,12 +128,7 @@ func (s *SearXNGClient) Search(ctx context.Context, query string, opts SearchOpt
 		if opts.Limit > 0 && i >= opts.Limit {
 			break
 		}
-		results = append(results, Result{
-			Title:   r.Title,
-			URL:     r.URL,
-			Content: r.Content,
-			Engine:  r.Engine,
-		})
+		results = append(results, Result(r))
 	}
 
 	return results, nil

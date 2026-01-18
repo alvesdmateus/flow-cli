@@ -186,7 +186,7 @@ func (c *OpenAICompatClient) Chat(ctx context.Context, messages []Message, opts 
 	c.setHeaders(req)
 	req.Header.Set("Accept", "text/event-stream")
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.httpClient.Do(req) //nolint:bodyclose // Body is closed in goroutine below
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}

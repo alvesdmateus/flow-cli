@@ -1,0 +1,199 @@
+{
+  "name": "flow-vscode",
+  "displayName": "Flow - AI Coding Assistant",
+  "description": "AI-powered coding assistant using self-hosted LLMs",
+  "version": "0.1.0",
+  "publisher": "flow-cli",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mateus/flow-cli"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "assistant",
+    "llm",
+    "ollama",
+    "coding"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "flow.startServer",
+        "title": "Flow: Start Language Server"
+      },
+      {
+        "command": "flow.stopServer",
+        "title": "Flow: Stop Language Server"
+      },
+      {
+        "command": "flow.explainCode",
+        "title": "Flow: Explain Selected Code"
+      },
+      {
+        "command": "flow.generateTests",
+        "title": "Flow: Generate Tests"
+      },
+      {
+        "command": "flow.refactor",
+        "title": "Flow: Refactor Code"
+      },
+      {
+        "command": "flow.fixError",
+        "title": "Flow: Fix Error"
+      },
+      {
+        "command": "flow.generateDocs",
+        "title": "Flow: Generate Documentation"
+      },
+      {
+        "command": "flow.chat",
+        "title": "Flow: Open Chat"
+      },
+      {
+        "command": "flow.runPrompt",
+        "title": "Flow: Run Custom Prompt"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "flow.submenu",
+          "group": "flow"
+        }
+      ],
+      "flow.submenu": [
+        {
+          "command": "flow.explainCode",
+          "group": "1_actions"
+        },
+        {
+          "command": "flow.generateTests",
+          "group": "1_actions"
+        },
+        {
+          "command": "flow.refactor",
+          "group": "1_actions"
+        },
+        {
+          "command": "flow.fixError",
+          "group": "1_actions"
+        },
+        {
+          "command": "flow.generateDocs",
+          "group": "1_actions"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "flow.submenu",
+        "label": "Flow AI"
+      }
+    ],
+    "configuration": {
+      "title": "Flow",
+      "properties": {
+        "flow.serverPath": {
+          "type": "string",
+          "default": "flow",
+          "description": "Path to the flow CLI executable"
+        },
+        "flow.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start the language server when VS Code opens"
+        },
+        "flow.model": {
+          "type": "string",
+          "default": "",
+          "description": "LLM model to use (leave empty for default)"
+        },
+        "flow.provider": {
+          "type": "string",
+          "enum": ["ollama", "openai-compatible", "localai", "lmstudio", "vllm"],
+          "default": "ollama",
+          "description": "LLM provider to use"
+        },
+        "flow.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server URL"
+        },
+        "flow.showInlineHints": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show inline AI hints and suggestions"
+        },
+        "flow.logLevel": {
+          "type": "string",
+          "enum": ["error", "warn", "info", "debug"],
+          "default": "info",
+          "description": "Logging level for the extension"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "flow.explainCode",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "flow.chat",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v"
+      },
+      {
+        "command": "flow.runPrompt",
+        "key": "ctrl+shift+p",
+        "mac": "cmd+shift+p",
+        "when": "editorFocus"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "flowChat",
+          "name": "Flow Chat",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.74.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  }
+}

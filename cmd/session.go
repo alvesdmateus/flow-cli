@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mateus/vibe-cli/internal/context"
-	"github.com/mateus/vibe-cli/internal/ui"
 	"github.com/spf13/cobra"
+
+	"github.com/mateus/flow-cli/internal/context"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var sessionCmd = &cobra.Command{
@@ -63,7 +64,7 @@ func runSessionList(cmd *cobra.Command, args []string) error {
 
 	if len(sessions) == 0 {
 		ui.PrintInfo("No saved sessions found.")
-		fmt.Println("Start a chat with 'vibe chat' to create a session.")
+		fmt.Println("Start a chat with 'flow chat' to create a session.")
 		return nil
 	}
 
@@ -96,7 +97,7 @@ func runSessionList(cmd *cobra.Command, args []string) error {
 
 	fmt.Println(dimStyle.Render(fmt.Sprintf("Total: %d sessions", len(sessions))))
 	fmt.Println()
-	fmt.Println("Use 'vibe session resume <id>' to continue a session.")
+	fmt.Println("Use 'flow session resume <id>' to continue a session.")
 
 	return nil
 }

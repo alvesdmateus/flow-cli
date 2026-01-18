@@ -261,7 +261,7 @@ func GetLogDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".vibe", "logs"), nil
+	return filepath.Join(home, ".flow", "logs"), nil
 }
 
 // SetupFileLogging configures file logging with rotation
@@ -271,6 +271,6 @@ func SetupFileLogging() error {
 		return err
 	}
 
-	logFile := filepath.Join(logDir, fmt.Sprintf("vibe_%s.log", time.Now().Format("2006-01-02")))
+	logFile := filepath.Join(logDir, fmt.Sprintf("flow_%s.log", time.Now().Format("2006-01-02")))
 	return Default().SetLogFile(logFile)
 }

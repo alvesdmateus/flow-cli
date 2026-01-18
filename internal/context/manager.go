@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mateus/vibe-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
 // Message extends llm.Message with metadata
@@ -43,10 +43,12 @@ type Conversation struct {
 
 // Manager handles conversation history and context
 type Manager struct {
-	mu           sync.RWMutex
-	conversation *Conversation
-	maxMessages  int
-	systemPrompt string
+	mu            sync.RWMutex
+	conversation  *Conversation
+	maxMessages   int
+	systemPrompt  string
+	windowManager *WindowManager
+	priorities    []MessagePriority
 }
 
 // NewManager creates a new context manager
@@ -306,6 +308,122 @@ func (m *Manager) EstimateTokens() int {
 	return total
 }
 
+// SetWindowManager configures context window management
+func (m *Manager) SetWindowManager(model string, strategy PruningStrategy) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.windowManager = NewWindowManager(WindowConfig{
+		Model:            model,
+		Strategy:         strategy,
+		KeepSystemPrompt: true,
+		KeepRecentCount:  4,
+	})
+}
+
+// GetContextStats returns current context window statistics
+func (m *Manager) GetContextStats() ContextStats {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if m.windowManager == nil {
+		// Return basic stats without window manager
+		tokens := 0
+		for _, msg := range m.conversation.Messages {
+			tokens += llm.EstimateTokens(msg.Content) + 4
+		}
+		if m.systemPrompt != "" {
+			tokens += llm.EstimateTokens(m.systemPrompt) + 4
+		}
+		return ContextStats{
+			TotalTokens:  tokens,
+			MaxTokens:    4096, // Default
+			MessageCount: len(m.conversation.Messages),
+		}
+	}
+
+	return m.windowManager.CalculateStats(m.conversation.Messages, m.systemPrompt)
+}
+
+// SetMessagePriority sets the priority of a specific message
+func (m *Manager) SetMessagePriority(index int, priority MessagePriority) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Ensure priorities slice is large enough
+	for len(m.priorities) <= index {
+		m.priorities = append(m.priorities, PriorityMedium)
+	}
+	m.priorities[index] = priority
+}
+
+// SetLastMessagePriority sets the priority of the most recent message
+func (m *Manager) SetLastMessagePriority(priority MessagePriority) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if len(m.conversation.Messages) == 0 {
+		return
+	}
+
+	index := len(m.conversation.Messages) - 1
+	for len(m.priorities) <= index {
+		m.priorities = append(m.priorities, PriorityMedium)
+	}
+	m.priorities[index] = priority
+}
+
+// PruneIfNeeded prunes messages if context window is near capacity
+func (m *Manager) PruneIfNeeded() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.windowManager == nil {
+		return false
+	}
+
+	if !m.windowManager.NeedsPruning(m.conversation.Messages, m.systemPrompt) {
+		return false
+	}
+
+	// Ensure priorities match messages
+	for len(m.priorities) < len(m.conversation.Messages) {
+		m.priorities = append(m.priorities, PriorityMedium)
+	}
+
+	// Prune messages
+	prunedMessages := m.windowManager.PruneMessages(m.conversation.Messages, m.priorities, m.systemPrompt)
+
+	// Update conversation
+	m.conversation.Messages = prunedMessages
+	m.conversation.UpdatedAt = time.Now()
+
+	// Trim priorities to match
+	if len(m.priorities) > len(prunedMessages) {
+		m.priorities = m.priorities[len(m.priorities)-len(prunedMessages):]
+	}
+
+	return true
+}
+
+// IsNearContextLimit checks if we're approaching context limits
+func (m *Manager) IsNearContextLimit() bool {
+	stats := m.GetContextStats()
+	return stats.IsNearLimit
+}
+
+// GetContextStatsFormatted returns formatted context stats for display
+func (m *Manager) GetContextStatsFormatted() string {
+	stats := m.GetContextStats()
+	return FormatStats(stats)
+}
+
+// GetContextStatsCompact returns compact context stats for status bar
+func (m *Manager) GetContextStatsCompact() string {
+	stats := m.GetContextStats()
+	return FormatStatsCompact(stats)
+}
+
 // GetID returns the conversation ID
 func (m *Manager) GetID() string {
 	m.mu.RLock()
@@ -338,7 +456,7 @@ func GetSessionsDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".vibe", "sessions"), nil
+	return filepath.Join(home, ".flow", "sessions"), nil
 }
 
 // ListSessions returns all saved sessions
