@@ -55,11 +55,14 @@ func runArch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
-	// Check connection
-	ui.PrintInfo("Connecting to LLM service...")
+	// Check connection with spinner
+	spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+	spinner.Start()
 	if err := llmClient.Ping(ctx); err != nil {
+		spinner.StopWithError("Connection failed")
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
+	spinner.StopWithSuccess("Connected")
 
 	// Determine model
 	model := modelFlag
@@ -340,13 +343,29 @@ func formatTaskList(tasks []agent.PlanTask) string {
 }
 
 // ArchHandler implements agent.PlannerHandler
-type ArchHandler struct{}
+type ArchHandler struct {
+	spinner *ui.Spinner
+}
 
 func (h *ArchHandler) OnPhaseChange(phase agent.PlanPhase) {
+	// Stop any running spinner
+	if h.spinner != nil {
+		h.spinner.Stop()
+	}
 	ui.PrintPhaseChange(phase.String())
+
+	// Start a new spinner for the phase
+	h.spinner = ui.SpinnerProcessing(phase.String())
+	h.spinner.Start()
 }
 
 func (h *ArchHandler) OnQuestion(question agent.ClarifyingQuestion) (string, error) {
+	// Stop spinner for user interaction
+	if h.spinner != nil {
+		h.spinner.Stop()
+		h.spinner = nil
+	}
+
 	// Display question
 	display := ui.QuestionDisplay{
 		Question: question.Question,
@@ -357,7 +376,14 @@ func (h *ArchHandler) OnQuestion(question agent.ClarifyingQuestion) (string, err
 
 	// Get answer using multiple choice
 	if len(question.Options) > 0 {
-		return ui.AskQuestion("Select an option:", question.Options)
+		answer, err := ui.AskQuestion("Select an option:", question.Options)
+		if err != nil {
+			return "", err
+		}
+		// Restart spinner after user answers
+		h.spinner = ui.SpinnerThinking()
+		h.spinner.Start()
+		return answer, nil
 	}
 
 	// Free-form input
@@ -367,18 +393,36 @@ func (h *ArchHandler) OnQuestion(question agent.ClarifyingQuestion) (string, err
 	if err != nil {
 		return "", err
 	}
+
+	// Restart spinner after user answers
+	h.spinner = ui.SpinnerThinking()
+	h.spinner.Start()
 	return strings.TrimSpace(input), nil
 }
 
 func (h *ArchHandler) OnPlanUpdate(plan *agent.Plan) {
-	// Plan display is handled separately
+	// Stop spinner when plan is ready to display
+	if h.spinner != nil {
+		h.spinner.Stop()
+		h.spinner = nil
+	}
 }
 
 func (h *ArchHandler) OnTaskStart(task agent.PlanTask) {
+	// Stop any running spinner
+	if h.spinner != nil {
+		h.spinner.Stop()
+	}
 	fmt.Printf("\n🔧 Starting: %s\n", task.Title)
+	h.spinner = ui.SpinnerProcessing(task.Title)
+	h.spinner.Start()
 }
 
 func (h *ArchHandler) OnTaskComplete(task agent.PlanTask, success bool) {
+	if h.spinner != nil {
+		h.spinner.Stop()
+		h.spinner = nil
+	}
 	if success {
 		fmt.Printf("✅ Completed: %s\n", task.Title)
 	} else {
@@ -387,9 +431,19 @@ func (h *ArchHandler) OnTaskComplete(task agent.PlanTask, success bool) {
 }
 
 func (h *ArchHandler) OnMessage(message string) {
-	ui.PrintInfo(message)
+	// Update spinner message if running, otherwise print
+	if h.spinner != nil {
+		h.spinner.UpdateMessage(message)
+	} else {
+		ui.PrintInfo(message)
+	}
 }
 
 func (h *ArchHandler) OnError(err error) {
-	ui.PrintError(err.Error())
+	if h.spinner != nil {
+		h.spinner.StopWithError(err.Error())
+		h.spinner = nil
+	} else {
+		ui.PrintError(err.Error())
+	}
 }

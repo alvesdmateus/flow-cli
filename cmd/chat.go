@@ -52,11 +52,14 @@ func runChat(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
-	// Check connection
-	ui.PrintInfo("Connecting to LLM service...")
+	// Check connection with spinner
+	spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+	spinner.Start()
 	if err := llmClient.Ping(ctx); err != nil {
+		spinner.StopWithError("Connection failed")
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
+	spinner.StopWithSuccess("Connected")
 
 	// Determine model
 	model := modelFlag
@@ -388,19 +391,38 @@ func handleModelSwitch(chatAgent *agent.Agent) bool {
 }
 
 // ConsoleHandler implements agent.ResponseHandler for console output
-type ConsoleHandler struct{}
+type ConsoleHandler struct {
+	spinner      *ui.Spinner
+	firstChunk   bool
+}
 
-func (h *ConsoleHandler) OnStreamStart() {}
+func (h *ConsoleHandler) OnStreamStart() {
+	h.spinner = ui.SpinnerThinking()
+	h.spinner.Start()
+	h.firstChunk = true
+}
 
 func (h *ConsoleHandler) OnStreamChunk(chunk string) {
+	if h.firstChunk && h.spinner != nil {
+		h.spinner.Stop()
+		h.firstChunk = false
+	}
 	fmt.Print(chunk)
 }
 
 func (h *ConsoleHandler) OnStreamEnd() {
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.Stop()
+	}
 	fmt.Println()
 }
 
 func (h *ConsoleHandler) OnToolStart(name, desc string) {
+	// Stop any running spinner
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.Stop()
+		h.firstChunk = false
+	}
 	fmt.Printf("\n\033[1;33m[🔧 %s]\033[0m %s\n", name, desc)
 }
 
@@ -413,9 +435,19 @@ func (h *ConsoleHandler) OnToolEnd(name string, success bool, result string) {
 }
 
 func (h *ConsoleHandler) OnThinking(msg string) {
-	fmt.Printf("\033[90m⏳ %s\033[0m\n", msg)
+	// Update spinner message if running, otherwise just print
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.UpdateMessage(msg)
+	} else {
+		fmt.Printf("\033[90m⏳ %s\033[0m\n", msg)
+	}
 }
 
 func (h *ConsoleHandler) OnError(err error) {
-	fmt.Printf("\033[1;31mError: %s\033[0m\n", err.Error())
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.StopWithError(err.Error())
+		h.firstChunk = false
+	} else {
+		fmt.Printf("\033[1;31mError: %s\033[0m\n", err.Error())
+	}
 }

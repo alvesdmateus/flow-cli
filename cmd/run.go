@@ -47,10 +47,14 @@ func runCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
-	// Check connection
+	// Check connection with spinner
+	spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+	spinner.Start()
 	if err := client.Ping(ctx); err != nil {
+		spinner.StopWithError("Connection failed")
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
+	spinner.StopWithSuccess("Connected")
 
 	// Determine which model to use
 	model := modelFlag
@@ -104,14 +108,24 @@ func runCommand(cmd *cobra.Command, args []string) error {
 		Stream:      true,
 	}
 
+	// Start thinking spinner
+	thinkSpinner := ui.SpinnerThinking()
+	thinkSpinner.Start()
+
 	chunks, err := client.Chat(ctx, messages, opts)
 	if err != nil {
+		thinkSpinner.StopWithError("Request failed")
 		return fmt.Errorf("chat failed: %w", err)
 	}
 
 	// Print streamed response
 	fmt.Println()
+	firstChunk := true
 	for chunk := range chunks {
+		if firstChunk {
+			thinkSpinner.Stop()
+			firstChunk = false
+		}
 		if chunk.Error != nil {
 			return chunk.Error
 		}
