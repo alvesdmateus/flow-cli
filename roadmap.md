@@ -134,19 +134,19 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 6: Integrations (Sprints 11-12)
 **Goal:** Ecosystem connectivity
 
-### Sprint 11: External Tools
-- [ ] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
-- [ ] Database tools (`query_db` for SQLite/Postgres)
-- [ ] HTTP client tool (`http_request`)
-- [ ] Package manager tools (npm, pip, cargo info)
-- [ ] CI/CD status checking (GitHub Actions)
+### Sprint 11: External Tools ✅
+- [x] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
+- [x] Database tools (`query_db` for SQLite/Postgres)
+- [x] HTTP client tool (`http_request`)
+- [x] Package manager tools (npm, pip, cargo info)
+- [x] CI/CD status checking (GitHub Actions)
 
-### Sprint 12: IDE & Editor
-- [ ] LSP server mode (integrate with any editor)
-- [ ] VS Code extension
-- [ ] Neovim plugin
-- [ ] JetBrains plugin (basic)
-- [ ] `.vibe/config.yaml` project-level settings
+### Sprint 12: IDE & Editor ✅
+- [x] LSP server mode (integrate with any editor)
+- [x] VS Code extension
+- [x] Neovim plugin
+- [x] JetBrains plugin (basic)
+- [x] `.vibe/config.yaml` project-level settings
 
 ---
 
@@ -166,6 +166,10 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Semantic search | High | High | P2 | Pending |
 | LSP server mode | High | High | P2 | Pending |
 | Test generation | Medium | Medium | P2 | ✅ Done |
+| LSP server mode | High | High | P2 | ✅ Done |
+| Test generation | Medium | Medium | P2 | Pending |
+| External tools | High | High | P2 | ✅ Done |
+| IDE plugins | High | High | P2 | ✅ Done |
 
 ---
 
@@ -390,6 +394,14 @@ Use this section to track periodic progress reviews.
 - Phase 5 (Advanced AI) complete
 - Code generation package provides comprehensive tooling
 - Ready for Phase 6: Integrations
+- **Sprint 4: Codebase Indexing** (pending)
+- **Security hardening** (ongoing)
+
+#### Notes
+- Phase 6 (Integrations) complete
+- All IDE/editor plugins provide basic functionality
+- LSP server enables integration with any LSP-compatible editor
+- Project config allows per-project customization
 
 ---
 

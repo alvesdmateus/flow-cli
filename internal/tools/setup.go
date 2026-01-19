@@ -1,10 +1,12 @@
 package tools
 
 import (
-	"github.com/mateus/vibe-cli/internal/indexing"
-	"github.com/mateus/vibe-cli/internal/sandbox"
-	"github.com/mateus/vibe-cli/internal/search"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/budget"
+	"github.com/mateus/flow-cli/internal/indexing"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/search"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 // SetupOptions contains options for setting up the tool registry
@@ -13,6 +15,12 @@ type SetupOptions struct {
 	SearchClient search.Client
 	Indexer      *indexing.Indexer
 	WorkDir      string
+
+	// Subagent options
+	LLMClient        llm.Client
+	SubagentModel    string
+	TokenBudget      *budget.TokenBudget
+	SubagentSpawner  SubagentSpawner // Optional spawner implementation
 }
 
 // SetupRegistry creates and populates a tool registry with all available tools
@@ -69,6 +77,11 @@ func SetupRegistry(opts SetupOptions) (*Registry, error) {
 		_ = registry.Register(NewReindexFileTool(opts.Indexer))
 	}
 
+	// Subagent tool (requires subagent spawner)
+	if opts.SubagentSpawner != nil {
+		_ = registry.Register(NewSpawnSubagentTool(opts.SubagentSpawner))
+	}
+
 	return registry, nil
 }
 
@@ -105,6 +118,7 @@ func AllToolNames() []string {
 		"semantic_search",
 		"index_status",
 		"reindex_file",
+		"spawn_subagent",
 	}
 }
 
@@ -141,5 +155,6 @@ func ToolDescriptions() map[string]string {
 		"semantic_search":  "Search the codebase using natural language queries",
 		"index_status":     "Show the status of the semantic search index",
 		"reindex_file":     "Re-index a specific file after modification",
+		"spawn_subagent":   "Spawn a specialized subagent with isolated context for specific tasks",
 	}
 }

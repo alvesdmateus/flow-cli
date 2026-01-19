@@ -1,4 +1,4 @@
-module github.com/mateus/vibe-cli
+module github.com/mateus/flow-cli
 
 go 1.24.1
 

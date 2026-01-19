@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mateus/vibe-cli/internal/config"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/config"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var runCmd = &cobra.Command{
@@ -22,8 +22,8 @@ var runCmd = &cobra.Command{
 If no model is specified and none is configured, you will be prompted to select one.
 
 Examples:
-  vibe run "Explain what a goroutine is"
-  vibe run --model llama3:8b "Write a hello world in Go"`,
+  flow run "Explain what a goroutine is"
+  flow run --model llama3:8b "Write a hello world in Go"`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runCommand,
 }

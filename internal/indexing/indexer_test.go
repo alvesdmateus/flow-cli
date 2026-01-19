@@ -158,15 +158,15 @@ func TestIndexer_ShouldIgnore(t *testing.T) {
 func TestIndexer_LoadIgnoreRules(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create .vibeignore file
-	vibeignore := filepath.Join(tmpDir, ".vibeignore")
+	// Create .flowignore file
+	flowignore := filepath.Join(tmpDir, ".flowignore")
 	content := `# Comment line
 custom_dir
 *.log
 temp_*
 `
-	if err := os.WriteFile(vibeignore, []byte(content), 0644); err != nil {
-		t.Fatalf("Failed to write .vibeignore: %v", err)
+	if err := os.WriteFile(flowignore, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write .flowignore: %v", err)
 	}
 
 	idx := &Indexer{
@@ -207,9 +207,9 @@ func TestIndexer_LoadIgnoreRules_NoFile(t *testing.T) {
 	}
 	idx.loadIgnoreRules()
 
-	// Should have default rules even without .vibeignore
+	// Should have default rules even without .flowignore
 	if len(idx.ignoreRules) == 0 {
-		t.Error("Should have default ignore rules even without .vibeignore")
+		t.Error("Should have default ignore rules even without .flowignore")
 	}
 
 	hasNodeModules := false

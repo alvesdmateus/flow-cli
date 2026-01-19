@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mateus/vibe-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
 // MessagePriority defines the importance level of a message
