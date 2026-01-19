@@ -77,7 +77,7 @@ jobs:
         run: ./vibe version
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: vibe-linux-amd64
           path: vibe
