@@ -132,24 +132,47 @@ func runArch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("planning failed: %w", err)
 	}
 
-	// Display the plan
-	displayPlan(plan)
+	// Plan review loop - allows modifications
+	for {
+		// Display the plan
+		displayPlan(plan)
 
-	// Ask for approval
-	approved, err := askPlanApproval()
-	if err != nil {
-		return err
+		// Ask for approval
+		result, feedback, err := askPlanApproval()
+		if err != nil {
+			return err
+		}
+
+		switch result {
+		case planApproved:
+			// Plan approved - transition to execution
+			planner.ApprovePlan()
+			ui.PrintSuccess("Plan approved!")
+			fmt.Println()
+			goto executeplan
+
+		case planNeedsModification:
+			if feedback == "" {
+				// No feedback, show plan again
+				continue
+			}
+			// Modify the plan based on feedback
+			plan, err = planner.ModifyPlan(ctx, feedback, handler)
+			if err != nil {
+				return fmt.Errorf("failed to modify plan: %w", err)
+			}
+			fmt.Println()
+			ui.PrintSuccess("Plan has been revised based on your feedback.")
+			fmt.Println()
+			continue
+
+		case planCancelled:
+			ui.PrintInfo("Planning cancelled.")
+			return nil
+		}
 	}
 
-	if !approved {
-		ui.PrintInfo("Plan not approved. You can modify your request and try again.")
-		return nil
-	}
-
-	// Plan approved - transition to execution
-	planner.ApprovePlan()
-	ui.PrintSuccess("Plan approved!")
-	fmt.Println()
+executeplan:
 
 	// Ask if user wants to proceed to chat for execution
 	proceed, err := ui.Confirm("Would you like to start implementing the plan now?")
@@ -197,7 +220,16 @@ func displayPlan(plan *agent.Plan) {
 	ui.PrintPlanSummary(len(plan.Tasks), fileCount)
 }
 
-func askPlanApproval() (bool, error) {
+// planApprovalResult represents the result of asking for plan approval
+type planApprovalResult int
+
+const (
+	planApproved planApprovalResult = iota
+	planNeedsModification
+	planCancelled
+)
+
+func askPlanApproval() (planApprovalResult, string, error) {
 	ui.PrintPlanApprovalPrompt()
 
 	choice, err := ui.AskQuestion("What would you like to do with this plan?", []string{
@@ -206,18 +238,25 @@ func askPlanApproval() (bool, error) {
 		"Cancel planning",
 	})
 	if err != nil {
-		return false, err
+		return planCancelled, "", err
 	}
 
 	switch choice {
 	case "Approve and proceed":
-		return true, nil
+		return planApproved, "", nil
 	case "Request modifications":
-		fmt.Println("\nModification requests are not yet implemented.")
-		fmt.Println("Please restart with a more specific request.")
-		return false, nil
+		fmt.Println()
+		feedback, err := ui.PromptInput("What changes would you like to make to the plan?")
+		if err != nil {
+			return planCancelled, "", err
+		}
+		if strings.TrimSpace(feedback) == "" {
+			ui.PrintInfo("No feedback provided. Keeping the current plan.")
+			return planNeedsModification, "", nil
+		}
+		return planNeedsModification, feedback, nil
 	default:
-		return false, nil
+		return planCancelled, "", nil
 	}
 }
 

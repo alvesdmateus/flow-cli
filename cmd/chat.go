@@ -245,9 +245,8 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 		return true
 
 	case "/model", "/m":
-		fmt.Println("Model selection not yet implemented in this version.")
-		fmt.Println("Restart with: flow chat --model <model_name>")
-		return true
+		return handleModelSwitch(chatAgent)
+
 
 	case "/status", "/s":
 		ctxManager := chatAgent.GetContextManager()
@@ -310,7 +309,7 @@ func printHelp() {
 │ Commands:                                               │
 │   /help, /h     - Show this help message                │
 │   /clear, /c    - Clear conversation history            │
-│   /model, /m    - Show current model info               │
+│   /model, /m    - Switch to a different model           │
 │   /status, /s   - Show conversation status              │
 │   /save         - Save current session                  │
 │   /sessions     - List saved sessions                   │
@@ -334,6 +333,58 @@ func printHelp() {
 ╰─────────────────────────────────────────────────────────╯
 `
 	fmt.Println(help)
+}
+
+// handleModelSwitch allows switching models during chat
+func handleModelSwitch(chatAgent *agent.Agent) bool {
+	ctx := context.Background()
+	llmClient := chatAgent.GetLLMClient()
+
+	// Get available models
+	models, err := llmClient.ListModels(ctx)
+	if err != nil {
+		ui.PrintError(fmt.Sprintf("Failed to list models: %v", err))
+		return true
+	}
+
+	if len(models) == 0 {
+		ui.PrintInfo("No models available.")
+		return true
+	}
+
+	// Get current model for display
+	currentModel := chatAgent.GetContextManager().GetModel()
+
+	// Build model list with current indicator
+	modelNames := make([]string, len(models))
+	for i, m := range models {
+		if m.Name == currentModel {
+			modelNames[i] = m.Name + " (current)"
+		} else {
+			modelNames[i] = m.Name
+		}
+	}
+
+	fmt.Println()
+	selected, err := ui.SelectModel(modelNames)
+	if err != nil {
+		ui.PrintInfo("Model selection cancelled.")
+		return true
+	}
+
+	// Remove " (current)" suffix if present
+	selected = strings.TrimSuffix(selected, " (current)")
+
+	if selected == currentModel {
+		ui.PrintInfo("Already using this model.")
+		return true
+	}
+
+	// Switch the model
+	chatAgent.SetModel(selected)
+	ui.PrintSuccess(fmt.Sprintf("Switched to model: %s", selected))
+	fmt.Println()
+	return true
 }
 
 // ConsoleHandler implements agent.ResponseHandler for console output
