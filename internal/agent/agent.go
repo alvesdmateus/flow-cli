@@ -64,7 +64,8 @@ type Agent struct {
 	ctxManager  *flowContext.Manager
 	model       string
 	temperature float64
-	maxTurns    int // Maximum tool execution turns per request
+	maxTurns    int          // Maximum tool execution turns per request
+	budget      *TokenBudget // Token budget for this agent and its subagents
 }
 
 // Config holds agent configuration
@@ -75,6 +76,7 @@ type Config struct {
 	Temperature  float64
 	MaxTurns     int
 	SystemPrompt string
+	TokenBudget  int // Total token budget for agent and subagents (0 = 100000)
 }
 
 // New creates a new agent
@@ -88,6 +90,9 @@ func New(cfg Config) *Agent {
 	if cfg.SystemPrompt == "" {
 		cfg.SystemPrompt = DefaultSystemPrompt()
 	}
+	if cfg.TokenBudget <= 0 {
+		cfg.TokenBudget = 100000 // Default 100k tokens
+	}
 
 	ctxManager := flowContext.NewManager(cfg.SystemPrompt, 100)
 	ctxManager.SetModel(cfg.Model)
@@ -99,6 +104,7 @@ func New(cfg Config) *Agent {
 		model:       cfg.Model,
 		temperature: cfg.Temperature,
 		maxTurns:    cfg.MaxTurns,
+		budget:      NewTokenBudget(cfg.TokenBudget),
 	}
 }
 
@@ -301,6 +307,51 @@ func (a *Agent) SetModel(model string) {
 // Clear resets the conversation
 func (a *Agent) Clear() {
 	a.ctxManager.Clear()
+}
+
+// GetBudget returns the token budget for this agent
+func (a *Agent) GetBudget() *TokenBudget {
+	return a.budget
+}
+
+// SetBudget sets the token budget for this agent
+func (a *Agent) SetBudget(budget *TokenBudget) {
+	a.budget = budget
+}
+
+// SpawnSubagent creates and runs a subagent with the given configuration
+func (a *Agent) SpawnSubagent(ctx context.Context, config SubagentConfig) (*SubagentResult, error) {
+	subagent, err := NewSubagent(a, config, a.budget)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create subagent: %w", err)
+	}
+
+	result, err := subagent.Run(ctx)
+
+	// Release unused budget
+	subagent.ReleaseUnusedBudget(a.budget)
+
+	return result, err
+}
+
+// GetSubagentManager creates a new subagent manager for this agent
+func (a *Agent) GetSubagentManager(maxParallel int) *SubagentManager {
+	return &SubagentManager{
+		parent:      a,
+		budget:      a.budget,
+		subagents:   make([]*Subagent, 0),
+		maxParallel: maxParallel,
+	}
+}
+
+// GetToolRegistry returns the tool registry
+func (a *Agent) GetToolRegistry() *tools.Registry {
+	return a.toolReg
+}
+
+// GetLLMClient returns the LLM client
+func (a *Agent) GetLLMClient() llm.Client {
+	return a.llmClient
 }
 
 // truncateResult limits result length

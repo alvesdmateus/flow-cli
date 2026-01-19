@@ -140,6 +140,47 @@ func (r *Registry) All() []Tool {
 	return tools
 }
 
+// FilterByNames creates a new registry containing only the specified tools
+func (r *Registry) FilterByNames(names []string) *Registry {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	filtered := NewRegistry()
+	nameSet := make(map[string]bool, len(names))
+	for _, name := range names {
+		nameSet[name] = true
+	}
+
+	for name, tool := range r.tools {
+		if nameSet[name] {
+			filtered.tools[name] = tool
+		}
+	}
+
+	return filtered
+}
+
+// Clone creates a copy of the registry
+func (r *Registry) Clone() *Registry {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	cloned := NewRegistry()
+	for name, tool := range r.tools {
+		cloned.tools[name] = tool
+	}
+
+	return cloned
+}
+
+// Count returns the number of registered tools
+func (r *Registry) Count() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return len(r.tools)
+}
+
 // ToJSONSchema converts a tool to a JSON schema for LLM function calling
 func ToJSONSchema(tool Tool) map[string]any {
 	properties := make(map[string]any)

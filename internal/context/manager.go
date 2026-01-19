@@ -533,3 +533,102 @@ func (m *Manager) SaveToDefaultDir() error {
 	}
 	return m.Save(dir)
 }
+
+// Clone creates a deep copy of the context manager with isolated state
+// This is used for subagents to have their own conversation context
+func (m *Manager) Clone() *Manager {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	// Create new manager with same settings but empty conversation
+	cloned := &Manager{
+		maxMessages:  m.maxMessages,
+		systemPrompt: m.systemPrompt,
+		conversation: &Conversation{
+			ID:         generateID(),
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+			Messages:   make([]Message, 0),
+			Model:      m.conversation.Model,
+			ProjectDir: m.conversation.ProjectDir,
+		},
+		priorities: make([]MessagePriority, 0),
+	}
+
+	// Clone window manager if set
+	if m.windowManager != nil {
+		cloned.windowManager = &WindowManager{
+			config: m.windowManager.config,
+		}
+	}
+
+	return cloned
+}
+
+// CloneWithSystemPrompt creates a clone with a different system prompt
+func (m *Manager) CloneWithSystemPrompt(systemPrompt string) *Manager {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	cloned := &Manager{
+		maxMessages:  m.maxMessages,
+		systemPrompt: systemPrompt,
+		conversation: &Conversation{
+			ID:         generateID(),
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+			Messages:   make([]Message, 0),
+			Model:      m.conversation.Model,
+			ProjectDir: m.conversation.ProjectDir,
+		},
+		priorities: make([]MessagePriority, 0),
+	}
+
+	if m.windowManager != nil {
+		cloned.windowManager = &WindowManager{
+			config: m.windowManager.config,
+		}
+	}
+
+	return cloned
+}
+
+// GetTokenCount returns the estimated token count for current context
+func (m *Manager) GetTokenCount() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	total := 0
+
+	// Count system prompt tokens
+	if m.systemPrompt != "" {
+		total += llm.EstimateTokens(m.systemPrompt) + 4 // +4 for role overhead
+	}
+
+	// Count message tokens
+	for _, msg := range m.conversation.Messages {
+		total += llm.EstimateTokens(msg.Content) + 4 // +4 for role overhead
+
+		// Count tool call tokens if any
+		for _, tc := range msg.ToolCalls {
+			total += llm.EstimateTokens(tc.Name)
+			total += llm.EstimateTokens(tc.Result)
+		}
+	}
+
+	return total
+}
+
+// GetSystemPrompt returns the current system prompt
+func (m *Manager) GetSystemPrompt() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.systemPrompt
+}
+
+// SetSystemPrompt updates the system prompt
+func (m *Manager) SetSystemPrompt(prompt string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.systemPrompt = prompt
+}
