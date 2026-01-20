@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -53,6 +54,9 @@ const (
 
 // ShowDiff displays a diff between old and new content
 func ShowDiff(path, oldContent, newContent string) error {
+	// Detect language for syntax highlighting
+	currentDiffLanguage = detectLanguageFromPath(path)
+
 	if oldContent == "" {
 		// New file
 		fmt.Println()
@@ -276,7 +280,10 @@ func displayDiff(lines []DiffLine) {
 	}
 }
 
-// printDiffLine prints a single diff line
+// currentDiffLanguage stores the detected language for current diff
+var currentDiffLanguage string
+
+// printDiffLine prints a single diff line with optional syntax highlighting
 func printDiffLine(line DiffLine) {
 	var prefix string
 	var style lipgloss.Style
@@ -297,9 +304,73 @@ func printDiffLine(line DiffLine) {
 		lineNum = fmt.Sprintf("%d", line.NewNum)
 	}
 
+	// Apply syntax highlighting to content if we have a detected language
+	content := line.Content
+	if currentDiffLanguage != "" && line.Type == DiffContext {
+		// For context lines, apply subtle syntax highlighting
+		content = HighlightCode(content, currentDiffLanguage)
+	}
+
 	fmt.Printf("%s %s\n",
 		lineNumberStyle.Render(lineNum),
-		style.Render(prefix+" "+line.Content))
+		style.Render(prefix+" "+content))
+}
+
+// detectLanguageFromPath returns the language based on file extension
+func detectLanguageFromPath(path string) string {
+	ext := strings.ToLower(filepath.Ext(path))
+
+	// Map extensions to languages
+	extMap := map[string]string{
+		".go":    "go",
+		".py":    "python",
+		".js":    "javascript",
+		".ts":    "typescript",
+		".jsx":   "javascript",
+		".tsx":   "typescript",
+		".rs":    "rust",
+		".java":  "java",
+		".c":     "c",
+		".cpp":   "cpp",
+		".h":     "c",
+		".hpp":   "cpp",
+		".rb":    "ruby",
+		".php":   "php",
+		".swift": "swift",
+		".kt":    "kotlin",
+		".scala": "scala",
+		".sh":    "bash",
+		".bash":  "bash",
+		".zsh":   "bash",
+		".sql":   "sql",
+		".html":  "html",
+		".css":   "css",
+		".scss":  "scss",
+		".json":  "json",
+		".yaml":  "yaml",
+		".yml":   "yaml",
+		".toml":  "toml",
+		".xml":   "xml",
+		".md":    "markdown",
+	}
+
+	if lang, ok := extMap[ext]; ok {
+		return lang
+	}
+
+	// Check for special filenames
+	base := strings.ToLower(filepath.Base(path))
+	specialFiles := map[string]string{
+		"dockerfile": "docker",
+		"makefile":   "make",
+		"cmakelists.txt": "cmake",
+	}
+
+	if lang, ok := specialFiles[base]; ok {
+		return lang
+	}
+
+	return ""
 }
 
 // ShowFileDiff is a convenience function for showing file diffs

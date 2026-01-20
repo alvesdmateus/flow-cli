@@ -320,6 +320,39 @@ func FormatTemplate(name, description string) string {
 	return fmt.Sprintf("%s - %s", titleStyle.Render(name), dimStyle.Render(description))
 }
 
+// ChatMode represents the current chat mode
+type ChatMode string
+
+const (
+	ModeChatNormal ChatMode = "chat"
+	ModeArch       ChatMode = "arch"
+)
+
+// RenderInputPrompt returns a styled input prompt for the given mode
+func RenderInputPrompt(mode ChatMode) string {
+	modeStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("39")).
+		Bold(true)
+
+	promptStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("75")).
+		Bold(true)
+
+	return fmt.Sprintf("%s %s ",
+		modeStyle.Render(fmt.Sprintf("[%s]", mode)),
+		promptStyle.Render(">"))
+}
+
+// RenderAssistantHeader returns a styled header for assistant output
+func RenderAssistantHeader() string {
+	return ""  // No header needed in the new design
+}
+
+// RenderSeparator returns a visual separator line
+func RenderSeparator() string {
+	return dimStyle.Render(strings.Repeat("─", 50))
+}
+
 // PrintWelcomeInit prints a welcome message for vibe init.
 func PrintWelcomeInit() {
 	fmt.Println()

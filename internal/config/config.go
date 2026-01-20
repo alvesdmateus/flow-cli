@@ -46,10 +46,18 @@ type SearchConfig struct {
 
 // SecurityConfig holds security and permission settings
 type SecurityConfig struct {
-	ProjectDir   string   `mapstructure:"project_dir"`
-	TrustedPaths []string `mapstructure:"trusted_paths"`
-	DeniedPaths  []string `mapstructure:"denied_paths"`
-	AutoApprove  bool     `mapstructure:"auto_approve"`
+	ProjectDir     string                `mapstructure:"project_dir"`
+	TrustedPaths   []string              `mapstructure:"trusted_paths"`
+	DeniedPaths    []string              `mapstructure:"denied_paths"`
+	AutoApprove    bool                  `mapstructure:"auto_approve"`    // Deprecated: Use Permissivity
+	Permissivity   string                `mapstructure:"permissivity"`    // auto-accept, revision-always, revision-big, revision-architecture
+	Classification ClassificationConfig `mapstructure:"classification"`
+}
+
+// ClassificationConfig holds thresholds for change classification
+type ClassificationConfig struct {
+	SmallLineThreshold  int `mapstructure:"small_line_threshold"`
+	MediumLineThreshold int `mapstructure:"medium_line_threshold"`
 }
 
 // CommandsConfig holds command allowlist/blocklist
@@ -88,6 +96,9 @@ func SetDefaults() {
 		filepath.Join(home, ".config", "gcloud"),
 	})
 	viper.SetDefault("security.auto_approve", false)
+	viper.SetDefault("security.permissivity", "revision-big") // Default: review significant changes
+	viper.SetDefault("security.classification.small_line_threshold", 20)
+	viper.SetDefault("security.classification.medium_line_threshold", 100)
 
 	// Commands defaults
 	viper.SetDefault("commands.allowed", []string{
@@ -153,8 +164,32 @@ func IsLLMAutoPull() bool {
 }
 
 // IsAutoApprove returns whether auto-approve is enabled
+// Deprecated: Use GetPermissivity instead
 func IsAutoApprove() bool {
 	return viper.GetBool("security.auto_approve")
+}
+
+// GetPermissivity returns the configured permissivity mode
+func GetPermissivity() string {
+	perm := viper.GetString("security.permissivity")
+	if perm == "" {
+		// Fall back to auto_approve for backward compatibility
+		if viper.GetBool("security.auto_approve") {
+			return "auto-accept"
+		}
+		return "revision-big"
+	}
+	return perm
+}
+
+// GetSmallLineThreshold returns the threshold for small changes
+func GetSmallLineThreshold() int {
+	return viper.GetInt("security.classification.small_line_threshold")
+}
+
+// GetMediumLineThreshold returns the threshold for medium changes
+func GetMediumLineThreshold() int {
+	return viper.GetInt("security.classification.medium_line_threshold")
 }
 
 // IsSearchEnabled returns whether web search is enabled
