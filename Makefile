@@ -1,4 +1,4 @@
-# vibe-cli Makefile
+# flow-cli Makefile
 
 # Version info
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -6,15 +6,15 @@ COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILD_DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Build settings
-BINARY_NAME = vibe
+BINARY_NAME = flow
 MAIN_PACKAGE = .
 GO = go
 
 # Linker flags for version injection
 LDFLAGS = -ldflags "-s -w \
-	-X github.com/mateus/vibe-cli/cmd.Version=$(VERSION) \
-	-X github.com/mateus/vibe-cli/cmd.Commit=$(COMMIT) \
-	-X github.com/mateus/vibe-cli/cmd.BuildDate=$(BUILD_DATE)"
+	-X github.com/mateus/flow-cli/cmd.Version=$(VERSION) \
+	-X github.com/mateus/flow-cli/cmd.Commit=$(COMMIT) \
+	-X github.com/mateus/flow-cli/cmd.BuildDate=$(BUILD_DATE)"
 
 # Platforms for cross-compilation
 PLATFORMS = linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
@@ -128,7 +128,7 @@ watch:
 
 # Show help
 help:
-	@echo "vibe-cli Makefile"
+	@echo "flow-cli Makefile"
 	@echo ""
 	@echo "Usage:"
 	@echo "  make              Build the binary"
