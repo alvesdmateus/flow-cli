@@ -109,13 +109,13 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] Rate limiting for LLM calls
 - [x] Checksum verification for file writes
 
-### Sprint 8: Reliability
-- [ ] Automatic retries with exponential backoff
-- [ ] Graceful degradation when LLM unavailable
-- [ ] Transaction-like file operations (atomic writes)
-- [ ] Backup before destructive operations
-- [ ] Health checks for LLM providers
-- [ ] Crash recovery (resume from last state)
+### Sprint 8: Reliability ✅
+- [x] Automatic retries with exponential backoff
+- [x] Graceful degradation when LLM unavailable
+- [x] Transaction-like file operations (atomic writes)
+- [x] Backup before destructive operations
+- [x] Health checks for LLM providers
+- [x] Crash recovery (resume from last state)
 
 ---
 
@@ -553,3 +553,32 @@ When working on roadmap items:
 | v0.3.0 | Phase 3-4 complete | Enhanced UX, security hardening |
 | v0.5.0 | Phase 5 complete | Advanced AI features |
 | v1.0.0 | Phase 6 complete | Full IDE integration, production ready |
+
+---
+
+### Check-in: 2026-01-17 (Sprint 8 Complete)
+
+#### Completed
+- **Sprint 8: Reliability** ✅
+  - `internal/reliability` package with production-grade reliability features
+  - `retry.go` - Automatic retries with exponential backoff, circuit breaker
+  - `fallback.go` - Graceful degradation with caching and offline capabilities
+  - `transaction.go` - Atomic file operations with commit/rollback
+  - `backup.go` - Automatic backups before destructive operations
+  - `health.go` - Health checks for LLM providers with status monitoring
+  - `recovery.go` - Crash recovery with checkpoints and state persistence
+  - 28 tests for reliability package
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 9: Planning & Reasoning**
+  - Multi-step task decomposition
+  - Self-validation
+  - Automatic rollback on failure
+
+#### Notes
+- Phase 4: Security & Reliability is now complete
+- Circuit breaker pattern prevents cascading failures
+- Transaction support enables safe multi-file operations
