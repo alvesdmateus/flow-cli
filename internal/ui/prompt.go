@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/mateus/vibe-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/sandbox"
 )
 
 var (
@@ -313,4 +313,50 @@ func PromptInputWithDefault(prompt, defaultValue string) (string, error) {
 	}
 
 	return input, nil
+}
+
+// FormatTemplate formats a template name and description for display.
+func FormatTemplate(name, description string) string {
+	return fmt.Sprintf("%s - %s", titleStyle.Render(name), dimStyle.Render(description))
+}
+
+// PrintWelcomeInit prints a welcome message for vibe init.
+func PrintWelcomeInit() {
+	fmt.Println()
+	fmt.Println(titleStyle.Render("Vibe Project Initialization"))
+	fmt.Println(dimStyle.Render("Create a new project or configure vibe for an existing one"))
+	fmt.Println()
+}
+
+// SelectOption prompts the user to select from a list of options
+func SelectOption(title string, options []string) (string, error) {
+	if len(options) == 0 {
+		return "", fmt.Errorf("no options provided")
+	}
+
+	if len(options) == 1 {
+		return options[0], nil
+	}
+
+	opts := make([]huh.Option[string], len(options))
+	for i, o := range options {
+		opts[i] = huh.NewOption(o, o)
+	}
+
+	var selected string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title(title).
+				Options(opts...).
+				Value(&selected),
+		),
+	)
+
+	err := form.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return selected, nil
 }

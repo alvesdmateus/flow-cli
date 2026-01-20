@@ -8,7 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mateus/vibe-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/secrets"
 )
 
 // GitRunner interface for executing git commands (allows mocking in tests)
@@ -424,6 +425,13 @@ func (t *GitCommitTool) Parameters() []Parameter {
 			Required:    false,
 			Default:     false,
 		},
+		{
+			Name:        "skip_secrets_check",
+			Type:        TypeBoolean,
+			Description: "Skip scanning staged files for secrets (not recommended)",
+			Required:    false,
+			Default:     false,
+		},
 	}
 }
 
@@ -438,6 +446,29 @@ func (t *GitCommitTool) Execute(ctx context.Context, args map[string]any) (*Resu
 	}
 
 	all := GetBoolArg(args, "all", false)
+	skipSecretsCheck := GetBoolArg(args, "skip_secrets_check", false)
+
+	// Scan staged files for secrets before committing (unless skipped)
+	if !skipSecretsCheck {
+		secretFindings, err := t.scanStagedFilesForSecrets(ctx)
+		if err != nil {
+			// Log warning but don't block on scan errors
+			// Just proceed with commit
+		} else if len(secretFindings) > 0 {
+			// Format warning message
+			var warningMsg strings.Builder
+			warningMsg.WriteString("WARNING: Potential secrets detected in staged files:\n\n")
+			for _, f := range secretFindings {
+				warningMsg.WriteString(fmt.Sprintf("  [%s] %s:%d - %s\n", f.Severity, f.File, f.Line, f.Description))
+				warningMsg.WriteString(fmt.Sprintf("         Match: %s\n", f.Match))
+			}
+			warningMsg.WriteString("\nCommit blocked to prevent accidental secret exposure.\n")
+			warningMsg.WriteString("To proceed anyway, use skip_secrets_check: true (not recommended).\n")
+			warningMsg.WriteString("Consider using environment variables or a secrets manager instead.")
+
+			return NewErrorResult(fmt.Errorf("%s", warningMsg.String())), nil
+		}
+	}
 
 	// Check permission for git commit
 	op := sandbox.NewOperation(sandbox.OpWriteFile, t.workDir, fmt.Sprintf("Git commit: %s", truncateMessage(message, 50)))
@@ -463,6 +494,44 @@ func (t *GitCommitTool) Execute(ctx context.Context, args map[string]any) (*Resu
 	}
 
 	return NewSuccessResultWithData(strings.TrimSpace(output), data), nil
+}
+
+// scanStagedFilesForSecrets scans staged files for secrets
+func (t *GitCommitTool) scanStagedFilesForSecrets(ctx context.Context) ([]secrets.Finding, error) {
+	// Get list of staged files
+	output, err := gitRunner.Run(ctx, t.workDir, "diff", "--cached", "--name-only")
+	if err != nil {
+		return nil, err
+	}
+
+	files := strings.Split(strings.TrimSpace(output), "\n")
+	if len(files) == 0 || (len(files) == 1 && files[0] == "") {
+		return nil, nil
+	}
+
+	detector := secrets.NewDetector()
+	var allFindings []secrets.Finding
+
+	for _, file := range files {
+		if file == "" {
+			continue
+		}
+
+		filePath := filepath.Join(t.workDir, file)
+		findings, err := detector.ScanFile(filePath)
+		if err != nil {
+			continue // Skip files we can't read
+		}
+
+		// Only report high and critical severity findings
+		for _, f := range findings {
+			if f.Severity == secrets.SeverityCritical || f.Severity == secrets.SeverityHigh {
+				allFindings = append(allFindings, f)
+			}
+		}
+	}
+
+	return allFindings, nil
 }
 
 // truncateMessage truncates a message to a maximum length

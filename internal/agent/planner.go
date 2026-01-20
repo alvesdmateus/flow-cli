@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	vibeContext "github.com/mateus/vibe-cli/internal/context"
-	"github.com/mateus/vibe-cli/internal/llm"
+	flowContext "github.com/mateus/flow-cli/internal/context"
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
 // PlanPhase represents a phase in the planning workflow
@@ -87,7 +87,7 @@ type PlannerHandler interface {
 // Planner orchestrates the architecture planning workflow
 type Planner struct {
 	llmClient  llm.Client
-	ctxManager *vibeContext.Manager
+	ctxManager *flowContext.Manager
 	model      string
 	plan       *Plan
 	phase      PlanPhase
@@ -102,7 +102,7 @@ type PlannerConfig struct {
 
 // NewPlanner creates a new planner
 func NewPlanner(cfg PlannerConfig) *Planner {
-	ctxManager := vibeContext.NewManager(ArchitectureSystemPrompt(), 100)
+	ctxManager := flowContext.NewManager(ArchitectureSystemPrompt(), 100)
 	ctxManager.SetModel(cfg.Model)
 
 	return &Planner{
@@ -466,9 +466,106 @@ func (p *Planner) ApprovePlan() {
 	}
 }
 
+// ModifyPlan incorporates user feedback and generates a revised plan
+func (p *Planner) ModifyPlan(ctx context.Context, feedback string, handler PlannerHandler) (*Plan, error) {
+	if p.plan == nil {
+		return nil, fmt.Errorf("no existing plan to modify")
+	}
+
+	handler.OnPhaseChange(PhaseAnalyzing)
+	handler.OnMessage("Revising the plan based on your feedback...")
+
+	// Build context with current plan and feedback
+	prompt := fmt.Sprintf(`I have created the following implementation plan:
+
+Title: %s
+Summary: %s
+
+Goals:
+%s
+
+Current Tasks:
+%s
+
+The user has provided this feedback for modifications:
+"%s"
+
+Please revise the plan to address this feedback. Maintain the same structure but adjust:
+- Goals if the scope has changed
+- Tasks to reflect the requested changes
+- Priorities if needed
+- File lists if affected
+
+Provide the complete revised plan with all sections.`,
+		p.plan.Title,
+		p.plan.Summary,
+		formatGoals(p.plan.Goals),
+		formatPlanTasks(p.plan.Tasks),
+		feedback,
+	)
+
+	p.ctxManager.AddUserMessage(prompt)
+
+	messages := p.ctxManager.GetMessages()
+	response, err := p.llmClient.ChatSync(ctx, messages, llm.ChatOptions{
+		Model:       p.model,
+		Temperature: 0.7,
+	})
+	if err != nil {
+		handler.OnError(err)
+		return nil, err
+	}
+
+	p.ctxManager.AddAssistantMessage(response, nil)
+
+	// Parse revised plan
+	revisedPlan := p.parsePlan(response)
+	revisedPlan.ID = p.plan.ID
+	revisedPlan.CreatedAt = p.plan.CreatedAt
+	revisedPlan.UpdatedAt = time.Now()
+	revisedPlan.Phase = PhaseReviewing
+
+	p.plan = revisedPlan
+
+	handler.OnPhaseChange(PhaseReviewing)
+	handler.OnPlanUpdate(p.plan)
+
+	return p.plan, nil
+}
+
+// formatGoals formats goals for display in prompt
+func formatGoals(goals []string) string {
+	if len(goals) == 0 {
+		return "- No specific goals defined"
+	}
+	var b strings.Builder
+	for _, g := range goals {
+		b.WriteString(fmt.Sprintf("- %s\n", g))
+	}
+	return b.String()
+}
+
+// formatPlanTasks formats tasks for display in prompt
+func formatPlanTasks(tasks []PlanTask) string {
+	if len(tasks) == 0 {
+		return "- No tasks defined"
+	}
+	var b strings.Builder
+	for i, t := range tasks {
+		b.WriteString(fmt.Sprintf("%d. %s (Priority: %s)\n", i+1, t.Title, t.Priority))
+		if t.Description != "" {
+			b.WriteString(fmt.Sprintf("   %s\n", t.Description))
+		}
+		if len(t.Files) > 0 {
+			b.WriteString(fmt.Sprintf("   Files: %s\n", strings.Join(t.Files, ", ")))
+		}
+	}
+	return b.String()
+}
+
 // ArchitectureSystemPrompt returns the system prompt for architecture mode
 func ArchitectureSystemPrompt() string {
-	return `You are vibe-cli in Architecture Mode - a specialized planning assistant.
+	return `You are flow-cli in Architecture Mode - a specialized planning assistant.
 
 Your role is to help users plan and design software implementations BEFORE writing code.
 

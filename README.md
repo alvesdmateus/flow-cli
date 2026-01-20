@@ -1,4 +1,4 @@
-# vibe-cli
+# flow-cli
 
 A self-hosted AI coding assistant CLI that uses local LLMs to help you code, plan, and build software projects.
 
@@ -27,15 +27,15 @@ A self-hosted AI coding assistant CLI that uses local LLMs to help you code, pla
 
 **From Source:**
 ```bash
-git clone https://github.com/mateus/vibe-cli.git
-cd vibe-cli
+git clone https://github.com/mateus/flow-cli.git
+cd flow-cli
 make build
 make install
 ```
 
 **Or build directly:**
 ```bash
-go install github.com/mateus/vibe-cli@latest
+go install github.com/mateus/flow-cli@latest
 ```
 
 ### First Run
@@ -48,12 +48,12 @@ go install github.com/mateus/vibe-cli@latest
 
 2. Initialize configuration:
    ```bash
-   vibe config init
+   flow config init
    ```
 
 3. Start chatting:
    ```bash
-   vibe chat
+   flow chat
    ```
 
 ## Usage
@@ -63,7 +63,7 @@ go install github.com/mateus/vibe-cli@latest
 Start an interactive session with your AI assistant:
 
 ```bash
-vibe chat
+flow chat
 ```
 
 Inside chat, you can:
@@ -84,8 +84,8 @@ Inside chat, you can:
 Run a single prompt and get a response:
 
 ```bash
-vibe run "Explain what a goroutine is"
-vibe run --model mistral:7b "Write a hello world in Rust"
+flow run "Explain what a goroutine is"
+flow run --model mistral:7b "Write a hello world in Rust"
 ```
 
 ### Architecture Mode
@@ -93,7 +93,7 @@ vibe run --model mistral:7b "Write a hello world in Rust"
 Enter planning mode for larger features:
 
 ```bash
-vibe arch "Add user authentication to my app"
+flow arch "Add user authentication to my app"
 ```
 
 This will:
@@ -105,17 +105,17 @@ This will:
 ### Session Management
 
 ```bash
-vibe session list              # List saved sessions
-vibe session resume            # Resume a session (interactive)
-vibe session resume abc123     # Resume by ID
-vibe session delete abc123     # Delete a session
+flow session list              # List saved sessions
+flow session resume            # Resume a session (interactive)
+flow session resume abc123     # Resume by ID
+flow session delete abc123     # Delete a session
 ```
 
 ## Configuration
 
 ### Config File
 
-Create a config file at `~/.vibe/config.yaml`:
+Create a config file at `~/.flow/config.yaml`:
 
 ```yaml
 llm:
@@ -142,13 +142,13 @@ security:
 Configure your LLM provider interactively:
 
 ```bash
-vibe config provider
+flow config provider
 ```
 
 ### View Configuration
 
 ```bash
-vibe config show
+flow config show
 ```
 
 ## Supported LLM Providers
@@ -165,8 +165,8 @@ vibe config show
 The provider is auto-detected based on the endpoint port, or you can specify it explicitly:
 
 ```bash
-vibe config set llm.provider lmstudio
-vibe config set llm.endpoint http://localhost:1234
+flow config set llm.provider lmstudio
+flow config set llm.endpoint http://localhost:1234
 ```
 
 ## Global Flags
@@ -185,21 +185,21 @@ Generate shell completion scripts:
 
 ```bash
 # Bash
-vibe completion bash > /etc/bash_completion.d/vibe
+flow completion bash > /etc/bash_completion.d/vibe
 
 # Zsh
-vibe completion zsh > "${fpath[1]}/_vibe"
+flow completion zsh > "${fpath[1]}/_vibe"
 
 # Fish
-vibe completion fish > ~/.config/fish/completions/vibe.fish
+flow completion fish > ~/.config/fish/completions/vibe.fish
 
 # PowerShell
-vibe completion powershell > vibe.ps1
+flow completion powershell > vibe.ps1
 ```
 
 ## Security
 
-vibe-cli operates with a permission-first model:
+flow-cli operates with a permission-first model:
 
 - **File Access** - Only files within the project directory can be accessed
 - **Command Execution** - Commands require approval (configurable allowlist)
@@ -208,15 +208,15 @@ vibe-cli operates with a permission-first model:
 
 To enable auto-approve (use with caution):
 ```bash
-vibe chat --auto-approve
+flow chat --auto-approve
 # or in config
-vibe config set security.auto_approve true
+flow config set security.auto_approve true
 ```
 
 ## Project Structure
 
 ```
-vibe-cli/
+flow-cli/
 ├── cmd/                    # CLI commands
 │   ├── root.go            # Root command, global flags
 │   ├── chat.go            # Interactive chat
@@ -253,7 +253,7 @@ make release        # Build for all platforms
 ### Version Information
 
 ```bash
-vibe version
+flow version
 ```
 
 Output includes version, commit hash, build date, and Go version.
@@ -270,7 +270,7 @@ Output includes version, commit hash, build date, and Go version.
 
 2. Check the endpoint configuration:
    ```bash
-   vibe config show
+   flow config show
    ```
 
 3. Test connectivity:
@@ -289,7 +289,7 @@ ollama pull llama3:8b
 
 Check your security configuration:
 ```bash
-vibe config show
+flow config show
 ```
 
 Ensure the project directory is correctly set and paths are not in the denied list.

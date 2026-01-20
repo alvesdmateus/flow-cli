@@ -6,19 +6,22 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
 	"github.com/spf13/cobra"
 
-	"github.com/mateus/vibe-cli/internal/agent"
-	"github.com/mateus/vibe-cli/internal/config"
-	vibecontext "github.com/mateus/vibe-cli/internal/context"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/sandbox"
-	"github.com/mateus/vibe-cli/internal/search"
-	"github.com/mateus/vibe-cli/internal/tools"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/agent"
+	"github.com/mateus/flow-cli/internal/config"
+	flowcontext "github.com/mateus/flow-cli/internal/context"
+	"github.com/mateus/flow-cli/internal/indexing"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/logging"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/search"
+	"github.com/mateus/flow-cli/internal/tools"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var chatCmd = &cobra.Command{
@@ -30,8 +33,8 @@ The assistant can help you with coding tasks, answer questions,
 read and write files, execute commands, and search the web.
 
 Examples:
-  vibe chat
-  vibe chat --model llama3:8b`,
+  flow chat
+  flow chat --model llama3:8b`,
 	RunE: runChat,
 }
 
@@ -43,20 +46,7 @@ func runChat(cmd *cobra.Command, args []string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	// Create LLM client
-	llmClient, err := llm.NewClient(
-		config.GetLLMProvider(),
-		config.GetLLMEndpoint(),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create LLM client: %w", err)
-	}
-
-	// Check connection
-	ui.PrintInfo("Connecting to LLM service...")
-	if err := llmClient.Ping(ctx); err != nil {
-		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
-	}
+	logging.Debug("Starting chat session")
 
 	// Determine model
 	model := modelFlag
@@ -64,7 +54,55 @@ func runChat(cmd *cobra.Command, args []string) error {
 		model = config.GetLLMModel()
 	}
 
-	// If still no model, prompt user to select one
+	// Create LLM client with auto-start and auto-pull support
+	logging.Debug("Creating LLM client: provider=%s endpoint=%s auto_start=%v auto_pull=%v",
+		config.GetLLMProvider(), config.GetLLMEndpoint(), config.IsLLMAutoStart(), config.IsLLMAutoPull())
+
+	var llmClient llm.Client
+	var err error
+
+	// Use auto-setup for Ollama provider when auto-start or auto-pull is enabled
+	if (config.GetLLMProvider() == "ollama" || config.GetLLMProvider() == "") &&
+		(config.IsLLMAutoStart() || config.IsLLMAutoPull()) {
+
+		spinner := ui.StartSpinner("Setting up LLM...")
+		llmClient, err = llm.NewClientWithAutoSetup(ctx, llm.ClientConfig{
+			Provider: config.GetLLMProvider(),
+			Endpoint: config.GetLLMEndpoint(),
+			APIKey:   config.GetLLMAPIKey(),
+		}, model, func(msg string) {
+			spinner.UpdateMessage(msg)
+		})
+		if err != nil {
+			spinner.StopWithError("Setup failed")
+			logging.Error("Failed to setup LLM client: %v", err)
+			return fmt.Errorf("failed to setup LLM: %w", err)
+		}
+		spinner.StopWithSuccess("Ready")
+	} else {
+		// Traditional client creation without auto-setup
+		llmClient, err = llm.NewClient(
+			config.GetLLMProvider(),
+			config.GetLLMEndpoint(),
+		)
+		if err != nil {
+			logging.Error("Failed to create LLM client: %v", err)
+			return fmt.Errorf("failed to create LLM client: %w", err)
+		}
+
+		// Check connection with spinner
+		spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+		spinner.Start()
+		if err := llmClient.Ping(ctx); err != nil {
+			spinner.StopWithError("Connection failed")
+			logging.Error("LLM connection failed: %v", err)
+			return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
+		}
+		spinner.StopWithSuccess("Connected")
+	}
+	logging.Debug("LLM connection established")
+
+	// If no model specified and using non-Ollama provider, prompt user to select
 	if model == "" {
 		models, err := llmClient.ListModels(ctx)
 		if err != nil {
@@ -87,13 +125,62 @@ func runChat(cmd *cobra.Command, args []string) error {
 		model = selected
 	}
 
+	// Get working directory
+	workDir, _ := os.Getwd()
+
 	// Create search client (optional)
 	var searchClient search.Client
 	if config.IsSearchEnabled() {
-		searchClient, _ = search.NewClient(
+		var searchErr error
+		searchClient, searchErr = search.NewClient(
 			config.GetSearchProvider(),
 			config.GetSearchEndpoint(),
 		)
+		if searchErr != nil {
+			ui.PrintWarning(fmt.Sprintf("Search disabled: %v", searchErr))
+		}
+	}
+
+	// Create indexer if enabled
+	var idx *indexing.Indexer
+	if config.IsIndexingEnabled() {
+		dbPath := filepath.Join(workDir, ".flow", "index.db")
+		var indexErr error
+		idx, indexErr = indexing.NewIndexer(indexing.IndexerConfig{
+			Endpoint:       config.GetLLMEndpoint(),
+			EmbeddingModel: config.GetEmbeddingModel(),
+			DBPath:         dbPath,
+			WorkDir:        workDir,
+		})
+		if indexErr != nil {
+			logging.Warn("Indexing disabled: %v", indexErr)
+			ui.PrintWarning(fmt.Sprintf("Indexing disabled: %v", indexErr))
+		} else {
+			defer idx.Close()
+
+			// Auto-index if enabled and index is empty
+			if config.IsAutoIndexEnabled() {
+				stats := idx.GetStats()
+				if stats.TotalDocuments == 0 {
+					logging.Debug("Index is empty, starting background indexing")
+					go func() {
+						if err := idx.IndexWorkspace(ctx, nil); err != nil {
+							logging.Warn("Background indexing failed: %v", err)
+						}
+					}()
+				}
+			}
+
+			// Start file watcher if enabled
+			if config.IsWatchChangesEnabled() {
+				_, watchErr := idx.WatchForChangesAsync(ctx, func(path string) {
+					logging.Debug("Re-indexed file: %s", path)
+				})
+				if watchErr != nil {
+					logging.Warn("File watching disabled: %v", watchErr)
+				}
+			}
+		}
 	}
 
 	// Create security policy
@@ -107,10 +194,10 @@ func runChat(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create tool registry
-	workDir, _ := os.Getwd()
 	toolReg, err := tools.SetupRegistry(tools.SetupOptions{
 		Permissions:  permissions,
 		SearchClient: searchClient,
+		Indexer:      idx,
 		WorkDir:      workDir,
 	})
 	if err != nil {
@@ -156,7 +243,7 @@ func runChat(cmd *cobra.Command, args []string) error {
 func printWelcome(model, workDir string) {
 	fmt.Println()
 	ui.PrintTitle("╭─────────────────────────────────────────────╮")
-	ui.PrintTitle("│           Welcome to vibe-cli               │")
+	ui.PrintTitle("│           Welcome to flow-cli               │")
 	ui.PrintTitle("╰─────────────────────────────────────────────╯")
 	fmt.Println()
 	ui.PrintInfo(fmt.Sprintf("  Model:   %s", model))
@@ -245,9 +332,8 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 		return true
 
 	case "/model", "/m":
-		fmt.Println("Model selection not yet implemented in this version.")
-		fmt.Println("Restart with: vibe chat --model <model_name>")
-		return true
+		return handleModelSwitch(chatAgent)
+
 
 	case "/status", "/s":
 		ctxManager := chatAgent.GetContextManager()
@@ -272,7 +358,7 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 		return true
 
 	case "/sessions":
-		sessions, err := vibecontext.ListSessions("")
+		sessions, err := flowcontext.ListSessions("")
 		if err != nil {
 			ui.PrintError(fmt.Sprintf("Failed to list sessions: %v", err))
 			return true
@@ -283,7 +369,7 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 			fmt.Printf("\nSaved sessions (%d):\n", len(sessions))
 			for i, s := range sessions {
 				if i >= 5 {
-					fmt.Printf("  ... and %d more. Use 'vibe session list' to see all.\n", len(sessions)-5)
+					fmt.Printf("  ... and %d more. Use 'flow session list' to see all.\n", len(sessions)-5)
 					break
 				}
 				fmt.Printf("  [%s] %s\n", s.ID[:8], s.Title)
@@ -305,12 +391,12 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 func printHelp() {
 	help := `
 ╭─────────────────────────────────────────────────────────╮
-│                    vibe-cli Help                        │
+│                    flow-cli Help                        │
 ├─────────────────────────────────────────────────────────┤
 │ Commands:                                               │
 │   /help, /h     - Show this help message                │
 │   /clear, /c    - Clear conversation history            │
-│   /model, /m    - Show current model info               │
+│   /model, /m    - Switch to a different model           │
 │   /status, /s   - Show conversation status              │
 │   /save         - Save current session                  │
 │   /sessions     - List saved sessions                   │
@@ -318,8 +404,8 @@ func printHelp() {
 │                                                         │
 │ Session Management:                                     │
 │   Sessions are auto-saved when you exit.                │
-│   Use 'vibe session list' to see all sessions.          │
-│   Use 'vibe session resume' to continue a session.      │
+│   Use 'flow session list' to see all sessions.          │
+│   Use 'flow session resume' to continue a session.      │
 │                                                         │
 │ Tips:                                                   │
 │   • Be specific about what you want to accomplish       │
@@ -336,20 +422,91 @@ func printHelp() {
 	fmt.Println(help)
 }
 
-// ConsoleHandler implements agent.ResponseHandler for console output
-type ConsoleHandler struct{}
+// handleModelSwitch allows switching models during chat
+func handleModelSwitch(chatAgent *agent.Agent) bool {
+	ctx := context.Background()
+	llmClient := chatAgent.GetLLMClient()
 
-func (h *ConsoleHandler) OnStreamStart() {}
+	// Get available models
+	models, err := llmClient.ListModels(ctx)
+	if err != nil {
+		ui.PrintError(fmt.Sprintf("Failed to list models: %v", err))
+		return true
+	}
+
+	if len(models) == 0 {
+		ui.PrintInfo("No models available.")
+		return true
+	}
+
+	// Get current model for display
+	currentModel := chatAgent.GetContextManager().GetModel()
+
+	// Build model list with current indicator
+	modelNames := make([]string, len(models))
+	for i, m := range models {
+		if m.Name == currentModel {
+			modelNames[i] = m.Name + " (current)"
+		} else {
+			modelNames[i] = m.Name
+		}
+	}
+
+	fmt.Println()
+	selected, err := ui.SelectModel(modelNames)
+	if err != nil {
+		ui.PrintInfo("Model selection cancelled.")
+		return true
+	}
+
+	// Remove " (current)" suffix if present
+	selected = strings.TrimSuffix(selected, " (current)")
+
+	if selected == currentModel {
+		ui.PrintInfo("Already using this model.")
+		return true
+	}
+
+	// Switch the model
+	chatAgent.SetModel(selected)
+	ui.PrintSuccess(fmt.Sprintf("Switched to model: %s", selected))
+	fmt.Println()
+	return true
+}
+
+// ConsoleHandler implements agent.ResponseHandler for console output
+type ConsoleHandler struct {
+	spinner      *ui.Spinner
+	firstChunk   bool
+}
+
+func (h *ConsoleHandler) OnStreamStart() {
+	h.spinner = ui.SpinnerThinking()
+	h.spinner.Start()
+	h.firstChunk = true
+}
 
 func (h *ConsoleHandler) OnStreamChunk(chunk string) {
+	if h.firstChunk && h.spinner != nil {
+		h.spinner.Stop()
+		h.firstChunk = false
+	}
 	fmt.Print(chunk)
 }
 
 func (h *ConsoleHandler) OnStreamEnd() {
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.Stop()
+	}
 	fmt.Println()
 }
 
 func (h *ConsoleHandler) OnToolStart(name, desc string) {
+	// Stop any running spinner
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.Stop()
+		h.firstChunk = false
+	}
 	fmt.Printf("\n\033[1;33m[🔧 %s]\033[0m %s\n", name, desc)
 }
 
@@ -362,9 +519,22 @@ func (h *ConsoleHandler) OnToolEnd(name string, success bool, result string) {
 }
 
 func (h *ConsoleHandler) OnThinking(msg string) {
-	fmt.Printf("\033[90m⏳ %s\033[0m\n", msg)
+	// Update spinner message if running, otherwise just print
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.UpdateMessage(msg)
+	} else {
+		fmt.Printf("\033[90m⏳ %s\033[0m\n", msg)
+	}
 }
 
 func (h *ConsoleHandler) OnError(err error) {
-	fmt.Printf("\033[1;31mError: %s\033[0m\n", err.Error())
+	if err == nil {
+		return
+	}
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.StopWithError(err.Error())
+		h.firstChunk = false
+	} else {
+		fmt.Printf("\033[1;31mError: %s\033[0m\n", err.Error())
+	}
 }

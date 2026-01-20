@@ -13,6 +13,15 @@ type Config struct {
 	Search   SearchConfig   `mapstructure:"search"`
 	Security SecurityConfig `mapstructure:"security"`
 	Commands CommandsConfig `mapstructure:"commands"`
+	Indexing IndexingConfig `mapstructure:"indexing"`
+}
+
+// IndexingConfig holds semantic search indexing configuration
+type IndexingConfig struct {
+	Enabled        bool   `mapstructure:"enabled"`
+	EmbeddingModel string `mapstructure:"embedding_model"`
+	AutoIndex      bool   `mapstructure:"auto_index"`
+	WatchChanges   bool   `mapstructure:"watch_changes"`
 }
 
 // LLMConfig holds LLM provider configuration
@@ -22,6 +31,8 @@ type LLMConfig struct {
 	APIKey      string  `mapstructure:"api_key"`
 	Model       string  `mapstructure:"model"`
 	Temperature float64 `mapstructure:"temperature"`
+	AutoStart   bool    `mapstructure:"auto_start"`   // Auto-start Ollama if not running
+	AutoPull    bool    `mapstructure:"auto_pull"`    // Auto-pull model if not available
 }
 
 // SearchConfig holds web search configuration
@@ -54,8 +65,10 @@ func SetDefaults() {
 	// LLM defaults
 	viper.SetDefault("llm.provider", "ollama")
 	viper.SetDefault("llm.endpoint", "http://localhost:11434")
-	viper.SetDefault("llm.model", "")
+	viper.SetDefault("llm.model", "llama3.2")
 	viper.SetDefault("llm.temperature", 0.7)
+	viper.SetDefault("llm.auto_start", true)
+	viper.SetDefault("llm.auto_pull", true)
 
 	// Search defaults
 	viper.SetDefault("search.enabled", true)
@@ -92,6 +105,12 @@ func SetDefaults() {
 		"chmod 777",
 		":(){ :|:& };:",
 	})
+
+	// Indexing defaults (opt-in feature)
+	viper.SetDefault("indexing.enabled", false)
+	viper.SetDefault("indexing.embedding_model", "nomic-embed-text")
+	viper.SetDefault("indexing.auto_index", true)
+	viper.SetDefault("indexing.watch_changes", true)
 }
 
 // Load returns the current configuration
@@ -116,6 +135,21 @@ func GetLLMModel() string {
 // GetLLMProvider returns the configured provider
 func GetLLMProvider() string {
 	return viper.GetString("llm.provider")
+}
+
+// GetLLMAPIKey returns the configured API key for the LLM provider
+func GetLLMAPIKey() string {
+	return viper.GetString("llm.api_key")
+}
+
+// IsLLMAutoStart returns whether auto-start is enabled for Ollama
+func IsLLMAutoStart() bool {
+	return viper.GetBool("llm.auto_start")
+}
+
+// IsLLMAutoPull returns whether auto-pull is enabled for models
+func IsLLMAutoPull() bool {
+	return viper.GetBool("llm.auto_pull")
 }
 
 // IsAutoApprove returns whether auto-approve is enabled
@@ -146,4 +180,24 @@ func GetSearchLanguage() string {
 // GetSearchLimit returns the configured search result limit
 func GetSearchLimit() int {
 	return viper.GetInt("search.limit")
+}
+
+// IsIndexingEnabled returns whether semantic indexing is enabled
+func IsIndexingEnabled() bool {
+	return viper.GetBool("indexing.enabled")
+}
+
+// GetEmbeddingModel returns the configured embedding model
+func GetEmbeddingModel() string {
+	return viper.GetString("indexing.embedding_model")
+}
+
+// IsAutoIndexEnabled returns whether auto-indexing is enabled
+func IsAutoIndexEnabled() bool {
+	return viper.GetBool("indexing.auto_index")
+}
+
+// IsWatchChangesEnabled returns whether file watching is enabled
+func IsWatchChangesEnabled() bool {
+	return viper.GetBool("indexing.watch_changes")
 }

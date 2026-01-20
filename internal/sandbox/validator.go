@@ -54,6 +54,7 @@ func NewValidator(policy *Policy) (*Validator, error) {
 }
 
 // expandAndAbs expands ~ to home directory and returns absolute path
+// Also resolves symlinks to prevent path traversal attacks
 func expandAndAbs(path string) (string, error) {
 	if strings.HasPrefix(path, "~") {
 		home, err := os.UserHomeDir()
@@ -62,7 +63,27 @@ func expandAndAbs(path string) (string, error) {
 		}
 		path = filepath.Join(home, path[1:])
 	}
-	return filepath.Abs(path)
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+
+	// Try to resolve symlinks for security (prevent symlink attacks)
+	// If the path doesn't exist yet, use the absolute path
+	resolved, err := filepath.EvalSymlinks(absPath)
+	if err != nil {
+		// Path may not exist yet (e.g., for write operations)
+		// In this case, resolve the parent directory
+		dir := filepath.Dir(absPath)
+		if resolvedDir, dirErr := filepath.EvalSymlinks(dir); dirErr == nil {
+			return filepath.Join(resolvedDir, filepath.Base(absPath)), nil
+		}
+		// Fall back to absolute path if parent doesn't exist either
+		return absPath, nil
+	}
+
+	return resolved, nil
 }
 
 // ValidateReadPath checks if a path can be read
