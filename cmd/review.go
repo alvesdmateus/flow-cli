@@ -35,12 +35,12 @@ By default, it reviews all uncommitted changes. You can specify files
 or use flags to review staged changes or compare with specific commits.
 
 Examples:
-  vibe review                    # Review all uncommitted changes
-  vibe review --staged           # Review only staged changes
-  vibe review --commit HEAD~1    # Compare with previous commit
-  vibe review src/main.go        # Review specific file
-  vibe review --pr 123           # Review a pull request (requires gh)
-  vibe review --focus security   # Focus on security issues`,
+  flow review                    # Review all uncommitted changes
+  flow review --staged           # Review only staged changes
+  flow review --commit HEAD~1    # Compare with previous commit
+  flow review src/main.go        # Review specific file
+  flow review --pr 123           # Review a pull request (requires gh)
+  flow review --focus security   # Focus on security issues`,
 	RunE: runReview,
 }
 

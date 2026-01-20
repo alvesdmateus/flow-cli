@@ -23,8 +23,6 @@ Thumbs.db
 *.dll
 *.so
 *.dylib
-vibe
-vibe.exe
 flow
 flow.exe
 dist/

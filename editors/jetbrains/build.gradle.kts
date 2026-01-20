@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.intellij") version "1.15.0"
 }
 
-group = "com.vibe"
+group = "com.flow"
 version = "0.1.0"
 
 repositories {

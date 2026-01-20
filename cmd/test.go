@@ -28,11 +28,11 @@ This command can:
 - Show test coverage information
 
 Examples:
-  vibe test                      # Run all tests in the project
-  vibe test --generate main.go   # Generate tests for main.go
-  vibe test --coverage           # Run tests with coverage report
-  vibe test ./pkg/...            # Run tests for specific packages
-  vibe test --fix                # Run tests and suggest fixes for failures`,
+  flow test                      # Run all tests in the project
+  flow test --generate main.go   # Generate tests for main.go
+  flow test --coverage           # Run tests with coverage report
+  flow test ./pkg/...            # Run tests for specific packages
+  flow test --fix                # Run tests and suggest fixes for failures`,
 	RunE: runTest,
 }
 

@@ -43,7 +43,7 @@ linters-settings:
       - G306 # WriteFile permissions - CLI writes code files with 0644
 
   goimports:
-    local-prefixes: github.com/mateus/vibe-cli
+    local-prefixes: github.com/alvesdmateus/flow-cli
 
 issues:
   exclude-rules:

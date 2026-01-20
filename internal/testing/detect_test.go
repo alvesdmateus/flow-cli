@@ -8,7 +8,7 @@ import (
 
 func TestDetectProjectType(t *testing.T) {
 	// Create temp directory for tests
-	tmpDir, err := os.MkdirTemp("", "vibe-test-*")
+	tmpDir, err := os.MkdirTemp("", "flow-test-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}

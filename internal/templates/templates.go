@@ -1,4 +1,4 @@
-// Package templates provides project scaffolding templates for vibe init.
+// Package templates provides project scaffolding templates for flow init.
 package templates
 
 // Template represents a project template with its files and configuration.

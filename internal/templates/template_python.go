@@ -9,7 +9,7 @@ var pythonTemplate = Template{
 		"requirements.txt for dependencies",
 		"src layout with package structure",
 		".gitignore for Python projects",
-		".vibe configuration",
+		".flow configuration",
 	},
 	Files: []TemplateFile{
 		{
@@ -259,9 +259,9 @@ mypy src/
 │   └── test_main.py
 ├── pyproject.toml
 ├── requirements.txt
-├── .vibe/
+├── .flow/
 │   └── config.yaml
-└── .vibeignore
+└── .flowignore
 ` + "```" + `
 
 ## License
@@ -270,8 +270,8 @@ MIT
 `,
 		},
 		{
-			Path: ".vibe/config.yaml",
-			Content: `# Vibe CLI Project Configuration
+			Path: ".flow/config.yaml",
+			Content: `# Flow CLI Project Configuration
 # This file contains project-specific settings for flow-cli
 
 # Project metadata
@@ -306,8 +306,8 @@ commands:
 `,
 		},
 		{
-			Path: ".vibeignore",
-			Content: `# Files and directories to exclude from vibe indexing
+			Path: ".flowignore",
+			Content: `# Files and directories to exclude from flow indexing
 
 # Virtual environments
 .venv/

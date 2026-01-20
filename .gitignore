@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-vibe
+flow
 
 # Test binary, built with `go test -c`
 *.test
@@ -28,7 +28,7 @@ dist/
 Thumbs.db
 
 # Local config (don't commit personal settings)
-.vibe.yaml
+.flow.yaml
 config.yaml
 
 # Logs

@@ -33,7 +33,7 @@ type BackupConfig struct {
 // DefaultBackupConfig returns sensible defaults.
 func DefaultBackupConfig(baseDir string) BackupConfig {
 	return BackupConfig{
-		BackupDir:     filepath.Join(baseDir, ".vibe", "backups"),
+		BackupDir:     filepath.Join(baseDir, ".flow", "backups"),
 		MaxBackups:    10,
 		CompressAfter: 24 * time.Hour,
 		Retention:     7 * 24 * time.Hour, // 7 days

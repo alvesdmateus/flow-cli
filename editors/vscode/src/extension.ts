@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Auto-start if configured
-    const config = vscode.workspace.getConfiguration('vibe');
+    const config = vscode.workspace.getConfiguration('flow');
     if (config.get<boolean>('autoStart', true)) {
         startServer();
     }
@@ -56,8 +56,8 @@ async function startServer(): Promise<void> {
         return;
     }
 
-    const config = vscode.workspace.getConfiguration('vibe');
-    const serverPath = config.get<string>('serverPath', 'vibe');
+    const config = vscode.workspace.getConfiguration('flow');
+    const serverPath = config.get<string>('serverPath', 'flow');
     const model = config.get<string>('model', '');
 
     const args = ['lsp'];
@@ -101,7 +101,7 @@ async function startServer(): Promise<void> {
     };
 
     client = new LanguageClient(
-        'vibe',
+        'flow',
         'Flow Language Server',
         serverOptions,
         clientOptions

@@ -320,11 +320,11 @@ func FormatTemplate(name, description string) string {
 	return fmt.Sprintf("%s - %s", titleStyle.Render(name), dimStyle.Render(description))
 }
 
-// PrintWelcomeInit prints a welcome message for vibe init.
+// PrintWelcomeInit prints a welcome message for flow init.
 func PrintWelcomeInit() {
 	fmt.Println()
-	fmt.Println(titleStyle.Render("Vibe Project Initialization"))
-	fmt.Println(dimStyle.Render("Create a new project or configure vibe for an existing one"))
+	fmt.Println(titleStyle.Render("Flow Project Initialization"))
+	fmt.Println(dimStyle.Render("Create a new project or configure flow for an existing one"))
 	fmt.Println()
 }
 
