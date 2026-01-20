@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	flowContext "github.com/mateus/flow-cli/internal/context"
@@ -374,5 +375,316 @@ func TestTruncateForLog(t *testing.T) {
 			t.Errorf("truncateForLog(%q, %d) = %q, expected %q",
 				tc.input, tc.maxLen, result, tc.expected)
 		}
+	}
+}
+
+func TestNewSubagentManager_Defaults(t *testing.T) {
+	parent := createTestAgent()
+
+	// Test with zero values (should use defaults)
+	manager := NewSubagentManager(parent, 0, 0)
+
+	if manager == nil {
+		t.Fatal("NewSubagentManager returned nil")
+	}
+
+	total, _, _, _ := manager.GetBudgetStats()
+	if total != 100000 {
+		t.Errorf("expected default total budget 100000, got %d", total)
+	}
+
+	if manager.maxParallel != 3 {
+		t.Errorf("expected default maxParallel 3, got %d", manager.maxParallel)
+	}
+}
+
+func TestNewSubagentManager_CustomValues(t *testing.T) {
+	parent := createTestAgent()
+
+	manager := NewSubagentManager(parent, 50000, 5)
+
+	if manager == nil {
+		t.Fatal("NewSubagentManager returned nil")
+	}
+
+	total, _, _, _ := manager.GetBudgetStats()
+	if total != 50000 {
+		t.Errorf("expected custom total budget 50000, got %d", total)
+	}
+
+	if manager.maxParallel != 5 {
+		t.Errorf("expected custom maxParallel 5, got %d", manager.maxParallel)
+	}
+}
+
+func TestSubagent_GetTokensUsed(t *testing.T) {
+	parent := createTestAgent()
+
+	config := SubagentConfig{
+		Type: SubagentExplorer,
+		Task: "Test task",
+	}
+
+	subagent, _ := NewSubagent(parent, config, parent.budget)
+
+	// Initially should be 0
+	if subagent.GetTokensUsed() != 0 {
+		t.Errorf("expected 0 tokens used initially, got %d", subagent.GetTokensUsed())
+	}
+
+	// Simulate some usage
+	subagent.tokensUsed = 1234
+	if subagent.GetTokensUsed() != 1234 {
+		t.Errorf("expected 1234 tokens used, got %d", subagent.GetTokensUsed())
+	}
+}
+
+func TestSubagent_ReleaseUnusedBudget_NilBudget(t *testing.T) {
+	parent := createTestAgent()
+
+	config := SubagentConfig{
+		Type: SubagentExplorer,
+		Task: "Test task",
+	}
+
+	subagent, _ := NewSubagent(parent, config, parent.budget)
+	subagent.tokensUsed = 5000
+	subagent.allocated = 20000
+
+	// Should not panic with nil budget
+	subagent.ReleaseUnusedBudget(nil)
+}
+
+func TestNewSubagent_NilBudget(t *testing.T) {
+	parent := createTestAgent()
+
+	config := SubagentConfig{
+		Type:        SubagentExplorer,
+		Task:        "Test task",
+		TokenBudget: 10000,
+	}
+
+	// Should work with nil parent budget (standalone mode)
+	subagent, err := NewSubagent(parent, config, nil)
+	if err != nil {
+		t.Fatalf("NewSubagent with nil budget failed: %v", err)
+	}
+
+	if subagent == nil {
+		t.Fatal("NewSubagent returned nil")
+	}
+
+	// Should have created its own budget
+	if subagent.budget == nil {
+		t.Error("subagent should have its own budget")
+	}
+
+	if subagent.allocated != 10000 {
+		t.Errorf("expected allocated 10000, got %d", subagent.allocated)
+	}
+}
+
+func TestAgentSubagentSpawner(t *testing.T) {
+	parent := createTestAgent()
+
+	spawner := NewAgentSubagentSpawner(parent)
+	if spawner == nil {
+		t.Fatal("NewAgentSubagentSpawner returned nil")
+	}
+
+	if spawner.agent != parent {
+		t.Error("spawner should reference the parent agent")
+	}
+}
+
+func TestSubagentSpawnerAdapter(t *testing.T) {
+	registry := tools.NewRegistry()
+	budget := NewTokenBudget(100000)
+
+	helper := NewSpawnSubagentHelper(
+		&mockLLMClient{},
+		registry,
+		budget,
+		"test-model",
+	)
+
+	adapter := NewSubagentSpawnerAdapter(helper)
+	if adapter == nil {
+		t.Fatal("NewSubagentSpawnerAdapter returned nil")
+	}
+
+	if adapter.helper != helper {
+		t.Error("adapter should reference the helper")
+	}
+}
+
+func TestLoggingSubagentHandler_WithWriter(t *testing.T) {
+	var buf strings.Builder
+	handler := &LoggingSubagentHandler{Writer: &buf}
+
+	handler.OnSubagentStart(SubagentExplorer, "Find files")
+	handler.OnSubagentToolCall("read_file", true)
+	handler.OnSubagentToolCall("read_file", false)
+	handler.OnSubagentEnd(&SubagentResult{Success: true, TokensUsed: 100})
+
+	output := buf.String()
+	if !strings.Contains(output, "explorer") {
+		t.Error("output should contain subagent type")
+	}
+	if !strings.Contains(output, "read_file") {
+		t.Error("output should contain tool name")
+	}
+	if !strings.Contains(output, "100") {
+		t.Error("output should contain tokens used")
+	}
+	if !strings.Contains(output, "completed") {
+		t.Error("output should contain completion status")
+	}
+}
+
+func TestLoggingSubagentHandler_FailedStatus(t *testing.T) {
+	var buf strings.Builder
+	handler := &LoggingSubagentHandler{Writer: &buf}
+
+	handler.OnSubagentEnd(&SubagentResult{Success: false, TokensUsed: 50})
+
+	output := buf.String()
+	if !strings.Contains(output, "failed") {
+		t.Error("output should contain 'failed' for unsuccessful result")
+	}
+}
+
+func TestSubagentResponseHandler_WithHandler(t *testing.T) {
+	parent := createTestAgent()
+	config := SubagentConfig{Type: SubagentExplorer, Task: "Test"}
+	subagent, _ := NewSubagent(parent, config, parent.budget)
+
+	// Track handler calls
+	toolCallCaptured := false
+	mockHandler := &testSubagentHandler{
+		onToolCall: func(name string, success bool) {
+			toolCallCaptured = true
+		},
+	}
+	subagent.SetHandler(mockHandler)
+
+	handler := &SubagentResponseHandler{
+		subagent: subagent,
+	}
+
+	handler.OnToolStart("test_tool", "Testing")
+	handler.OnToolEnd("test_tool", true, "result")
+
+	if !toolCallCaptured {
+		t.Error("subagent handler should have been called on tool end")
+	}
+}
+
+// testSubagentHandler is a test helper
+type testSubagentHandler struct {
+	onStart    func(SubagentType, string)
+	onToolCall func(string, bool)
+	onEnd      func(*SubagentResult)
+}
+
+func (h *testSubagentHandler) OnSubagentStart(t SubagentType, task string) {
+	if h.onStart != nil {
+		h.onStart(t, task)
+	}
+}
+
+func (h *testSubagentHandler) OnSubagentToolCall(name string, success bool) {
+	if h.onToolCall != nil {
+		h.onToolCall(name, success)
+	}
+}
+
+func (h *testSubagentHandler) OnSubagentEnd(result *SubagentResult) {
+	if h.onEnd != nil {
+		h.onEnd(result)
+	}
+}
+
+func TestGenerateSummary_WithIndicators(t *testing.T) {
+	parent := createTestAgent()
+	config := SubagentConfig{Type: SubagentExplorer, Task: "Test"}
+	subagent, _ := NewSubagent(parent, config, parent.budget)
+
+	tests := []struct {
+		name     string
+		input    string
+		contains string
+	}{
+		{"summary indicator", "Details here. Summary: This is the key point.", "Summary:"},
+		{"in summary indicator", "Details. In summary, here's what we found.", "In summary,"},
+		{"key findings", "Analysis complete. Key findings: important stuff.", "Key findings:"},
+		{"result indicator", "Processing done. Result: success with 5 items.", "Result:"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Need long enough output to trigger summary extraction
+			longInput := strings.Repeat("x", 600) + tc.input
+			summary := subagent.generateSummary(longInput)
+			if !strings.Contains(summary, tc.contains) {
+				t.Errorf("summary should contain %q indicator", tc.contains)
+			}
+		})
+	}
+}
+
+func TestExtractModifiedFiles_AllTypes(t *testing.T) {
+	parent := createTestAgent()
+	config := SubagentConfig{Type: SubagentCoder, Task: "Test"}
+	subagent, _ := NewSubagent(parent, config, parent.budget)
+
+	// Test all modifying tools
+	modifyingTools := []string{"write_file", "edit_file", "insert_lines", "delete_lines", "delete_file"}
+	modified := subagent.extractModifiedFiles(modifyingTools)
+
+	if len(modified) != 5 {
+		t.Errorf("expected 5 modifying tools, got %d", len(modified))
+	}
+
+	// Test empty list
+	modified = subagent.extractModifiedFiles([]string{})
+	if len(modified) != 0 {
+		t.Errorf("expected 0 for empty input, got %d", len(modified))
+	}
+
+	// Test read-only tools
+	readOnlyTools := []string{"read_file", "list_files", "grep_search"}
+	modified = subagent.extractModifiedFiles(readOnlyTools)
+	if len(modified) != 0 {
+		t.Errorf("expected 0 for read-only tools, got %d", len(modified))
+	}
+}
+
+func TestNewSubagent_DefaultTemperature(t *testing.T) {
+	parent := createTestAgent()
+
+	config := SubagentConfig{
+		Type:        SubagentExplorer,
+		Task:        "Test task",
+		Temperature: 0, // Zero value
+	}
+
+	subagent, err := NewSubagent(parent, config, parent.budget)
+	if err != nil {
+		t.Fatalf("NewSubagent failed: %v", err)
+	}
+
+	// Should have default temperature of 0.7
+	if subagent.config.Temperature != 0.7 {
+		t.Errorf("expected default temperature 0.7, got %f", subagent.config.Temperature)
+	}
+}
+
+func TestSubagentManager_SubagentTracking(t *testing.T) {
+	parent := createTestAgent()
+	manager := NewSubagentManager(parent, 100000, 3)
+
+	if len(manager.subagents) != 0 {
+		t.Error("manager should start with no subagents")
 	}
 }

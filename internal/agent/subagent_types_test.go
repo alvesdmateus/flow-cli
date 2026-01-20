@@ -196,3 +196,173 @@ func TestSubagentResult_Fields(t *testing.T) {
 		t.Errorf("expected TokensUsed 5000, got %d", result.TokensUsed)
 	}
 }
+
+func TestSubagentType_StringConversion(t *testing.T) {
+	// Verify type constants match their string values
+	tests := []struct {
+		subagentType SubagentType
+		expected     string
+	}{
+		{SubagentExplorer, "explorer"},
+		{SubagentCoder, "coder"},
+		{SubagentReviewer, "reviewer"},
+		{SubagentPlanner, "planner"},
+		{SubagentResearch, "research"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			if string(tt.subagentType) != tt.expected {
+				t.Errorf("SubagentType = %q, want %q", string(tt.subagentType), tt.expected)
+			}
+		})
+	}
+}
+
+func TestDefaultToolsForType_UnknownType(t *testing.T) {
+	tools := DefaultToolsForType(SubagentType("unknown"))
+
+	// Should return minimal default tools
+	if len(tools) == 0 {
+		t.Error("DefaultToolsForType(unknown) should return default tools")
+	}
+
+	// Should include basic read tools
+	hasReadFile := false
+	hasListFiles := false
+	for _, tool := range tools {
+		if tool == "read_file" {
+			hasReadFile = true
+		}
+		if tool == "list_files" {
+			hasListFiles = true
+		}
+	}
+
+	if !hasReadFile {
+		t.Error("DefaultToolsForType(unknown) should include read_file")
+	}
+	if !hasListFiles {
+		t.Error("DefaultToolsForType(unknown) should include list_files")
+	}
+}
+
+func TestDefaultMaxTurnsForType_UnknownType(t *testing.T) {
+	turns := DefaultMaxTurnsForType(SubagentType("unknown"))
+
+	if turns <= 0 {
+		t.Error("DefaultMaxTurnsForType(unknown) should return positive default")
+	}
+
+	// Default should be 10
+	if turns != 10 {
+		t.Errorf("DefaultMaxTurnsForType(unknown) = %d, want 10", turns)
+	}
+}
+
+func TestDefaultTokenBudgetForType_UnknownType(t *testing.T) {
+	budget := DefaultTokenBudgetForType(SubagentType("unknown"))
+
+	if budget <= 0 {
+		t.Error("DefaultTokenBudgetForType(unknown) should return positive default")
+	}
+
+	// Default should be 15000
+	if budget != 15000 {
+		t.Errorf("DefaultTokenBudgetForType(unknown) = %d, want 15000", budget)
+	}
+}
+
+func TestTokenBudgets_Ordering(t *testing.T) {
+	// Coder should have the highest budget (most complex operations)
+	coderBudget := DefaultTokenBudgetForType(SubagentCoder)
+	plannerBudget := DefaultTokenBudgetForType(SubagentPlanner)
+	explorerBudget := DefaultTokenBudgetForType(SubagentExplorer)
+	researchBudget := DefaultTokenBudgetForType(SubagentResearch)
+
+	if coderBudget <= plannerBudget {
+		t.Error("Coder should have higher budget than Planner")
+	}
+	if plannerBudget <= explorerBudget {
+		t.Error("Planner should have higher budget than Explorer")
+	}
+	if researchBudget >= explorerBudget {
+		t.Error("Research should have lower budget than Explorer")
+	}
+}
+
+func TestMaxTurns_Ordering(t *testing.T) {
+	// Coder should have the most turns (implementation tasks are longer)
+	coderTurns := DefaultMaxTurnsForType(SubagentCoder)
+	explorerTurns := DefaultMaxTurnsForType(SubagentExplorer)
+	reviewerTurns := DefaultMaxTurnsForType(SubagentReviewer)
+
+	if coderTurns <= explorerTurns {
+		t.Error("Coder should have more turns than Explorer")
+	}
+	if explorerTurns <= reviewerTurns {
+		t.Error("Explorer should have more turns than Reviewer")
+	}
+}
+
+func TestIsValidSubagentType_EdgeCases(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"EXPLORER", false},    // uppercase
+		{"Explorer", false},    // title case
+		{"code", false},        // partial match
+		{"research ", false},   // trailing space
+		{" research", false},   // leading space
+		{" ", false},           // just whitespace
+		{"explorer\n", false},  // newline
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			result := IsValidSubagentType(tt.input)
+			if result != tt.expected {
+				t.Errorf("IsValidSubagentType(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDefaultToolsForType_AllTypesHaveReadFile(t *testing.T) {
+	// All subagent types should have read_file capability
+	types := AllSubagentTypes()
+
+	for _, st := range types {
+		tools := DefaultToolsForType(st)
+		hasReadFile := false
+		for _, tool := range tools {
+			if tool == "read_file" {
+				hasReadFile = true
+				break
+			}
+		}
+		if !hasReadFile {
+			t.Errorf("Subagent type %s should have read_file tool", st)
+		}
+	}
+}
+
+func TestDefaultToolsForType_NoEmptyTools(t *testing.T) {
+	// All tool lists should have at least some tools
+	types := AllSubagentTypes()
+
+	for _, st := range types {
+		tools := DefaultToolsForType(st)
+		if len(tools) == 0 {
+			t.Errorf("Subagent type %s should have at least one tool", st)
+		}
+
+		// No empty tool names
+		for _, tool := range tools {
+			if tool == "" {
+				t.Errorf("Subagent type %s has empty tool name", st)
+			}
+		}
+	}
+}
