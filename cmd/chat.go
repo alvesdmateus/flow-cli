@@ -455,6 +455,9 @@ func (h *ConsoleHandler) OnThinking(msg string) {
 }
 
 func (h *ConsoleHandler) OnError(err error) {
+	if err == nil {
+		return
+	}
 	if h.spinner != nil && h.firstChunk {
 		h.spinner.StopWithError(err.Error())
 		h.firstChunk = false

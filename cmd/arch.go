@@ -444,6 +444,9 @@ func (h *ArchHandler) OnMessage(message string) {
 }
 
 func (h *ArchHandler) OnError(err error) {
+	if err == nil {
+		return
+	}
 	if h.spinner != nil {
 		h.spinner.StopWithError(err.Error())
 		h.spinner = nil
