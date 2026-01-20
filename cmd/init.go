@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mateus/vibe-cli/internal/templates"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/templates"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var initCmd = &cobra.Command{

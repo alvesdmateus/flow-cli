@@ -40,6 +40,11 @@ cmd/                       # Cobra commands
   config.go                # Configuration management command
   session.go               # Session management commands
   index.go                 # Semantic search index management
+  init.go                  # Project initialization with templates
+  review.go                # Code review command
+  test.go                  # Test running and generation
+  fix.go                   # Auto-fix linter errors
+  explain.go               # Code/error explanation
   completion.go            # Shell completion generation
   version.go               # Version information
   lsp.go                   # Language Server Protocol server
@@ -85,6 +90,21 @@ internal/
     chat.go                # Interactive chat interface
     diff.go                # File diff display
     plan.go                # Plan formatting and display
+  templates/               # Project scaffolding templates
+    templates.go           # Template registry
+    scaffolder.go          # File generation from templates
+  review/                  # Code review system
+    reviewer.go            # AI-powered code review
+    parser.go              # Diff parsing
+  testing/                 # Test management
+    runner.go              # Test execution
+    generator.go           # AI test generation
+    analyzer.go            # Failure analysis
+  fixer/                   # Linter integration
+    linter.go              # Multi-language linter support
+    fixer.go               # AI-powered fix generation
+  explainer/               # Code explanation
+    explainer.go           # AI code/error explanation
 ```
 
 ## CLI Commands
@@ -105,6 +125,18 @@ flow index build           # Build/rebuild the semantic search index
 flow index status          # Show index statistics
 flow index clear           # Clear the index database
 flow index search "query"  # Search the codebase using natural language
+flow init                  # Initialize new project with templates
+flow init --template go    # Use specific template (go, python, node, rust)
+flow review                # Review uncommitted changes
+flow review --staged       # Review only staged changes
+flow review --pr 123       # Review a pull request (requires gh CLI)
+flow test                  # Run project tests
+flow test --generate file  # Generate tests for a file
+flow test --coverage       # Run tests with coverage report
+flow fix                   # Auto-fix linter errors
+flow fix --dry-run         # Show fixes without applying
+flow explain file.go       # Explain code in a file
+flow explain --error "msg" # Explain an error message
 flow completion bash       # Generate shell completion
 flow version               # Show version info
 ```

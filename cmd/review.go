@@ -12,11 +12,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mateus/vibe-cli/internal/config"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/review"
-	"github.com/mateus/vibe-cli/internal/tools"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/config"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/review"
+	"github.com/mateus/flow-cli/internal/tools"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var reviewCmd = &cobra.Command{

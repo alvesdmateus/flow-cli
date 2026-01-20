@@ -2,8 +2,8 @@
 package fixer
 
 import (
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/testing"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/testing"
 )
 
 // LintIssue represents a single linter issue.

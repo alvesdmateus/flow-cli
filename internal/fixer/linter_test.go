@@ -3,7 +3,7 @@ package fixer
 import (
 	"testing"
 
-	testpkg "github.com/mateus/vibe-cli/internal/testing"
+	testpkg "github.com/mateus/flow-cli/internal/testing"
 )
 
 func TestNewLinter(t *testing.T) {

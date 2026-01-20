@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mateus/vibe-cli/internal/testing"
+	"github.com/mateus/flow-cli/internal/testing"
 )
 
 // Linter runs linters for different project types.
