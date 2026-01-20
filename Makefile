@@ -37,15 +37,23 @@ build-windows:
 	@echo "Built: $(BINARY_NAME).exe"
 
 # Install to GOPATH/bin
-install:
-	@echo "Installing $(BINARY_NAME)..."
-	$(GO) install $(LDFLAGS) $(MAIN_PACKAGE)
+install: build
+	@echo "Installing $(BINARY_NAME) to GOPATH/bin..."
+ifeq ($(OS),Windows_NT)
+	@cp $(BINARY_NAME).exe "$(shell go env GOPATH)/bin/$(BINARY_NAME).exe" 2>/dev/null || cp $(BINARY_NAME) "$(shell go env GOPATH)/bin/$(BINARY_NAME).exe"
+else
+	@cp $(BINARY_NAME) "$(shell go env GOPATH)/bin/$(BINARY_NAME)"
+endif
 	@echo "Installed to $(shell go env GOPATH)/bin/$(BINARY_NAME)"
 
 # Uninstall
 uninstall:
 	@echo "Uninstalling $(BINARY_NAME)..."
-	rm -f $(shell go env GOPATH)/bin/$(BINARY_NAME)
+ifeq ($(OS),Windows_NT)
+	rm -f "$(shell go env GOPATH)/bin/$(BINARY_NAME).exe"
+else
+	rm -f "$(shell go env GOPATH)/bin/$(BINARY_NAME)"
+endif
 	@echo "Uninstalled"
 
 # Run tests
