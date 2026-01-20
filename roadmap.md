@@ -122,12 +122,12 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 5: Advanced AI (Sprints 9-10)
 **Goal:** Intelligent assistance
 
-### Sprint 9: Planning & Reasoning
-- [ ] Multi-step task decomposition
-- [ ] Dependency graph for task ordering
-- [ ] Self-validation (verify changes work)
-- [ ] Automatic rollback on failure
-- [ ] Learning from corrections (session-based)
+### Sprint 9: Planning & Reasoning ✅
+- [x] Multi-step task decomposition
+- [x] Dependency graph for task ordering
+- [x] Self-validation (verify changes work)
+- [x] Automatic rollback on failure
+- [x] Learning from corrections (session-based)
 
 ### Sprint 10: Code Generation ✅
 - [x] Test generation from implementation
@@ -569,16 +569,32 @@ When working on roadmap items:
   - `recovery.go` - Crash recovery with checkpoints and state persistence
   - 28 tests for reliability package
 
-#### In Progress
-- None
-
-#### Next Sprint Focus
-- **Sprint 9: Planning & Reasoning**
-  - Multi-step task decomposition
-  - Self-validation
-  - Automatic rollback on failure
-
 #### Notes
 - Phase 4: Security & Reliability is now complete
 - Circuit breaker pattern prevents cascading failures
 - Transaction support enables safe multi-file operations
+
+---
+
+### Check-in: 2026-01-20 (Sprint 9 Complete)
+
+#### Completed
+- **Sprint 9: Planning & Reasoning** ✅
+  - `internal/planner` package with AI planning and reasoning capabilities
+  - `task.go` - Multi-step task decomposition with strategies for file_edit, refactor, feature, bug_fix
+  - `graph.go` - Dependency graph with topological sort, cycle detection, execution levels
+  - `executor.go` - Plan executor with validation, retries, and automatic rollback
+  - `learning.go` - Session-based learning from user corrections with pattern detection
+  - 27 tests for planner package
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- Complete security and reliability checklists
+- Improve test coverage
+
+#### Notes
+- Phase 5: Advanced AI is now complete
+- Planning system supports parallel execution at each dependency level
+- Learning system builds patterns from user corrections for future suggestions
