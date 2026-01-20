@@ -323,29 +323,7 @@ func TestFuzzyMatch(t *testing.T) {
 }
 
 // Tests for Progress
-
-func TestNewSpinner(t *testing.T) {
-	s := NewSpinner("Loading...")
-	if s == nil {
-		t.Fatal("expected Spinner to be created")
-	}
-	if s.message != "Loading..." {
-		t.Errorf("expected message 'Loading...', got '%s'", s.message)
-	}
-}
-
-func TestSpinner_UpdateMessage(t *testing.T) {
-	s := NewSpinner("Loading...")
-	s.UpdateMessage("Almost done...")
-
-	s.mu.Lock()
-	msg := s.message
-	s.mu.Unlock()
-
-	if msg != "Almost done..." {
-		t.Errorf("expected message 'Almost done...', got '%s'", msg)
-	}
-}
+// Note: Spinner tests are in spinner_test.go
 
 func TestNewProgressBar(t *testing.T) {
 	pb := NewProgressBar(100, "Processing")

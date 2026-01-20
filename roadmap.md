@@ -102,6 +102,9 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] Command injection prevention (shell escaping audit)
 - [x] Path traversal protection (symlink resolution)
 - [x] Secrets detection (block commits with API keys)
+  - `internal/secrets/detector.go` - Pattern-based detection for 20+ secret types
+  - `cmd/secrets.go` - `flow secrets scan` and `flow secrets check` commands
+  - Git commit integration - Auto-scan staged files before committing
 - [x] Audit logging (all file/command operations)
 - [x] Rate limiting for LLM calls
 - [x] Checksum verification for file writes
@@ -166,7 +169,7 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Git integration | High | Medium | **P1** | ✅ Done |
 | Context summarization | High | Medium | **P1** | ✅ Done |
 | Code Analysis (AST/regex) | High | High | **P1** | ✅ Done |
-| Secrets detection | High | Medium | **P1** | Pending |
+| Secrets detection | High | Medium | **P1** | ✅ Done |
 | Semantic search | High | High | P2 | ✅ Done |
 | LSP server mode | High | High | P2 | Pending |
 | Test generation | Medium | Medium | P2 | ✅ Done |

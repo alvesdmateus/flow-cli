@@ -37,131 +37,8 @@ var (
 				Render("░")
 )
 
-// Spinner frames for animation
-var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-var dotsFrames = []string{"   ", ".  ", ".. ", "..."}
-var pulseFrames = []string{"○", "◔", "◑", "◕", "●", "◕", "◑", "◔"}
-
-// Spinner provides an animated spinner for indeterminate progress
-type Spinner struct {
-	message   string
-	style     ProgressStyle
-	frames    []string
-	current   int
-	running   bool
-	done      chan struct{}
-	output    io.Writer
-	startTime time.Time
-	mu        sync.Mutex
-}
-
-// NewSpinner creates a new spinner with the given message
-func NewSpinner(message string) *Spinner {
-	return &Spinner{
-		message: message,
-		style:   ProgressStyleSpinner,
-		frames:  spinnerFrames,
-		output:  os.Stdout,
-	}
-}
-
-// WithStyle sets the spinner style
-func (s *Spinner) WithStyle(style ProgressStyle) *Spinner {
-	switch style {
-	case ProgressStyleSpinner:
-		s.frames = spinnerFrames
-	case ProgressStyleDots:
-		s.frames = dotsFrames
-	case ProgressStylePulse:
-		s.frames = pulseFrames
-	}
-	s.style = style
-	return s
-}
-
-// Start begins the spinner animation
-func (s *Spinner) Start() {
-	s.mu.Lock()
-	if s.running {
-		s.mu.Unlock()
-		return
-	}
-	s.running = true
-	s.done = make(chan struct{})
-	s.startTime = time.Now()
-	s.mu.Unlock()
-
-	go s.animate()
-}
-
-// Stop stops the spinner and clears the line
-func (s *Spinner) Stop() {
-	s.mu.Lock()
-	if !s.running {
-		s.mu.Unlock()
-		return
-	}
-	s.running = false
-	close(s.done)
-	s.mu.Unlock()
-
-	// Clear the line
-	fmt.Fprint(s.output, "\r\033[K")
-}
-
-// StopWithMessage stops the spinner and shows a final message
-func (s *Spinner) StopWithMessage(message string) {
-	s.Stop()
-	elapsed := time.Since(s.startTime)
-	fmt.Fprintf(s.output, "%s %s\n",
-		progressCompleteStyle.Render("✓"),
-		fmt.Sprintf("%s (%s)", message, formatDuration(elapsed)))
-}
-
-// StopWithError stops the spinner and shows an error message
-func (s *Spinner) StopWithError(message string) {
-	s.Stop()
-	fmt.Fprintf(s.output, "%s %s\n",
-		lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render("✗"),
-		message)
-}
-
-// UpdateMessage updates the spinner message
-func (s *Spinner) UpdateMessage(message string) {
-	s.mu.Lock()
-	s.message = message
-	s.mu.Unlock()
-}
-
-func (s *Spinner) animate() {
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-s.done:
-			return
-		case <-ticker.C:
-			s.mu.Lock()
-			frame := s.frames[s.current]
-			message := s.message
-			elapsed := time.Since(s.startTime)
-			s.current = (s.current + 1) % len(s.frames)
-			s.mu.Unlock()
-
-			// Show elapsed time after 3 seconds
-			timeStr := ""
-			if elapsed > 3*time.Second {
-				timeStr = dimStyle.Render(fmt.Sprintf(" (%s)", formatDuration(elapsed)))
-			}
-
-			fmt.Fprintf(s.output, "\r\033[K%s %s%s",
-				progressStyle.Render(frame),
-				message,
-				timeStr)
-		}
-	}
-}
+// Spinner frames for animation (used by MultiProgress)
+var defaultSpinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 
 // ProgressBar provides a determinate progress bar
 type ProgressBar struct {
@@ -400,7 +277,7 @@ func (mp *MultiProgress) render() {
 			icon = "✗"
 			style = lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
 		} else {
-			icon = spinnerFrames[int(time.Now().UnixMilli()/100)%len(spinnerFrames)]
+			icon = defaultSpinnerFrames[int(time.Now().UnixMilli()/100)%len(defaultSpinnerFrames)]
 			style = progressStyle
 		}
 
