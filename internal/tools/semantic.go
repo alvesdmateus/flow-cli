@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mateus/vibe-cli/internal/indexing"
-	"github.com/mateus/vibe-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/indexing"
+	"github.com/mateus/flow-cli/internal/sandbox"
 )
 
 // SemanticSearchTool performs semantic search across the codebase
@@ -172,7 +172,7 @@ func (t *IndexStatusTool) RequiredPermission() sandbox.OperationType {
 
 func (t *IndexStatusTool) Execute(ctx context.Context, args map[string]any) (*Result, error) {
 	if t.indexer == nil {
-		return NewSuccessResult("Index not initialized. Run `vibe index` to create the index."), nil
+		return NewSuccessResult("Index not initialized. Run `flow index` to create the index."), nil
 	}
 
 	stats := t.indexer.GetStats()

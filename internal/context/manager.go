@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/mateus/vibe-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
 // Message extends llm.Message with metadata
@@ -49,6 +50,10 @@ type Manager struct {
 	systemPrompt  string
 	windowManager *WindowManager
 	priorities    []MessagePriority
+
+	// Token count cache for performance
+	cachedTokenCount int
+	tokenCountValid  bool
 }
 
 // NewManager creates a new context manager
@@ -81,6 +86,13 @@ func (m *Manager) SetModel(model string) {
 	m.conversation.Model = model
 }
 
+// GetModel returns the current model for this conversation
+func (m *Manager) GetModel() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.conversation.Model
+}
+
 // SetProjectDir sets the project directory for this conversation
 func (m *Manager) SetProjectDir(dir string) {
 	m.mu.Lock()
@@ -103,6 +115,7 @@ func (m *Manager) AddUserMessage(content string) {
 
 	m.conversation.Messages = append(m.conversation.Messages, msg)
 	m.conversation.UpdatedAt = time.Now()
+	m.tokenCountValid = false // Invalidate cache
 
 	// Set title from first message if not set
 	if m.conversation.Title == "" {
@@ -128,6 +141,7 @@ func (m *Manager) AddAssistantMessage(content string, toolCalls []ToolCall) {
 
 	m.conversation.Messages = append(m.conversation.Messages, msg)
 	m.conversation.UpdatedAt = time.Now()
+	m.tokenCountValid = false // Invalidate cache
 
 	m.trimIfNeeded()
 }
@@ -147,6 +161,7 @@ func (m *Manager) AddSystemMessage(content string) {
 
 	m.conversation.Messages = append(m.conversation.Messages, msg)
 	m.conversation.UpdatedAt = time.Now()
+	m.tokenCountValid = false // Invalidate cache
 }
 
 // GetMessages returns all messages for LLM context
@@ -199,6 +214,8 @@ func (m *Manager) Clear() {
 		Model:      m.conversation.Model,
 		ProjectDir: m.conversation.ProjectDir,
 	}
+	m.tokenCountValid = false // Invalidate cache
+	m.cachedTokenCount = 0
 }
 
 // trimIfNeeded removes old messages if we exceed max
@@ -207,6 +224,7 @@ func (m *Manager) trimIfNeeded() {
 		// Keep the most recent messages
 		excess := len(m.conversation.Messages) - m.maxMessages
 		m.conversation.Messages = m.conversation.Messages[excess:]
+		m.tokenCountValid = false // Invalidate cache after trimming
 	}
 }
 
@@ -456,7 +474,7 @@ func GetSessionsDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".vibe", "sessions"), nil
+	return filepath.Join(home, ".flow", "sessions"), nil
 }
 
 // ListSessions returns all saved sessions
@@ -508,14 +526,10 @@ func ListSessions(dir string) ([]SessionInfo, error) {
 		})
 	}
 
-	// Sort by updated time (most recent first)
-	for i := 0; i < len(sessions)-1; i++ {
-		for j := i + 1; j < len(sessions); j++ {
-			if sessions[j].UpdatedAt.After(sessions[i].UpdatedAt) {
-				sessions[i], sessions[j] = sessions[j], sessions[i]
-			}
-		}
-	}
+	// Sort by updated time (most recent first) - O(n log n)
+	sort.Slice(sessions, func(i, j int) bool {
+		return sessions[i].UpdatedAt.After(sessions[j].UpdatedAt)
+	})
 
 	return sessions, nil
 }
@@ -532,4 +546,123 @@ func (m *Manager) SaveToDefaultDir() error {
 		return err
 	}
 	return m.Save(dir)
+}
+
+// Clone creates a deep copy of the context manager with isolated state
+// This is used for subagents to have their own conversation context
+func (m *Manager) Clone() *Manager {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	// Create new manager with same settings but empty conversation
+	cloned := &Manager{
+		maxMessages:  m.maxMessages,
+		systemPrompt: m.systemPrompt,
+		conversation: &Conversation{
+			ID:         generateID(),
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+			Messages:   make([]Message, 0),
+			Model:      m.conversation.Model,
+			ProjectDir: m.conversation.ProjectDir,
+		},
+		priorities: make([]MessagePriority, 0),
+	}
+
+	// Clone window manager if set
+	if m.windowManager != nil {
+		cloned.windowManager = &WindowManager{
+			config: m.windowManager.config,
+		}
+	}
+
+	return cloned
+}
+
+// CloneWithSystemPrompt creates a clone with a different system prompt
+func (m *Manager) CloneWithSystemPrompt(systemPrompt string) *Manager {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	cloned := &Manager{
+		maxMessages:  m.maxMessages,
+		systemPrompt: systemPrompt,
+		conversation: &Conversation{
+			ID:         generateID(),
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+			Messages:   make([]Message, 0),
+			Model:      m.conversation.Model,
+			ProjectDir: m.conversation.ProjectDir,
+		},
+		priorities: make([]MessagePriority, 0),
+	}
+
+	if m.windowManager != nil {
+		cloned.windowManager = &WindowManager{
+			config: m.windowManager.config,
+		}
+	}
+
+	return cloned
+}
+
+// GetTokenCount returns the estimated token count for current context
+// Uses caching to avoid repeated computation
+func (m *Manager) GetTokenCount() int {
+	// Fast path: check if cache is valid
+	m.mu.RLock()
+	if m.tokenCountValid {
+		count := m.cachedTokenCount
+		m.mu.RUnlock()
+		return count
+	}
+	m.mu.RUnlock()
+
+	// Slow path: compute and cache
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Double-check after acquiring write lock
+	if m.tokenCountValid {
+		return m.cachedTokenCount
+	}
+
+	total := 0
+
+	// Count system prompt tokens
+	if m.systemPrompt != "" {
+		total += llm.EstimateTokens(m.systemPrompt) + 4 // +4 for role overhead
+	}
+
+	// Count message tokens
+	for _, msg := range m.conversation.Messages {
+		total += llm.EstimateTokens(msg.Content) + 4 // +4 for role overhead
+
+		// Count tool call tokens if any
+		for _, tc := range msg.ToolCalls {
+			total += llm.EstimateTokens(tc.Name)
+			total += llm.EstimateTokens(tc.Result)
+		}
+	}
+
+	m.cachedTokenCount = total
+	m.tokenCountValid = true
+
+	return total
+}
+
+// GetSystemPrompt returns the current system prompt
+func (m *Manager) GetSystemPrompt() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.systemPrompt
+}
+
+// SetSystemPrompt updates the system prompt
+func (m *Manager) SetSystemPrompt(prompt string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.systemPrompt = prompt
+	m.tokenCountValid = false // Invalidate cache
 }

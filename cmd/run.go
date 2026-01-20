@@ -10,9 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/mateus/vibe-cli/internal/config"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/config"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/logging"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var runCmd = &cobra.Command{
@@ -22,8 +23,8 @@ var runCmd = &cobra.Command{
 If no model is specified and none is configured, you will be prompted to select one.
 
 Examples:
-  vibe run "Explain what a goroutine is"
-  vibe run --model llama3:8b "Write a hello world in Go"`,
+  flow run "Explain what a goroutine is"
+  flow run --model llama3:8b "Write a hello world in Go"`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runCommand,
 }
@@ -37,20 +38,29 @@ func runCommand(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	prompt := strings.Join(args, " ")
+	logging.Debug("Running prompt: %s", prompt)
 
 	// Create LLM client
+	logging.Debug("Creating LLM client: provider=%s endpoint=%s", config.GetLLMProvider(), config.GetLLMEndpoint())
 	client, err := llm.NewClient(
 		config.GetLLMProvider(),
 		config.GetLLMEndpoint(),
 	)
 	if err != nil {
+		logging.Error("Failed to create LLM client: %v", err)
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
-	// Check connection
+	// Check connection with spinner
+	spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+	spinner.Start()
 	if err := client.Ping(ctx); err != nil {
+		spinner.StopWithError("Connection failed")
+		logging.Error("LLM connection failed: %v", err)
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
+	spinner.StopWithSuccess("Connected")
+	logging.Debug("LLM connection established")
 
 	// Determine which model to use
 	model := modelFlag
@@ -104,14 +114,24 @@ func runCommand(cmd *cobra.Command, args []string) error {
 		Stream:      true,
 	}
 
+	// Start thinking spinner
+	thinkSpinner := ui.SpinnerThinking()
+	thinkSpinner.Start()
+
 	chunks, err := client.Chat(ctx, messages, opts)
 	if err != nil {
+		thinkSpinner.StopWithError("Request failed")
 		return fmt.Errorf("chat failed: %w", err)
 	}
 
 	// Print streamed response
 	fmt.Println()
+	firstChunk := true
 	for chunk := range chunks {
+		if firstChunk {
+			thinkSpinner.Stop()
+			firstChunk = false
+		}
 		if chunk.Error != nil {
 			return chunk.Error
 		}

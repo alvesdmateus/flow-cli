@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mateus/vibe-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/sandbox"
 )
 
 // GrepSearchTool searches for patterns in files across the codebase

@@ -11,8 +11,8 @@ import (
 
 	"golang.org/x/net/html"
 
-	"github.com/mateus/vibe-cli/internal/sandbox"
-	"github.com/mateus/vibe-cli/internal/search"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/search"
 )
 
 // WebSearchTool searches the web using SearXNG
@@ -218,7 +218,7 @@ func (t *FetchURLTool) Execute(ctx context.Context, args map[string]any) (*Resul
 	}
 
 	// Set user agent to avoid blocks
-	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; vibe-cli/1.0; +https://github.com/mateus/vibe-cli)")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; flow-cli/1.0; +https://github.com/mateus/flow-cli)")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.7")
 
 	resp, err := client.Do(req)

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mateus/vibe-cli/internal/config"
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/sandbox"
-	"github.com/mateus/vibe-cli/internal/search"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/config"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/search"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 // App is the main application container that holds all dependencies

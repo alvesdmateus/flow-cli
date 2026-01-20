@@ -17,7 +17,7 @@ var (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version information",
-	Long:  `Print detailed version information about vibe-cli.`,
+	Long:  `Print detailed version information about flow-cli.`,
 	Run:   runVersion,
 }
 
@@ -34,7 +34,7 @@ func runVersion(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Printf("vibe-cli %s\n", Version)
+	fmt.Printf("flow-cli %s\n", Version)
 	fmt.Println()
 	fmt.Printf("  Commit:     %s\n", Commit)
 	fmt.Printf("  Built:      %s\n", BuildDate)
@@ -49,5 +49,5 @@ func GetVersion() string {
 
 // GetVersionInfo returns full version info as a formatted string
 func GetVersionInfo() string {
-	return fmt.Sprintf("vibe-cli %s (%s) built %s", Version, Commit[:min(7, len(Commit))], BuildDate)
+	return fmt.Sprintf("flow-cli %s (%s) built %s", Version, Commit[:min(7, len(Commit))], BuildDate)
 }

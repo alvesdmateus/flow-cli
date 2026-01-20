@@ -10,20 +10,20 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/mateus/vibe-cli/internal/llm"
-	"github.com/mateus/vibe-cli/internal/ui"
+	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/ui"
 )
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Manage vibe configuration",
-	Long: `View and modify vibe configuration settings.
+	Short: "Manage flow configuration",
+	Long: `View and modify flow configuration settings.
 
 Use subcommands to configure different aspects:
-  vibe config show          - Display current configuration
-  vibe config set           - Set a configuration value
-  vibe config provider      - Configure LLM provider interactively
-  vibe config init          - Initialize configuration file`,
+  flow config show          - Display current configuration
+  flow config set           - Set a configuration value
+  flow config provider      - Configure LLM provider interactively
+  flow config init          - Initialize configuration file`,
 }
 
 var configShowCmd = &cobra.Command{
@@ -38,11 +38,11 @@ var configSetCmd = &cobra.Command{
 	Long: `Set a configuration value.
 
 Examples:
-  vibe config set llm.provider ollama
-  vibe config set llm.endpoint http://localhost:11434
-  vibe config set llm.model llama3:8b
-  vibe config set llm.api_key sk-xxx
-  vibe config set security.auto_approve true`,
+  flow config set llm.provider ollama
+  flow config set llm.endpoint http://localhost:11434
+  flow config set llm.model llama3:8b
+  flow config set llm.api_key sk-xxx
+  flow config set security.auto_approve true`,
 	Args: cobra.ExactArgs(2),
 	RunE: runConfigSet,
 }
@@ -63,7 +63,7 @@ var configInitCmd = &cobra.Command{
 	Long: `Create a new configuration file with default values.
 
 The configuration file will be created at:
-  - $HOME/.vibe/config.yaml (default)
+  - $HOME/.flow/config.yaml (default)
   - Or in the current directory with --local flag`,
 	RunE: runConfigInit,
 }
@@ -279,12 +279,12 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to get home directory: %w", err)
 		}
 
-		vibeDir := filepath.Join(home, ".vibe")
-		if err := os.MkdirAll(vibeDir, 0755); err != nil {
+		flowDir := filepath.Join(home, ".flow")
+		if err := os.MkdirAll(flowDir, 0755); err != nil {
 			return fmt.Errorf("failed to create config directory: %w", err)
 		}
 
-		configPath = filepath.Join(vibeDir, "config.yaml")
+		configPath = filepath.Join(flowDir, "config.yaml")
 	}
 
 	// Check if config already exists
@@ -301,7 +301,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 
 	// Write default config
 	configContent := `# Vibe CLI Configuration
-# See https://github.com/mateus/vibe-cli for documentation
+# See https://github.com/mateus/flow-cli for documentation
 
 # LLM Provider Settings
 llm:
@@ -393,8 +393,8 @@ commands:
 	fmt.Println()
 	fmt.Println("Next steps:")
 	fmt.Println("  1. Edit the config file to set your LLM provider and endpoint")
-	fmt.Println("  2. Or run 'vibe config provider' for interactive setup")
-	fmt.Println("  3. Run 'vibe run \"hello\"' to test the connection")
+	fmt.Println("  2. Or run 'flow config provider' for interactive setup")
+	fmt.Println("  3. Run 'flow run \"hello\"' to test the connection")
 
 	return nil
 }
@@ -452,12 +452,12 @@ func writeConfig() error {
 			return err
 		}
 
-		vibeDir := filepath.Join(home, ".vibe")
-		if err := os.MkdirAll(vibeDir, 0755); err != nil {
+		flowDir := filepath.Join(home, ".flow")
+		if err := os.MkdirAll(flowDir, 0755); err != nil {
 			return err
 		}
 
-		configFile = filepath.Join(vibeDir, "config.yaml")
+		configFile = filepath.Join(flowDir, "config.yaml")
 	}
 
 	return viper.WriteConfigAs(configFile)
