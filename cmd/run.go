@@ -40,35 +40,61 @@ func runCommand(cmd *cobra.Command, args []string) error {
 	prompt := strings.Join(args, " ")
 	logging.Debug("Running prompt: %s", prompt)
 
-	// Create LLM client
-	logging.Debug("Creating LLM client: provider=%s endpoint=%s", config.GetLLMProvider(), config.GetLLMEndpoint())
-	client, err := llm.NewClient(
-		config.GetLLMProvider(),
-		config.GetLLMEndpoint(),
-	)
-	if err != nil {
-		logging.Error("Failed to create LLM client: %v", err)
-		return fmt.Errorf("failed to create LLM client: %w", err)
-	}
-
-	// Check connection with spinner
-	spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
-	spinner.Start()
-	if err := client.Ping(ctx); err != nil {
-		spinner.StopWithError("Connection failed")
-		logging.Error("LLM connection failed: %v", err)
-		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
-	}
-	spinner.StopWithSuccess("Connected")
-	logging.Debug("LLM connection established")
-
 	// Determine which model to use
 	model := modelFlag
 	if model == "" {
 		model = config.GetLLMModel()
 	}
 
-	// If still no model, prompt user to select one
+	// Create LLM client with auto-start and auto-pull support
+	logging.Debug("Creating LLM client: provider=%s endpoint=%s auto_start=%v auto_pull=%v",
+		config.GetLLMProvider(), config.GetLLMEndpoint(), config.IsLLMAutoStart(), config.IsLLMAutoPull())
+
+	var client llm.Client
+	var err error
+
+	// Use auto-setup for Ollama provider when auto-start or auto-pull is enabled
+	if (config.GetLLMProvider() == "ollama" || config.GetLLMProvider() == "") &&
+		(config.IsLLMAutoStart() || config.IsLLMAutoPull()) {
+
+		spinner := ui.StartSpinner("Setting up LLM...")
+		client, err = llm.NewClientWithAutoSetup(ctx, llm.ClientConfig{
+			Provider: config.GetLLMProvider(),
+			Endpoint: config.GetLLMEndpoint(),
+			APIKey:   config.GetLLMAPIKey(),
+		}, model, func(msg string) {
+			spinner.UpdateMessage(msg)
+		})
+		if err != nil {
+			spinner.StopWithError("Setup failed")
+			logging.Error("Failed to setup LLM client: %v", err)
+			return fmt.Errorf("failed to setup LLM: %w", err)
+		}
+		spinner.StopWithSuccess("Ready")
+	} else {
+		// Traditional client creation without auto-setup
+		client, err = llm.NewClient(
+			config.GetLLMProvider(),
+			config.GetLLMEndpoint(),
+		)
+		if err != nil {
+			logging.Error("Failed to create LLM client: %v", err)
+			return fmt.Errorf("failed to create LLM client: %w", err)
+		}
+
+		// Check connection with spinner
+		spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+		spinner.Start()
+		if err := client.Ping(ctx); err != nil {
+			spinner.StopWithError("Connection failed")
+			logging.Error("LLM connection failed: %v", err)
+			return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
+		}
+		spinner.StopWithSuccess("Connected")
+	}
+	logging.Debug("LLM connection established")
+
+	// If no model specified and using non-Ollama provider, prompt user to select
 	if model == "" {
 		models, err := client.ListModels(ctx)
 		if err != nil {

@@ -1,0 +1,349 @@
+# =============================================================================
+# flow-cli Docker Compose Configuration
+# Provides multiple deployment options: CPU, GPU, and sidecar modes
+# =============================================================================
+
+name: flow-cli
+
+services:
+  # ---------------------------------------------------------------------------
+  # Option 1: All-in-one (flow-cli + Ollama in single container)
+  # Good for: Simple deployments, single-user scenarios
+  # ---------------------------------------------------------------------------
+  flow:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: production
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-none}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+    image: flow-cli:latest
+    container_name: flow-cli
+    hostname: flow-cli
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+    # Environment configuration
+    environment:
+      # LLM Configuration
+      - FLOW_LLM_PROVIDER=${FLOW_LLM_PROVIDER:-ollama}
+      - FLOW_LLM_ENDPOINT=${FLOW_LLM_ENDPOINT:-http://localhost:11434}
+      - FLOW_LLM_MODEL=${FLOW_LLM_MODEL:-}
+      - FLOW_LLM_TEMPERATURE=${FLOW_LLM_TEMPERATURE:-0.7}
+      # Ollama Configuration
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODELS=/home/flow/.ollama/models
+      - OLLAMA_STARTUP_TIMEOUT=${OLLAMA_STARTUP_TIMEOUT:-120}
+      # Model Management
+      - FLOW_AUTO_PULL_MODEL=${FLOW_AUTO_PULL_MODEL:-true}
+      - FLOW_PRELOAD_MODELS=${FLOW_PRELOAD_MODELS:-}
+      # Security
+      - FLOW_SECURITY_AUTO_APPROVE=${FLOW_SECURITY_AUTO_APPROVE:-false}
+      # Search (optional)
+      - FLOW_SEARCH_ENABLED=${FLOW_SEARCH_ENABLED:-false}
+      - FLOW_SEARCH_ENDPOINT=${FLOW_SEARCH_ENDPOINT:-http://searxng:8080}
+
+    # Port mappings
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"  # Ollama API
+
+    # Persistent storage
+    volumes:
+      # Ollama models (largest volume, consider SSD)
+      - ollama_models:/home/flow/.ollama
+      # flow-cli configuration and sessions
+      - flow_config:/home/flow/.flow
+      # Project workspace (mount your code here)
+      - ${PROJECT_DIR:-.}:/data:rw
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-16G}
+        reservations:
+          memory: ${MEMORY_RESERVATION:-4G}
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Option 2: GPU-enabled all-in-one
+  # Good for: Production deployments with NVIDIA GPUs
+  # ---------------------------------------------------------------------------
+  flow-gpu:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: gpu
+      args:
+        VERSION: ${VERSION:-dev}
+        COMMIT: ${COMMIT:-none}
+        BUILD_DATE: ${BUILD_DATE:-unknown}
+    image: flow-cli:gpu
+    container_name: flow-cli-gpu
+    hostname: flow-cli-gpu
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    profiles:
+      - gpu  # Only start with: docker compose --profile gpu up
+
+    environment:
+      - FLOW_LLM_PROVIDER=ollama
+      - FLOW_LLM_ENDPOINT=http://localhost:11434
+      - FLOW_LLM_MODEL=${FLOW_LLM_MODEL:-}
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_MODELS=/home/flow/.ollama/models
+      - FLOW_AUTO_PULL_MODEL=${FLOW_AUTO_PULL_MODEL:-true}
+      - FLOW_PRELOAD_MODELS=${FLOW_PRELOAD_MODELS:-}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+
+    volumes:
+      - ollama_models:/home/flow/.ollama
+      - flow_config:/home/flow/.flow
+      - ${PROJECT_DIR:-.}:/data:rw
+
+    # NVIDIA GPU configuration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: ${MEMORY_LIMIT:-32G}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+  # ---------------------------------------------------------------------------
+  # Option 3: Sidecar mode (separate Ollama container)
+  # Good for: Microservices architecture, shared Ollama instance
+  # ---------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    hostname: ollama
+    restart: unless-stopped
+    profiles:
+      - sidecar
+
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+
+    volumes:
+      - ollama_models:/root/.ollama
+
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_MEMORY_LIMIT:-16G}
+        reservations:
+          memory: ${OLLAMA_MEMORY_RESERVATION:-4G}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # flow-cli container that connects to sidecar Ollama
+  flow-sidecar:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: cli-only
+      args:
+        VERSION: ${VERSION:-dev}
+    image: flow-cli:minimal
+    container_name: flow-cli-sidecar
+    hostname: flow-cli-sidecar
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    profiles:
+      - sidecar
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+    environment:
+      - FLOW_LLM_PROVIDER=ollama
+      - FLOW_LLM_ENDPOINT=http://ollama:11434
+      - FLOW_LLM_MODEL=${FLOW_LLM_MODEL:-}
+
+    volumes:
+      - flow_config:/home/flow/.flow
+      - ${PROJECT_DIR:-.}:/data:rw
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # GPU-enabled Ollama sidecar
+  ollama-gpu:
+    image: ollama/ollama:latest
+    container_name: ollama-gpu
+    hostname: ollama-gpu
+    restart: unless-stopped
+    profiles:
+      - sidecar-gpu
+
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - NVIDIA_VISIBLE_DEVICES=all
+
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+
+    volumes:
+      - ollama_models:/root/.ollama
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        limits:
+          memory: ${OLLAMA_MEMORY_LIMIT:-32G}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # flow-cli that connects to GPU sidecar
+  flow-sidecar-gpu:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: cli-only
+    image: flow-cli:minimal
+    container_name: flow-cli-sidecar-gpu
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    profiles:
+      - sidecar-gpu
+    depends_on:
+      ollama-gpu:
+        condition: service_healthy
+
+    environment:
+      - FLOW_LLM_PROVIDER=ollama
+      - FLOW_LLM_ENDPOINT=http://ollama-gpu:11434
+      - FLOW_LLM_MODEL=${FLOW_LLM_MODEL:-}
+
+    volumes:
+      - flow_config:/home/flow/.flow
+      - ${PROJECT_DIR:-.}:/data:rw
+
+  # ---------------------------------------------------------------------------
+  # Optional: SearXNG for web search capability
+  # ---------------------------------------------------------------------------
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    hostname: searxng
+    restart: unless-stopped
+    profiles:
+      - search
+
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080
+
+    ports:
+      - "${SEARXNG_PORT:-8080}:8080"
+
+    volumes:
+      - searxng_config:/etc/searxng
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  # Ollama models - consider mounting to fast storage (SSD/NVMe)
+  ollama_models:
+    driver: local
+    name: flow-ollama-models
+
+  # flow-cli configuration and sessions
+  flow_config:
+    driver: local
+    name: flow-config
+
+  # SearXNG configuration (optional)
+  searxng_config:
+    driver: local
+    name: flow-searxng-config
+
+# =============================================================================
+# Networks (default bridge network is used)
+# =============================================================================
+networks:
+  default:
+    name: flow-network
+    driver: bridge

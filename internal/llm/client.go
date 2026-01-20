@@ -185,3 +185,28 @@ func AvailableProviders() []string {
 		"openai",
 	}
 }
+
+// NewClientWithAutoSetup creates a client with automatic Ollama start and model pull
+// This is the recommended way to create a client for interactive use
+func NewClientWithAutoSetup(ctx context.Context, cfg ClientConfig, model string, messageFn func(string)) (Client, error) {
+	provider := normalizeProvider(cfg.Provider)
+
+	// For Ollama, use the manager with auto-start and auto-pull
+	if provider == "ollama" || provider == "" {
+		result, err := Setup(ctx, SetupOptions{
+			Endpoint:   cfg.Endpoint,
+			Model:      model,
+			AutoStart:  true,
+			AutoPull:   true,
+			MessageFn:  messageFn,
+			ProgressFn: nil, // Could add progress bar here
+		})
+		if err != nil {
+			return nil, err
+		}
+		return result.Client, nil
+	}
+
+	// For other providers, just create the client normally
+	return NewClientWithConfig(cfg)
+}

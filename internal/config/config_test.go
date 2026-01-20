@@ -113,10 +113,10 @@ func TestGetLLMModel(t *testing.T) {
 	viper.Reset()
 	SetDefaults()
 
-	// Default model is empty
+	// Default model is llama3.2 (for auto-pull support)
 	model := GetLLMModel()
-	if model != "" {
-		t.Errorf("GetLLMModel() = %q, want empty string (default)", model)
+	if model != "llama3.2" {
+		t.Errorf("GetLLMModel() = %q, want 'llama3.2' (default)", model)
 	}
 
 	// Test custom value
@@ -141,6 +141,56 @@ func TestGetLLMProvider(t *testing.T) {
 	provider = GetLLMProvider()
 	if provider != "openai-compatible" {
 		t.Errorf("GetLLMProvider() = %q, want 'openai-compatible'", provider)
+	}
+}
+
+func TestGetLLMAPIKey(t *testing.T) {
+	viper.Reset()
+	SetDefaults()
+
+	// Default API key is empty
+	apiKey := GetLLMAPIKey()
+	if apiKey != "" {
+		t.Errorf("GetLLMAPIKey() = %q, want empty string (default)", apiKey)
+	}
+
+	// Test custom value
+	viper.Set("llm.api_key", "sk-test-key")
+	apiKey = GetLLMAPIKey()
+	if apiKey != "sk-test-key" {
+		t.Errorf("GetLLMAPIKey() = %q, want 'sk-test-key'", apiKey)
+	}
+}
+
+func TestIsLLMAutoStart(t *testing.T) {
+	viper.Reset()
+	SetDefaults()
+
+	// Default should be true
+	if !IsLLMAutoStart() {
+		t.Error("IsLLMAutoStart() should be true by default")
+	}
+
+	// Disable auto-start
+	viper.Set("llm.auto_start", false)
+	if IsLLMAutoStart() {
+		t.Error("IsLLMAutoStart() should be false after disabling")
+	}
+}
+
+func TestIsLLMAutoPull(t *testing.T) {
+	viper.Reset()
+	SetDefaults()
+
+	// Default should be true
+	if !IsLLMAutoPull() {
+		t.Error("IsLLMAutoPull() should be true by default")
+	}
+
+	// Disable auto-pull
+	viper.Set("llm.auto_pull", false)
+	if IsLLMAutoPull() {
+		t.Error("IsLLMAutoPull() should be false after disabling")
 	}
 }
 
