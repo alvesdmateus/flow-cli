@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mateus/vibe-cli/internal/sandbox"
+	"github.com/mateus/flow-cli/internal/sandbox"
 )
 
 const (

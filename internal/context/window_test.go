@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mateus/vibe-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/llm"
 )
 
 func TestGetModelLimits(t *testing.T) {

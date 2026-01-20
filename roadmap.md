@@ -62,12 +62,16 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] `list_symbols` tool for codebase exploration
 - [ ] Import/dependency analysis (future enhancement)
 
-### Sprint 4: Codebase Indexing
-- [ ] Local embedding generation (with Ollama)
-- [ ] Vector store for semantic search (SQLite + vector extension)
-- [ ] `semantic_search` tool for natural language code queries
-- [ ] Automatic re-indexing on file changes
-- [ ] `.vibeignore` for excluding files from indexing
+### Sprint 4: Codebase Indexing ✅
+- [x] Local embedding generation (with Ollama)
+- [x] Vector store for semantic search (SQLite)
+- [x] `semantic_search` tool for natural language code queries
+- [x] `index_status` tool for checking index statistics
+- [x] `reindex_file` tool for manual re-indexing
+- [x] Automatic re-indexing on file changes (file watcher)
+- [x] `.flowignore` for excluding files from indexing
+- [x] CLI commands: `flow index build`, `flow index status`, `flow index clear`, `flow index search`
+- [x] Configuration: `indexing.enabled`, `indexing.embedding_model`, `indexing.auto_index`, `indexing.watch_changes`
 
 ---
 
@@ -122,31 +126,31 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [ ] Automatic rollback on failure
 - [ ] Learning from corrections (session-based)
 
-### Sprint 10: Code Generation
-- [ ] Test generation from implementation
-- [ ] Documentation generation (JSDoc, GoDoc, etc.)
-- [ ] Boilerplate generation (CRUD, API endpoints)
-- [ ] Refactoring suggestions (extract function, rename)
-- [ ] Bug fix suggestions from error messages
+### Sprint 10: Code Generation ✅
+- [x] Test generation from implementation
+- [x] Documentation generation (JSDoc, GoDoc, etc.)
+- [x] Boilerplate generation (CRUD, API endpoints)
+- [x] Refactoring suggestions (extract function, rename)
+- [x] Bug fix suggestions from error messages
 
 ---
 
 ## Phase 6: Integrations (Sprints 11-12)
 **Goal:** Ecosystem connectivity
 
-### Sprint 11: External Tools
-- [ ] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
-- [ ] Database tools (`query_db` for SQLite/Postgres)
-- [ ] HTTP client tool (`http_request`)
-- [ ] Package manager tools (npm, pip, cargo info)
-- [ ] CI/CD status checking (GitHub Actions)
+### Sprint 11: External Tools ✅
+- [x] Docker tools (`docker_build`, `docker_run`, `docker_logs`)
+- [x] Database tools (`query_db` for SQLite/Postgres)
+- [x] HTTP client tool (`http_request`)
+- [x] Package manager tools (npm, pip, cargo info)
+- [x] CI/CD status checking (GitHub Actions)
 
-### Sprint 12: IDE & Editor
-- [ ] LSP server mode (integrate with any editor)
-- [ ] VS Code extension
-- [ ] Neovim plugin
-- [ ] JetBrains plugin (basic)
-- [ ] `.vibe/config.yaml` project-level settings
+### Sprint 12: IDE & Editor ✅
+- [x] LSP server mode (integrate with any editor)
+- [x] VS Code extension
+- [x] Neovim plugin
+- [x] JetBrains plugin (basic)
+- [x] `.vibe/config.yaml` project-level settings
 
 ---
 
@@ -163,9 +167,13 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Context summarization | High | Medium | **P1** | ✅ Done |
 | Code Analysis (AST/regex) | High | High | **P1** | ✅ Done |
 | Secrets detection | High | Medium | **P1** | Pending |
-| Semantic search | High | High | P2 | Pending |
+| Semantic search | High | High | P2 | ✅ Done |
 | LSP server mode | High | High | P2 | Pending |
+| Test generation | Medium | Medium | P2 | ✅ Done |
+| LSP server mode | High | High | P2 | ✅ Done |
 | Test generation | Medium | Medium | P2 | Pending |
+| External tools | High | High | P2 | ✅ Done |
+| IDE plugins | High | High | P2 | ✅ Done |
 
 ---
 
@@ -344,6 +352,90 @@ Use this section to track periodic progress reviews.
 - Chose go/ast over tree-sitter for Go (native, zero dependencies)
 - Regex parsers provide good coverage for common patterns
 - Analysis tools ready for LLM use
+
+---
+
+### Check-in: 2026-01-17 (Sprint 10 Complete)
+
+#### Completed
+- **Sprint 10: Code Generation** ✅
+  - `internal/codegen/testgen.go` - Test generation from implementation
+    - Multi-language support (Go, Python, JavaScript, TypeScript)
+    - Table-driven test generation for Go
+    - Language-specific analyzers for function extraction
+  - `internal/codegen/docgen.go` - Documentation generation
+    - GoDoc, JSDoc, PyDoc, RustDoc styles
+    - Function and class documentation
+    - Auto-insertion of docs for undocumented functions
+  - `internal/codegen/boilerplate.go` - Boilerplate generation
+    - CRUD operations for entities
+    - Model, Repository, Service, Handler patterns
+    - Multi-language support (Go, Python, TypeScript)
+  - `internal/codegen/refactor.go` - Refactoring suggestions
+    - Long function detection
+    - Duplicate code detection
+    - Magic number detection
+    - Deep nesting detection
+    - Large class detection
+    - Extract function, rename, extract variable operations
+  - `internal/codegen/bugfix.go` - Bug fix suggestions
+    - Error message pattern matching
+    - Language-specific error patterns (Go, Python, JS, TS)
+    - Generic error patterns (timeout, permission denied, etc.)
+    - Compiler output parsing
+  - `internal/codegen/codegen_test.go` - 44 tests
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 11: External Tools** (Phase 6)
+  - Docker tools
+  - Database tools
+  - HTTP client tool
+
+#### Notes
+- Phase 5 (Advanced AI) complete
+- Code generation package provides comprehensive tooling
+- Ready for Phase 6: Integrations
+- **Sprint 4: Codebase Indexing** (pending)
+- **Security hardening** (ongoing)
+
+#### Notes
+- Phase 6 (Integrations) complete
+- All IDE/editor plugins provide basic functionality
+- LSP server enables integration with any LSP-compatible editor
+- Project config allows per-project customization
+
+---
+
+### Check-in: 2026-01-20 (Sprint 4 Complete)
+
+#### Completed
+- **Sprint 4: Codebase Indexing** ✅
+  - `internal/indexing/embeddings.go` - Ollama embedding client
+  - `internal/indexing/store.go` - SQLite vector store with cosine similarity
+  - `internal/indexing/indexer.go` - Orchestrates indexing with file watching
+  - `internal/tools/semantic.go` - Semantic search tools
+  - `cmd/index.go` - CLI commands for index management
+  - `internal/config/config.go` - IndexingConfig struct and helpers
+  - Wired up indexer in `cmd/chat.go` and `cmd/arch.go`
+  - Configuration options: enabled, embedding_model, auto_index, watch_changes
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 5: Enhanced Workflows** (Phase 3)
+  - `flow init` - Project scaffolding
+  - `flow review` - Code review mode
+  - `flow test` - Test generation
+
+#### Notes
+- Phase 2 (Code Intelligence) complete with semantic search
+- Embedding model defaults to `nomic-embed-text`
+- Feature is opt-in via `indexing.enabled` config
+- Automatic background indexing and file watching available
 
 ---
 

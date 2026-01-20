@@ -11,7 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mateus/vibe-cli/internal/analysis"
+	"github.com/fsnotify/fsnotify"
+	"github.com/mateus/flow-cli/internal/analysis"
 )
 
 // Indexer manages codebase indexing with embeddings
@@ -46,7 +47,7 @@ func NewIndexer(cfg IndexerConfig) (*Indexer, error) {
 	}
 
 	if cfg.DBPath == "" {
-		cfg.DBPath = filepath.Join(cfg.WorkDir, ".vibe", "index.db")
+		cfg.DBPath = filepath.Join(cfg.WorkDir, ".flow", "index.db")
 	}
 
 	embedClient, err := NewEmbeddingClient(cfg.Endpoint, cfg.EmbeddingModel)
@@ -67,18 +68,18 @@ func NewIndexer(cfg IndexerConfig) (*Indexer, error) {
 		fileHashes:  make(map[string]string),
 	}
 
-	// Load .vibeignore rules
+	// Load .flowignore rules
 	indexer.loadIgnoreRules()
 
 	return indexer, nil
 }
 
-// loadIgnoreRules loads ignore patterns from .vibeignore
+// loadIgnoreRules loads ignore patterns from .flowignore
 func (idx *Indexer) loadIgnoreRules() {
 	// Default ignore patterns
 	idx.ignoreRules = []string{
 		".git",
-		".vibe",
+		".flow",
 		"node_modules",
 		"vendor",
 		"__pycache__",
@@ -96,11 +97,11 @@ func (idx *Indexer) loadIgnoreRules() {
 		"go.sum",
 	}
 
-	// Load custom rules from .vibeignore
-	ignorePath := filepath.Join(idx.workDir, ".vibeignore")
+	// Load custom rules from .flowignore
+	ignorePath := filepath.Join(idx.workDir, ".flowignore")
 	file, err := os.Open(ignorePath)
 	if err != nil {
-		return // No .vibeignore file
+		return // No .flowignore file
 	}
 	defer file.Close()
 
@@ -426,11 +427,203 @@ func hashContent(content []byte) string {
 	return fmt.Sprintf("%x", hash)
 }
 
-// WatchForChanges starts watching for file changes (placeholder)
+// WatchForChanges starts watching for file changes and triggers re-indexing
 func (idx *Indexer) WatchForChanges(ctx context.Context, onChange func(path string)) error {
-	// This is a placeholder - full implementation would use fsnotify
-	// For now, users can call RefreshFile manually or use IndexWorkspace
-	return fmt.Errorf("file watching not yet implemented - use RefreshFile or IndexWorkspace")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("failed to create file watcher: %w", err)
+	}
+
+	// Add directories to watch (recursively)
+	err = filepath.Walk(idx.workDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip errors
+		}
+
+		if info.IsDir() {
+			if idx.shouldIgnore(path) {
+				return filepath.SkipDir
+			}
+			if err := watcher.Add(path); err != nil {
+				// Log but don't fail - some directories might not be watchable
+				return nil
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		watcher.Close()
+		return fmt.Errorf("failed to setup directory watches: %w", err)
+	}
+
+	// Debounce map to avoid processing the same file multiple times in quick succession
+	debounce := make(map[string]time.Time)
+	debounceDuration := 500 * time.Millisecond
+	var debounceMu sync.Mutex
+
+	// Start watching
+	go func() {
+		defer watcher.Close()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+
+				// Only process write and create events for supported files
+				if event.Op&(fsnotify.Write|fsnotify.Create) == 0 {
+					continue
+				}
+
+				path := event.Name
+
+				// Skip ignored files
+				if idx.shouldIgnore(path) {
+					continue
+				}
+
+				// Check if it's a supported file type
+				if _, supported := isSupported(path); !supported {
+					continue
+				}
+
+				// Debounce - skip if we processed this file recently
+				debounceMu.Lock()
+				lastProcessed, exists := debounce[path]
+				now := time.Now()
+				if exists && now.Sub(lastProcessed) < debounceDuration {
+					debounceMu.Unlock()
+					continue
+				}
+				debounce[path] = now
+				debounceMu.Unlock()
+
+				// Re-index the file
+				if err := idx.IndexFile(ctx, path); err != nil {
+					// Log error but continue watching
+					continue
+				}
+
+				// Notify callback
+				if onChange != nil {
+					onChange(path)
+				}
+
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				// Log error but continue watching
+				_ = err
+			}
+		}
+	}()
+
+	// Block until context is cancelled
+	<-ctx.Done()
+	return nil
+}
+
+// WatchForChangesAsync starts watching for file changes in a goroutine and returns immediately
+func (idx *Indexer) WatchForChangesAsync(ctx context.Context, onChange func(path string)) (<-chan error, error) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create file watcher: %w", err)
+	}
+
+	// Add directories to watch (recursively)
+	err = filepath.Walk(idx.workDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip errors
+		}
+
+		if info.IsDir() {
+			if idx.shouldIgnore(path) {
+				return filepath.SkipDir
+			}
+			if err := watcher.Add(path); err != nil {
+				return nil
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		watcher.Close()
+		return nil, fmt.Errorf("failed to setup directory watches: %w", err)
+	}
+
+	errChan := make(chan error, 1)
+
+	// Debounce map
+	debounce := make(map[string]time.Time)
+	debounceDuration := 500 * time.Millisecond
+	var debounceMu sync.Mutex
+
+	go func() {
+		defer watcher.Close()
+		defer close(errChan)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+
+				if event.Op&(fsnotify.Write|fsnotify.Create) == 0 {
+					continue
+				}
+
+				path := event.Name
+
+				if idx.shouldIgnore(path) {
+					continue
+				}
+
+				if _, supported := isSupported(path); !supported {
+					continue
+				}
+
+				// Debounce
+				debounceMu.Lock()
+				lastProcessed, exists := debounce[path]
+				now := time.Now()
+				if exists && now.Sub(lastProcessed) < debounceDuration {
+					debounceMu.Unlock()
+					continue
+				}
+				debounce[path] = now
+				debounceMu.Unlock()
+
+				if err := idx.IndexFile(ctx, path); err != nil {
+					continue
+				}
+
+				if onChange != nil {
+					onChange(path)
+				}
+
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				select {
+				case errChan <- err:
+				default:
+				}
+			}
+		}
+	}()
+
+	return errChan, nil
 }
 
 // LastIndexed returns when a file was last indexed
