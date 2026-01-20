@@ -78,12 +78,12 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 ## Phase 3: Developer Experience (Sprints 5-6)
 **Goal:** Productivity features
 
-### Sprint 5: Enhanced Workflows
-- [ ] `vibe init` - Project scaffolding with templates
-- [ ] `vibe review` - Code review mode (diff analysis)
-- [ ] `vibe test` - Test generation and execution
-- [ ] `vibe fix` - Auto-fix linter errors
-- [ ] `vibe explain` - Explain code/errors in detail
+### Sprint 5: Enhanced Workflows ✅
+- [x] `flow init` - Project scaffolding with templates (Go, Python, Node.js, Rust)
+- [x] `flow review` - Code review mode (diff analysis, PR review via gh CLI)
+- [x] `flow test` - Test generation and execution with coverage
+- [x] `flow fix` - Auto-fix linter errors (golangci-lint, ruff, eslint, clippy)
+- [x] `flow explain` - Explain code/errors in detail
 
 ### Sprint 6: Terminal UX
 - [ ] Multi-file edit preview with unified diff
@@ -436,6 +436,38 @@ Use this section to track periodic progress reviews.
 - Embedding model defaults to `nomic-embed-text`
 - Feature is opt-in via `indexing.enabled` config
 - Automatic background indexing and file watching available
+
+---
+
+### Check-in: 2026-01-20 (Sprint 5 Complete)
+
+#### Completed
+- **Sprint 5: Enhanced Workflows** ✅
+  - `cmd/init.go` - Project scaffolding with templates (Go, Python, Node.js, Rust, Empty)
+  - `cmd/review.go` - AI-powered code review (git diff, staged changes, PR review)
+  - `cmd/test.go` - Test generation and execution with coverage
+  - `cmd/fix.go` - Auto-fix linter errors (golangci-lint, ruff, eslint, clippy)
+  - `cmd/explain.go` - Explain code, functions, or errors
+  - `internal/templates/` - Project template scaffolding system
+  - `internal/review/` - Code review diff parsing and analysis
+  - `internal/testing/` - Test runner, generator, and analyzer
+  - `internal/fixer/` - Linter integration and fix generation
+  - `internal/explainer/` - Code and error explanation
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 6: Terminal UX** (Phase 3)
+  - Multi-file edit preview
+  - Undo/redo for file changes
+  - Keyboard shortcuts
+
+#### Notes
+- Phase 3 (Developer Experience) in progress
+- All Sprint 5 commands use LLM for intelligent assistance
+- Templates support multiple languages with best practices
+- Code review supports PR analysis via GitHub CLI
 
 ---
 
