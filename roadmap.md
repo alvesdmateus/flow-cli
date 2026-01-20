@@ -62,12 +62,16 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] `list_symbols` tool for codebase exploration
 - [ ] Import/dependency analysis (future enhancement)
 
-### Sprint 4: Codebase Indexing
-- [ ] Local embedding generation (with Ollama)
-- [ ] Vector store for semantic search (SQLite + vector extension)
-- [ ] `semantic_search` tool for natural language code queries
-- [ ] Automatic re-indexing on file changes
-- [ ] `.vibeignore` for excluding files from indexing
+### Sprint 4: Codebase Indexing ✅
+- [x] Local embedding generation (with Ollama)
+- [x] Vector store for semantic search (SQLite)
+- [x] `semantic_search` tool for natural language code queries
+- [x] `index_status` tool for checking index statistics
+- [x] `reindex_file` tool for manual re-indexing
+- [x] Automatic re-indexing on file changes (file watcher)
+- [x] `.flowignore` for excluding files from indexing
+- [x] CLI commands: `flow index build`, `flow index status`, `flow index clear`, `flow index search`
+- [x] Configuration: `indexing.enabled`, `indexing.embedding_model`, `indexing.auto_index`, `indexing.watch_changes`
 
 ---
 
@@ -163,7 +167,7 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Context summarization | High | Medium | **P1** | ✅ Done |
 | Code Analysis (AST/regex) | High | High | **P1** | ✅ Done |
 | Secrets detection | High | Medium | **P1** | Pending |
-| Semantic search | High | High | P2 | Pending |
+| Semantic search | High | High | P2 | ✅ Done |
 | LSP server mode | High | High | P2 | Pending |
 | Test generation | Medium | Medium | P2 | ✅ Done |
 | LSP server mode | High | High | P2 | ✅ Done |
@@ -402,6 +406,36 @@ Use this section to track periodic progress reviews.
 - All IDE/editor plugins provide basic functionality
 - LSP server enables integration with any LSP-compatible editor
 - Project config allows per-project customization
+
+---
+
+### Check-in: 2026-01-20 (Sprint 4 Complete)
+
+#### Completed
+- **Sprint 4: Codebase Indexing** ✅
+  - `internal/indexing/embeddings.go` - Ollama embedding client
+  - `internal/indexing/store.go` - SQLite vector store with cosine similarity
+  - `internal/indexing/indexer.go` - Orchestrates indexing with file watching
+  - `internal/tools/semantic.go` - Semantic search tools
+  - `cmd/index.go` - CLI commands for index management
+  - `internal/config/config.go` - IndexingConfig struct and helpers
+  - Wired up indexer in `cmd/chat.go` and `cmd/arch.go`
+  - Configuration options: enabled, embedding_model, auto_index, watch_changes
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 5: Enhanced Workflows** (Phase 3)
+  - `flow init` - Project scaffolding
+  - `flow review` - Code review mode
+  - `flow test` - Test generation
+
+#### Notes
+- Phase 2 (Code Intelligence) complete with semantic search
+- Embedding model defaults to `nomic-embed-text`
+- Feature is opt-in via `indexing.enabled` config
+- Automatic background indexing and file watching available
 
 ---
 

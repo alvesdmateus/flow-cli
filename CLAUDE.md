@@ -39,6 +39,7 @@ cmd/                       # Cobra commands
   arch.go                  # Architecture planning mode
   config.go                # Configuration management command
   session.go               # Session management commands
+  index.go                 # Semantic search index management
   completion.go            # Shell completion generation
   version.go               # Version information
   lsp.go                   # Language Server Protocol server
@@ -51,6 +52,10 @@ internal/
   config/                  # Configuration management (Viper)
   context/                 # Conversation management
     manager.go             # Message history, session persistence
+  indexing/                # Semantic search indexing
+    embeddings.go          # Ollama embedding client
+    store.go               # SQLite vector store
+    indexer.go             # File indexing orchestrator
   llm/                     # LLM client abstraction
     client.go              # Interface definitions, auto-detection
     ollama.go              # Ollama implementation
@@ -73,6 +78,7 @@ internal/
     filesystem.go          # read_file, write_file, list_files, create_directory
     shell.go               # run_command
     search.go              # web_search, fetch_url
+    semantic.go            # semantic_search, index_status, reindex_file
     process.go             # check_port, kill_process, start_process
   ui/                      # Terminal UI components (huh/bubbletea)
     prompt.go              # Multiple choice, confirmations, approval UI
@@ -95,6 +101,10 @@ flow config init           # Create default config file
 flow session list          # List saved sessions
 flow session resume [id]   # Resume a saved session
 flow session delete <id>   # Delete a session
+flow index build           # Build/rebuild the semantic search index
+flow index status          # Show index statistics
+flow index clear           # Clear the index database
+flow index search "query"  # Search the codebase using natural language
 flow completion bash       # Generate shell completion
 flow version               # Show version info
 ```
@@ -178,6 +188,45 @@ The CLI can execute development-related commands:
 - Chat sessions are auto-saved on exit
 - Sessions can be listed, resumed, and deleted
 - Stored in `~/.flow/sessions/`
+
+### Semantic Search
+- Natural language code search using embeddings
+- Requires Ollama with an embedding model (default: `nomic-embed-text`)
+- Index stored in `.flow/index.db` (SQLite)
+- Automatic re-indexing on file changes (when enabled)
+- Tools: `semantic_search`, `index_status`, `reindex_file`
+
+**Configuration:**
+```yaml
+indexing:
+  enabled: false           # Enable/disable semantic search (opt-in)
+  embedding_model: "nomic-embed-text"  # Ollama embedding model
+  auto_index: true         # Auto-index when index is empty
+  watch_changes: true      # Watch files and re-index on changes
+```
+
+**Supported file types:** `.go`, `.py`, `.js`, `.ts`, `.tsx`, `.jsx`, `.rs`, `.java`, `.c`, `.cpp`, `.h`, `.hpp`, `.rb`, `.php`, `.md`, `.txt`
+
+**Usage:**
+```bash
+# Build the index first
+flow index build
+
+# Enable in config for chat/arch tools
+flow config set indexing.enabled true
+
+# Search from CLI
+flow index search "function that handles authentication"
+
+# Or use the semantic_search tool in chat
+flow chat
+> Use semantic_search to find functions related to "file reading"
+```
+
+**Troubleshooting:**
+- If model not found: `ollama pull nomic-embed-text`
+- Large codebases may take time to index
+- Use `.flowignore` to exclude files from indexing
 
 ## Adding New Features
 

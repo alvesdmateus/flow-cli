@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/mateus/flow-cli/internal/agent"
 	"github.com/mateus/flow-cli/internal/config"
 	flowcontext "github.com/mateus/flow-cli/internal/context"
+	"github.com/mateus/flow-cli/internal/indexing"
 	"github.com/mateus/flow-cli/internal/llm"
 	"github.com/mateus/flow-cli/internal/logging"
 	"github.com/mateus/flow-cli/internal/sandbox"
@@ -97,6 +99,9 @@ func runChat(cmd *cobra.Command, args []string) error {
 		model = selected
 	}
 
+	// Get working directory
+	workDir, _ := os.Getwd()
+
 	// Create search client (optional)
 	var searchClient search.Client
 	if config.IsSearchEnabled() {
@@ -107,6 +112,48 @@ func runChat(cmd *cobra.Command, args []string) error {
 		)
 		if searchErr != nil {
 			ui.PrintWarning(fmt.Sprintf("Search disabled: %v", searchErr))
+		}
+	}
+
+	// Create indexer if enabled
+	var idx *indexing.Indexer
+	if config.IsIndexingEnabled() {
+		dbPath := filepath.Join(workDir, ".flow", "index.db")
+		var indexErr error
+		idx, indexErr = indexing.NewIndexer(indexing.IndexerConfig{
+			Endpoint:       config.GetLLMEndpoint(),
+			EmbeddingModel: config.GetEmbeddingModel(),
+			DBPath:         dbPath,
+			WorkDir:        workDir,
+		})
+		if indexErr != nil {
+			logging.Warn("Indexing disabled: %v", indexErr)
+			ui.PrintWarning(fmt.Sprintf("Indexing disabled: %v", indexErr))
+		} else {
+			defer idx.Close()
+
+			// Auto-index if enabled and index is empty
+			if config.IsAutoIndexEnabled() {
+				stats := idx.GetStats()
+				if stats.TotalDocuments == 0 {
+					logging.Debug("Index is empty, starting background indexing")
+					go func() {
+						if err := idx.IndexWorkspace(ctx, nil); err != nil {
+							logging.Warn("Background indexing failed: %v", err)
+						}
+					}()
+				}
+			}
+
+			// Start file watcher if enabled
+			if config.IsWatchChangesEnabled() {
+				_, watchErr := idx.WatchForChangesAsync(ctx, func(path string) {
+					logging.Debug("Re-indexed file: %s", path)
+				})
+				if watchErr != nil {
+					logging.Warn("File watching disabled: %v", watchErr)
+				}
+			}
 		}
 	}
 
@@ -121,10 +168,10 @@ func runChat(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create tool registry
-	workDir, _ := os.Getwd()
 	toolReg, err := tools.SetupRegistry(tools.SetupOptions{
 		Permissions:  permissions,
 		SearchClient: searchClient,
+		Indexer:      idx,
 		WorkDir:      workDir,
 	})
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -13,7 +14,9 @@ import (
 
 	"github.com/mateus/flow-cli/internal/agent"
 	"github.com/mateus/flow-cli/internal/config"
+	"github.com/mateus/flow-cli/internal/indexing"
 	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/logging"
 	"github.com/mateus/flow-cli/internal/sandbox"
 	"github.com/mateus/flow-cli/internal/search"
 	"github.com/mateus/flow-cli/internal/tools"
@@ -267,6 +270,9 @@ func runPlanExecution(ctx context.Context, llmClient llm.Client, model string, p
 	ui.PrintInfo("Transitioning to implementation mode...")
 	fmt.Println()
 
+	// Get working directory
+	workDir, _ := os.Getwd()
+
 	// Create search client (optional)
 	var searchClient search.Client
 	if config.IsSearchEnabled() {
@@ -277,6 +283,35 @@ func runPlanExecution(ctx context.Context, llmClient llm.Client, model string, p
 		)
 		if searchErr != nil {
 			ui.PrintWarning(fmt.Sprintf("Search disabled: %v", searchErr))
+		}
+	}
+
+	// Create indexer if enabled
+	var idx *indexing.Indexer
+	if config.IsIndexingEnabled() {
+		dbPath := filepath.Join(workDir, ".flow", "index.db")
+		var indexErr error
+		idx, indexErr = indexing.NewIndexer(indexing.IndexerConfig{
+			Endpoint:       config.GetLLMEndpoint(),
+			EmbeddingModel: config.GetEmbeddingModel(),
+			DBPath:         dbPath,
+			WorkDir:        workDir,
+		})
+		if indexErr != nil {
+			logging.Warn("Indexing disabled: %v", indexErr)
+			ui.PrintWarning(fmt.Sprintf("Indexing disabled: %v", indexErr))
+		} else {
+			defer idx.Close()
+
+			// Start file watcher if enabled
+			if config.IsWatchChangesEnabled() {
+				_, watchErr := idx.WatchForChangesAsync(ctx, func(path string) {
+					logging.Debug("Re-indexed file: %s", path)
+				})
+				if watchErr != nil {
+					logging.Warn("File watching disabled: %v", watchErr)
+				}
+			}
 		}
 	}
 
@@ -291,10 +326,10 @@ func runPlanExecution(ctx context.Context, llmClient llm.Client, model string, p
 	}
 
 	// Create tool registry
-	workDir, _ := os.Getwd()
 	toolReg, err := tools.SetupRegistry(tools.SetupOptions{
 		Permissions:  permissions,
 		SearchClient: searchClient,
+		Indexer:      idx,
 		WorkDir:      workDir,
 	})
 	if err != nil {
