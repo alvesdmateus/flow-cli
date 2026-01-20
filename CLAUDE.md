@@ -75,6 +75,8 @@ internal/
     policy.go              # Security policy definitions
     validator.go           # Path and command validation
     permissions.go         # Permission manager with approval flow
+  secrets/                 # Secrets detection
+    detector.go            # Pattern-based secret detection
   search/                  # Web search abstraction
     client.go              # Search interface
     searxng.go             # SearXNG implementation
@@ -137,6 +139,8 @@ flow fix                   # Auto-fix linter errors
 flow fix --dry-run         # Show fixes without applying
 flow explain file.go       # Explain code in a file
 flow explain --error "msg" # Explain an error message
+flow secrets scan          # Scan for hardcoded secrets
+flow secrets check         # Check staged files for secrets (pre-commit)
 flow completion bash       # Generate shell completion
 flow version               # Show version info
 ```
@@ -259,6 +263,44 @@ flow chat
 - If model not found: `ollama pull nomic-embed-text`
 - Large codebases may take time to index
 - Use `.flowignore` to exclude files from indexing
+
+### Secrets Detection
+
+flow-cli includes built-in secrets detection to prevent accidental commits of sensitive data.
+
+**Detected secret types:**
+- API keys: AWS, Google, Stripe, SendGrid, generic
+- Tokens: GitHub, GitLab, Slack, npm, JWT
+- Private keys: RSA, OpenSSH, EC, PGP
+- Connection strings: PostgreSQL, MongoDB, MySQL, Redis
+- Passwords: Generic password patterns
+
+**CLI Commands:**
+```bash
+flow secrets scan                    # Scan current directory
+flow secrets scan ./src              # Scan specific directory
+flow secrets scan --file config.go   # Scan specific file
+flow secrets scan --severity high    # Only show high+ severity
+flow secrets check                   # Check staged git files (pre-commit)
+```
+
+**Git Integration:**
+- `git_commit` tool automatically scans staged files before committing
+- Use `skip_secrets_check: true` parameter to bypass (not recommended)
+- Can be used as a pre-commit hook via `flow secrets check`
+
+**Pre-commit hook setup:**
+```bash
+# Add to .git/hooks/pre-commit:
+#!/bin/sh
+flow secrets check
+```
+
+**False positive handling:**
+- Placeholders (`your_api_key_here`, `<your-key>`) are ignored
+- Template variables (`${API_KEY}`, `{{.ApiKey}}`) are ignored
+- Test/fake keys are detected and filtered
+- Comments with example patterns are ignored
 
 ## Adding New Features
 

@@ -327,3 +327,36 @@ func PrintWelcomeInit() {
 	fmt.Println(dimStyle.Render("Create a new project or configure vibe for an existing one"))
 	fmt.Println()
 }
+
+// SelectOption prompts the user to select from a list of options
+func SelectOption(title string, options []string) (string, error) {
+	if len(options) == 0 {
+		return "", fmt.Errorf("no options provided")
+	}
+
+	if len(options) == 1 {
+		return options[0], nil
+	}
+
+	opts := make([]huh.Option[string], len(options))
+	for i, o := range options {
+		opts[i] = huh.NewOption(o, o)
+	}
+
+	var selected string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title(title).
+				Options(opts...).
+				Value(&selected),
+		),
+	)
+
+	err := form.Run()
+	if err != nil {
+		return "", err
+	}
+
+	return selected, nil
+}

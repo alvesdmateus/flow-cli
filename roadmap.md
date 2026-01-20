@@ -85,26 +85,29 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 - [x] `flow fix` - Auto-fix linter errors (golangci-lint, ruff, eslint, clippy)
 - [x] `flow explain` - Explain code/errors in detail
 
-### Sprint 6: Terminal UX
-- [ ] Multi-file edit preview with unified diff
-- [ ] Undo/redo for file changes
-- [ ] Keyboard shortcuts (Ctrl+C cancel, Ctrl+R retry)
-- [ ] Progress indicators for long operations
-- [ ] Command history with fuzzy search
-- [ ] Markdown rendering in terminal
+### Sprint 6: Terminal UX ✅
+- [x] Multi-file edit preview with unified diff
+- [x] Undo/redo for file changes
+- [x] Keyboard shortcuts (Ctrl+C cancel, Ctrl+R retry)
+- [x] Progress indicators for long operations
+- [x] Command history with fuzzy search
+- [x] Markdown rendering in terminal
 
 ---
 
 ## Phase 4: Security & Reliability (Sprints 7-8)
 **Goal:** Production-grade safety
 
-### Sprint 7: Security Hardening
-- [ ] Command injection prevention (shell escaping audit)
-- [ ] Path traversal protection (symlink resolution)
-- [ ] Secrets detection (block commits with API keys)
-- [ ] Audit logging (all file/command operations)
-- [ ] Rate limiting for LLM calls
-- [ ] Checksum verification for file writes
+### Sprint 7: Security Hardening ✅
+- [x] Command injection prevention (shell escaping audit)
+- [x] Path traversal protection (symlink resolution)
+- [x] Secrets detection (block commits with API keys)
+  - `internal/secrets/detector.go` - Pattern-based detection for 20+ secret types
+  - `cmd/secrets.go` - `flow secrets scan` and `flow secrets check` commands
+  - Git commit integration - Auto-scan staged files before committing
+- [x] Audit logging (all file/command operations)
+- [x] Rate limiting for LLM calls
+- [x] Checksum verification for file writes
 
 ### Sprint 8: Reliability
 - [ ] Automatic retries with exponential backoff
@@ -166,7 +169,7 @@ This roadmap outlines the development plan to make vibe-cli a competitive AI cod
 | Git integration | High | Medium | **P1** | ✅ Done |
 | Context summarization | High | Medium | **P1** | ✅ Done |
 | Code Analysis (AST/regex) | High | High | **P1** | ✅ Done |
-| Secrets detection | High | Medium | **P1** | Pending |
+| Secrets detection | High | Medium | **P1** | ✅ Done |
 | Semantic search | High | High | P2 | ✅ Done |
 | LSP server mode | High | High | P2 | Pending |
 | Test generation | Medium | Medium | P2 | ✅ Done |
@@ -468,6 +471,61 @@ Use this section to track periodic progress reviews.
 - All Sprint 5 commands use LLM for intelligent assistance
 - Templates support multiple languages with best practices
 - Code review supports PR analysis via GitHub CLI
+
+---
+
+### Check-in: 2026-01-17 (Sprint 6 Complete)
+
+#### Completed
+- **Sprint 6: Terminal UX** ✅
+  - Multi-file edit preview with unified diff
+    - `EditPreview` manager for collecting and previewing file changes
+    - Unified diff generation with hunk support
+    - Summary view with added/removed line counts
+    - Interactive approval flow with per-file review option
+
+  - Undo/redo for file changes
+    - `ChangeHistory` manager with full undo/redo stack
+    - Records create, modify, and delete operations
+    - Automatic file restoration on undo
+    - Interactive undo/redo with confirmation
+
+  - Progress indicators for long operations
+    - `Spinner` with multiple animation styles
+    - `ProgressBar` with percentage and ETA
+    - `MultiProgress` for parallel operations
+    - `WithProgress` helper for easy integration
+
+  - Command history with fuzzy search
+    - `CommandHistory` with persistence to file
+    - Fuzzy matching with scoring (exact, contains, character)
+    - Frequency-based ranking
+    - `HistoryNavigator` for up/down navigation
+    - `FuzzyFinder` for interactive search
+
+  - Markdown rendering in terminal
+    - Headers (H1-H3), lists, blockquotes
+    - Code blocks with basic syntax highlighting
+    - Inline formatting (bold, italic, code, links)
+    - Table rendering with borders
+    - Support for Go, Python, JavaScript, TypeScript, Rust syntax
+
+  - 40+ tests for UI components
+
+#### In Progress
+- None
+
+#### Next Sprint Focus
+- **Sprint 7: Security Hardening**
+  - Command injection prevention
+  - Path traversal protection
+  - Secrets detection
+
+#### Notes
+- Phase 3: Developer Experience is now complete
+- All UI components are reusable and well-tested
+- Progress indicators support multiple styles for different use cases
+- Markdown rendering provides good terminal experience for AI responses
 
 ---
 
