@@ -1,11 +1,11 @@
-# vibe-cli Development Roadmap
+# flow-cli Development Roadmap
 
 > Last updated: 2026-01-16
 > Status: Phase 1 - Foundation
 
 ## Overview
 
-This roadmap outlines the development plan to make vibe-cli a competitive AI coding assistant comparable to Gemini CLI, Claude Code, Cursor, and similar tools.
+This roadmap outlines the development plan to make flow-cli a competitive AI coding assistant comparable to Gemini CLI, Claude Code, Cursor, and similar tools.
 
 ## Current Status
 

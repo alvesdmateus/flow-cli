@@ -272,7 +272,7 @@ MIT
 		{
 			Path: ".vibe/config.yaml",
 			Content: `# Vibe CLI Project Configuration
-# This file contains project-specific settings for vibe-cli
+# This file contains project-specific settings for flow-cli
 
 # Project metadata
 project:

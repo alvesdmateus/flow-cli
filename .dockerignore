@@ -1,0 +1,90 @@
+# =============================================================================
+# Docker Build Context Exclusions
+# Reduces build context size and prevents sensitive files from being included
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+vibe
+vibe.exe
+flow
+flow.exe
+dist/
+coverage.out
+coverage.html
+
+# Test artifacts
+*.test
+*.out
+__debug_bin*
+
+# Documentation (not needed in container)
+*.md
+!docker/README.md
+docs/
+LICENSE
+
+# Editor extensions (not needed in container)
+editors/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Local configuration
+.env
+.env.local
+.env.*.local
+*.local.yaml
+*.local.yml
+config.yaml
+.flow/
+
+# Docker files (we copy these explicitly)
+docker/backups/
+
+# Claude/AI files
+.claude/
+CLAUDE.md
+roadmap.md
+
+# Development files
+.golangci.yml
+.pre-commit-config.yaml
+Makefile
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.log
+
+# Secrets (never include in build context)
+*.pem
+*.key
+*.crt
+credentials*
+secrets*
+.aws
+.ssh

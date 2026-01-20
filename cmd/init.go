@@ -239,7 +239,7 @@ func gatherProjectInfo(targetDir string, tmpl *templates.Template) (*templates.P
 	info.Name = filepath.Base(targetDir)
 
 	if skipPrompts {
-		info.Description = fmt.Sprintf("A %s project created with vibe-cli", tmpl.Language)
+		info.Description = fmt.Sprintf("A %s project created with flow-cli", tmpl.Language)
 		info.Author = ""
 		return info, nil
 	}
