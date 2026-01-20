@@ -24,7 +24,7 @@ make lint               # Run linter
 make release            # Build for all platforms
 
 # Using Go directly
-go build -o vibe .      # Build binary
+go build -o flow .      # Build binary
 go test ./...           # Run all tests
 go mod tidy             # Clean dependencies
 ```

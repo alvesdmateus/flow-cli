@@ -63,7 +63,7 @@ type RecoveryConfig struct {
 // DefaultRecoveryConfig returns sensible defaults.
 func DefaultRecoveryConfig(baseDir string) RecoveryConfig {
 	return RecoveryConfig{
-		StateDir:     filepath.Join(baseDir, ".vibe", "recovery"),
+		StateDir:     filepath.Join(baseDir, ".flow", "recovery"),
 		AutoSave:     true,
 		SaveInterval: 5 * time.Second,
 	}

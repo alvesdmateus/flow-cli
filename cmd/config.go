@@ -300,7 +300,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// Write default config
-	configContent := `# Vibe CLI Configuration
+	configContent := `# Flow CLI Configuration
 # See https://github.com/mateus/flow-cli for documentation
 
 # LLM Provider Settings

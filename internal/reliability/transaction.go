@@ -77,7 +77,7 @@ func (tm *TransactionManager) Begin() (*Transaction, error) {
 	defer tm.mu.Unlock()
 
 	id := fmt.Sprintf("tx-%d", time.Now().UnixNano())
-	tempDir := filepath.Join(tm.baseDir, ".vibe", "transactions", id)
+	tempDir := filepath.Join(tm.baseDir, ".flow", "transactions", id)
 
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create transaction directory: %w", err)

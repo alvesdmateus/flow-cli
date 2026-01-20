@@ -3,16 +3,16 @@ package templates
 var emptyTemplate = Template{
 	Name:        "empty",
 	Language:    "Any",
-	Description: "Vibe configuration only (for existing projects)",
+	Description: "Flow configuration only (for existing projects)",
 	Features: []string{
-		".vibe/config.yaml for project settings",
-		".vibeignore for index exclusions",
+		".flow/config.yaml for project settings",
+		".flowignore for index exclusions",
 		"No project files created",
 	},
 	Files: []TemplateFile{
 		{
-			Path: ".vibe/config.yaml",
-			Content: `# Vibe CLI Project Configuration
+			Path: ".flow/config.yaml",
+			Content: `# Flow CLI Project Configuration
 # This file contains project-specific settings for flow-cli
 
 # Project metadata
@@ -45,8 +45,8 @@ commands:
 `,
 		},
 		{
-			Path: ".vibeignore",
-			Content: `# Files and directories to exclude from vibe indexing
+			Path: ".flowignore",
+			Content: `# Files and directories to exclude from flow indexing
 # Add patterns below, one per line
 
 # Dependencies

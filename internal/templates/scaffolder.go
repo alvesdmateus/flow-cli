@@ -41,9 +41,9 @@ func (s *Scaffolder) Scaffold(tmpl *Template) ([]string, error) {
 	return createdFiles, nil
 }
 
-// CreateVibeConfig creates only the vibe configuration files.
-// Used for initializing vibe in existing projects.
-func (s *Scaffolder) CreateVibeConfig() ([]string, error) {
+// CreateFlowConfig creates only the flow configuration files.
+// Used for initializing flow in existing projects.
+func (s *Scaffolder) CreateFlowConfig() ([]string, error) {
 	emptyTmpl := GetTemplate("empty")
 	if emptyTmpl == nil {
 		return nil, fmt.Errorf("empty template not found")

@@ -1,6 +1,6 @@
 #!/bin/bash
-# vibe-cli installation script
-# Usage: curl -fsSL https://raw.githubusercontent.com/mateus/vibe-cli/main/install.sh | bash
+# flow-cli installation script
+# Usage: curl -fsSL https://raw.githubusercontent.com/alvesdmateus/flow-cli/main/install.sh | bash
 
 set -e
 
@@ -12,8 +12,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO="mateus/vibe-cli"
-BINARY_NAME="vibe"
+REPO="alvesdmateus/flow-cli"
+BINARY_NAME="flow"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 # Detect OS and architecture
@@ -46,7 +46,7 @@ detect_platform() {
             ;;
         mingw*|msys*|cygwin*)
             OS="windows"
-            BINARY_NAME="vibe.exe"
+            BINARY_NAME="flow.exe"
             ;;
         *)
             echo -e "${RED}Unsupported operating system: $OS${NC}"
@@ -63,7 +63,7 @@ get_latest_version() {
 }
 
 # Download and install
-install_vibe() {
+install_flow() {
     PLATFORM=$(detect_platform)
     VERSION=${VERSION:-$(get_latest_version)}
 
@@ -72,10 +72,10 @@ install_vibe() {
         VERSION="latest"
     fi
 
-    echo -e "${BLUE}Installing vibe-cli ${VERSION} for ${PLATFORM}...${NC}"
+    echo -e "${BLUE}Installing flow-cli ${VERSION} for ${PLATFORM}...${NC}"
 
     # Construct download URL
-    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/vibe_${VERSION#v}_${PLATFORM}.tar.gz"
+    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${VERSION}/flow_${VERSION#v}_${PLATFORM}.tar.gz"
 
     # Create temporary directory
     TMP_DIR=$(mktemp -d)
@@ -83,18 +83,18 @@ install_vibe() {
 
     # Download
     echo -e "${BLUE}Downloading from ${DOWNLOAD_URL}...${NC}"
-    if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/vibe.tar.gz"; then
-        echo -e "${RED}Failed to download vibe-cli${NC}"
+    if ! curl -fsSL "$DOWNLOAD_URL" -o "$TMP_DIR/flow.tar.gz"; then
+        echo -e "${RED}Failed to download flow-cli${NC}"
         echo -e "${YELLOW}You can build from source instead:${NC}"
         echo "  git clone https://github.com/${REPO}.git"
-        echo "  cd vibe-cli"
-        echo "  go build -o vibe ."
+        echo "  cd flow-cli"
+        echo "  go build -o flow ."
         exit 1
     fi
 
     # Extract
     echo -e "${BLUE}Extracting...${NC}"
-    tar -xzf "$TMP_DIR/vibe.tar.gz" -C "$TMP_DIR"
+    tar -xzf "$TMP_DIR/flow.tar.gz" -C "$TMP_DIR"
 
     # Install
     echo -e "${BLUE}Installing to ${INSTALL_DIR}...${NC}"
@@ -107,14 +107,14 @@ install_vibe() {
         sudo chmod +x "$INSTALL_DIR/$BINARY_NAME"
     fi
 
-    echo -e "${GREEN}✓ vibe-cli installed successfully!${NC}"
+    echo -e "${GREEN}✓ flow-cli installed successfully!${NC}"
     echo ""
-    echo "Run 'vibe --help' to get started."
+    echo "Run 'flow --help' to get started."
     echo ""
     echo "Quick start:"
     echo "  1. Make sure Ollama is running: ollama serve"
-    echo "  2. Initialize config: vibe config init"
-    echo "  3. Start chatting: vibe chat"
+    echo "  2. Initialize config: flow config init"
+    echo "  3. Start chatting: flow chat"
 }
 
 # Build from source
@@ -143,34 +143,34 @@ build_from_source() {
     trap "rm -rf $TMP_DIR" EXIT
 
     echo -e "${BLUE}Cloning repository...${NC}"
-    git clone "https://github.com/${REPO}.git" "$TMP_DIR/vibe-cli"
-    cd "$TMP_DIR/vibe-cli"
+    git clone "https://github.com/${REPO}.git" "$TMP_DIR/flow-cli"
+    cd "$TMP_DIR/flow-cli"
 
     echo -e "${BLUE}Building...${NC}"
-    go build -ldflags "-s -w -X github.com/mateus/vibe-cli/cmd.Version=$(git describe --tags --always)" -o vibe .
+    go build -ldflags "-s -w -X github.com/alvesdmateus/flow-cli/cmd.Version=$(git describe --tags --always)" -o flow .
 
     # Install
     echo -e "${BLUE}Installing to ${INSTALL_DIR}...${NC}"
     if [ -w "$INSTALL_DIR" ]; then
-        mv vibe "$INSTALL_DIR/"
+        mv flow "$INSTALL_DIR/"
     else
-        sudo mv vibe "$INSTALL_DIR/"
+        sudo mv flow "$INSTALL_DIR/"
     fi
 
-    echo -e "${GREEN}✓ vibe-cli built and installed successfully!${NC}"
+    echo -e "${GREEN}✓ flow-cli built and installed successfully!${NC}"
 }
 
 # Main
 main() {
     echo -e "${BLUE}"
     echo "╭─────────────────────────────────────────╮"
-    echo "│       vibe-cli Installer                │"
+    echo "│       flow-cli Installer                │"
     echo "╰─────────────────────────────────────────╯"
     echo -e "${NC}"
 
     case "${1:-install}" in
         install)
-            install_vibe
+            install_flow
             ;;
         build)
             build_from_source

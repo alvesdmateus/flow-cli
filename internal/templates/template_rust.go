@@ -9,7 +9,7 @@ var rustTemplate = Template{
 		"Main binary with hello world",
 		"Library module structure",
 		"Unit tests included",
-		".vibe configuration",
+		".flow configuration",
 	},
 	Files: []TemplateFile{
 		{
@@ -187,9 +187,9 @@ cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 │   ├── main.rs    # Binary entry point
 │   └── lib.rs     # Library with core logic
 ├── Cargo.toml     # Package manifest
-├── .vibe/
+├── .flow/
 │   └── config.yaml
-└── .vibeignore
+└── .flowignore
 ` + "```" + `
 
 ## License
@@ -198,8 +198,8 @@ MIT
 `,
 		},
 		{
-			Path: ".vibe/config.yaml",
-			Content: `# Vibe CLI Project Configuration
+			Path: ".flow/config.yaml",
+			Content: `# Flow CLI Project Configuration
 # This file contains project-specific settings for flow-cli
 
 # Project metadata
@@ -228,8 +228,8 @@ commands:
 `,
 		},
 		{
-			Path: ".vibeignore",
-			Content: `# Files and directories to exclude from vibe indexing
+			Path: ".flowignore",
+			Content: `# Files and directories to exclude from flow indexing
 
 # Cargo build artifacts
 target/

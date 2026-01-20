@@ -13,21 +13,21 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init [project-name]",
-	Short: "Initialize a new project or configure vibe for an existing project",
-	Long: `Initialize a new project with scaffolding or configure vibe for an existing project.
+	Short: "Initialize a new project or configure flow for an existing project",
+	Long: `Initialize a new project with scaffolding or configure flow for an existing project.
 
 When run without arguments in an empty directory, it will prompt you to select
 a project template and create the appropriate structure.
 
-When run in an existing project, it will create .vibe/config.yaml for
-project-level vibe configuration.
+When run in an existing project, it will create .flow/config.yaml for
+project-level flow configuration.
 
 Examples:
-  vibe init                    # Interactive initialization in current directory
-  vibe init my-project         # Create new project in my-project directory
-  vibe init --template go      # Use Go template
-  vibe init --list-templates   # List available templates
-  vibe init --existing         # Configure vibe for existing project only`,
+  flow init                    # Interactive initialization in current directory
+  flow init my-project         # Create new project in my-project directory
+  flow init --template go      # Use Go template
+  flow init --list-templates   # List available templates
+  flow init --existing         # Configure flow for existing project only`,
 	RunE: runInit,
 }
 
@@ -43,7 +43,7 @@ func init() {
 
 	initCmd.Flags().StringVarP(&templateName, "template", "t", "", "Project template to use")
 	initCmd.Flags().BoolVarP(&listTemplates, "list-templates", "l", false, "List available templates")
-	initCmd.Flags().BoolVarP(&existingOnly, "existing", "e", false, "Only create vibe config for existing project")
+	initCmd.Flags().BoolVarP(&existingOnly, "existing", "e", false, "Only create flow config for existing project")
 	initCmd.Flags().BoolVarP(&skipPrompts, "yes", "y", false, "Skip confirmation prompts and use defaults")
 }
 
@@ -71,12 +71,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 		dirExists = false
 	}
 
-	// If --existing flag, just create vibe config
+	// If --existing flag, just create flow config
 	if existingOnly {
 		if !dirExists {
 			return fmt.Errorf("directory does not exist: %s", absPath)
 		}
-		return initVibeConfig(absPath)
+		return initFlowConfig(absPath)
 	}
 
 	// If directory doesn't exist, create it
@@ -162,7 +162,7 @@ func listAvailableTemplates() error {
 		fmt.Println()
 	}
 
-	fmt.Println("Use 'vibe init --template <name>' to use a template.")
+	fmt.Println("Use 'flow init --template <name>' to use a template.")
 	return nil
 }
 
@@ -189,7 +189,7 @@ func selectTemplate(isEmpty bool) (*templates.Template, error) {
 	if templateName != "" {
 		tmpl := templates.GetTemplate(templateName)
 		if tmpl == nil {
-			return nil, fmt.Errorf("unknown template: %s\nRun 'vibe init --list-templates' to see available templates", templateName)
+			return nil, fmt.Errorf("unknown template: %s\nRun 'flow init --list-templates' to see available templates", templateName)
 		}
 		return tmpl, nil
 	}
@@ -300,8 +300,8 @@ func previewAndConfirm(info *templates.ProjectInfo, tmpl *templates.Template) er
 	return nil
 }
 
-func initVibeConfig(targetDir string) error {
-	ui.PrintInfo("Initializing vibe configuration for existing project...")
+func initFlowConfig(targetDir string) error {
+	ui.PrintInfo("Initializing flow configuration for existing project...")
 	fmt.Println()
 
 	info := &templates.ProjectInfo{
@@ -310,12 +310,12 @@ func initVibeConfig(targetDir string) error {
 	}
 
 	scaffolder := templates.NewScaffolder(targetDir, info)
-	files, err := scaffolder.CreateVibeConfig()
+	files, err := scaffolder.CreateFlowConfig()
 	if err != nil {
-		return fmt.Errorf("failed to create vibe config: %w", err)
+		return fmt.Errorf("failed to create flow config: %w", err)
 	}
 
-	ui.PrintSuccess("Vibe configuration created!")
+	ui.PrintSuccess("Flow configuration created!")
 	fmt.Println()
 	fmt.Println("Created files:")
 	for _, f := range files {
@@ -325,9 +325,9 @@ func initVibeConfig(targetDir string) error {
 
 	fmt.Println()
 	fmt.Println("Next steps:")
-	fmt.Println("  1. Edit .vibe/config.yaml to customize settings")
-	fmt.Println("  2. Edit .vibeignore to exclude files from indexing")
-	fmt.Println("  3. Run 'vibe chat' to start working with vibe")
+	fmt.Println("  1. Edit .flow/config.yaml to customize settings")
+	fmt.Println("  2. Edit .flowignore to exclude files from indexing")
+	fmt.Println("  3. Run 'flow chat' to start working with flow")
 
 	return nil
 }
@@ -362,6 +362,6 @@ func printNextSteps(targetDir string, tmpl *templates.Template, info *templates.
 
 	// Common next steps
 	fmt.Println()
-	fmt.Println("  vibe chat    # Start chatting with vibe")
-	fmt.Println("  vibe arch    # Plan your implementation")
+	fmt.Println("  flow chat    # Start chatting with flow")
+	fmt.Println("  flow arch    # Plan your implementation")
 }

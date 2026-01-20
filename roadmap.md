@@ -153,7 +153,7 @@ This roadmap outlines the development plan to make flow-cli a competitive AI cod
 - [x] VS Code extension
 - [x] Neovim plugin
 - [x] JetBrains plugin (basic)
-- [x] `.vibe/config.yaml` project-level settings
+- [x] `.flow/config.yaml` project-level settings
 
 ---
 

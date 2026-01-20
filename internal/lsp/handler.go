@@ -175,7 +175,7 @@ func (h *FlowHandler) TextDocumentCompletion(params CompletionParams) (*Completi
 
 	// Check for flow command trigger
 	if strings.Contains(prefix, "@flow") || strings.HasSuffix(prefix, "@") {
-		items = append(items, h.getVibeCompletions()...)
+		items = append(items, h.getFlowCompletions()...)
 	}
 
 	// Add language-specific completions
@@ -187,7 +187,7 @@ func (h *FlowHandler) TextDocumentCompletion(params CompletionParams) (*Completi
 	}, nil
 }
 
-func (h *FlowHandler) getVibeCompletions() []CompletionItem {
+func (h *FlowHandler) getFlowCompletions() []CompletionItem {
 	return []CompletionItem{
 		{
 			Label:      "@flow explain",
@@ -342,10 +342,10 @@ func (h *FlowHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 
 	// Add flow-powered code actions
 	actions = append(actions, CodeAction{
-		Title: "Explain with Vibe",
+		Title: "Explain with Flow",
 		Kind:  CodeActionKindQuickFix,
 		Command: &Command{
-			Title:   "Explain with Vibe",
+			Title:   "Explain with Flow",
 			Command: "flow.explainCode",
 			Arguments: []interface{}{
 				string(params.TextDocument.URI),
@@ -355,7 +355,7 @@ func (h *FlowHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 	})
 
 	actions = append(actions, CodeAction{
-		Title: "Generate Tests with Vibe",
+		Title: "Generate Tests with Flow",
 		Kind:  CodeActionKindRefactor,
 		Command: &Command{
 			Title:   "Generate Tests",
@@ -368,7 +368,7 @@ func (h *FlowHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 	})
 
 	actions = append(actions, CodeAction{
-		Title: "Refactor with Vibe",
+		Title: "Refactor with Flow",
 		Kind:  CodeActionKindRefactor,
 		Command: &Command{
 			Title:   "Refactor Code",
@@ -387,7 +387,7 @@ func (h *FlowHandler) TextDocumentCodeAction(params CodeActionParams) ([]CodeAct
 			Kind:  CodeActionKindQuickFix,
 			Diagnostics: []Diagnostic{diag},
 			Command: &Command{
-				Title:   "Fix with Vibe",
+				Title:   "Fix with Flow",
 				Command: "flow.fixError",
 				Arguments: []interface{}{
 					string(params.TextDocument.URI),

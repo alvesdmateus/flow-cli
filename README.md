@@ -27,7 +27,7 @@ A self-hosted AI coding assistant CLI that uses local LLMs to help you code, pla
 
 **From Source:**
 ```bash
-git clone https://github.com/mateus/flow-cli.git
+git clone https://github.com/alvesdmateus/flow-cli.git
 cd flow-cli
 make build
 make install
@@ -35,7 +35,7 @@ make install
 
 **Or build directly:**
 ```bash
-go install github.com/mateus/flow-cli@latest
+go install github.com/alvesdmateus/flow-cli@latest
 ```
 
 ### First Run
@@ -185,16 +185,16 @@ Generate shell completion scripts:
 
 ```bash
 # Bash
-flow completion bash > /etc/bash_completion.d/vibe
+flow completion bash > /etc/bash_completion.d/flow
 
 # Zsh
-flow completion zsh > "${fpath[1]}/_vibe"
+flow completion zsh > "${fpath[1]}/_flow"
 
 # Fish
-flow completion fish > ~/.config/fish/completions/vibe.fish
+flow completion fish > ~/.config/fish/completions/flow.fish
 
 # PowerShell
-flow completion powershell > vibe.ps1
+flow completion powershell > flow.ps1
 ```
 
 ## Security

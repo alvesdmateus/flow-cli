@@ -330,7 +330,7 @@ func TestFlowHandlerCodeAction(t *testing.T) {
 		titles[action.Title] = true
 	}
 
-	expectedActions := []string{"Explain with Vibe", "Generate Tests with Vibe", "Refactor with Vibe"}
+	expectedActions := []string{"Explain with Flow", "Generate Tests with Flow", "Refactor with Flow"}
 	for _, expected := range expectedActions {
 		if !titles[expected] {
 			t.Errorf("Expected code action '%s'", expected)
@@ -603,7 +603,7 @@ func TestIncrementalChange(t *testing.T) {
 					Start: Position{Line: 0, Character: 6},
 					End:   Position{Line: 0, Character: 11},
 				},
-				Text: "vibe",
+				Text: "flow",
 			},
 		},
 	})
@@ -615,7 +615,7 @@ func TestIncrementalChange(t *testing.T) {
 	doc := handler.documents[uri]
 	handler.mu.RUnlock()
 
-	if doc.Content != "hello vibe" {
-		t.Errorf("Expected 'hello vibe', got '%s'", doc.Content)
+	if doc.Content != "hello flow" {
+		t.Errorf("Expected 'hello flow', got '%s'", doc.Content)
 	}
 }

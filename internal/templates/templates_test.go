@@ -81,22 +81,22 @@ func TestTemplateStructure(t *testing.T) {
 				t.Error("template should have at least one file")
 			}
 
-			// All templates should include vibe config files
-			hasVibeConfig := false
-			hasVibeignore := false
+			// All templates should include flow config files
+			hasFlowConfig := false
+			hasFlowignore := false
 			for _, f := range tmpl.Files {
-				if strings.Contains(f.Path, ".vibe/config.yaml") {
-					hasVibeConfig = true
+				if strings.Contains(f.Path, ".flow/config.yaml") {
+					hasFlowConfig = true
 				}
-				if strings.Contains(f.Path, ".vibeignore") {
-					hasVibeignore = true
+				if strings.Contains(f.Path, ".flowignore") {
+					hasFlowignore = true
 				}
 			}
-			if !hasVibeConfig {
-				t.Error("template should include .vibe/config.yaml")
+			if !hasFlowConfig {
+				t.Error("template should include .flow/config.yaml")
 			}
-			if !hasVibeignore {
-				t.Error("template should include .vibeignore")
+			if !hasFlowignore {
+				t.Error("template should include .flowignore")
 			}
 		})
 	}
@@ -104,7 +104,7 @@ func TestTemplateStructure(t *testing.T) {
 
 func TestScaffolderScaffold(t *testing.T) {
 	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "vibe-test-*")
+	tmpDir, err := os.MkdirTemp("", "flow-test-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -142,21 +142,21 @@ func TestScaffolderScaffold(t *testing.T) {
 		}
 	}
 
-	// Check vibe config exists
-	vibeConfigPath := filepath.Join(tmpDir, ".vibe", "config.yaml")
-	if _, err := os.Stat(vibeConfigPath); os.IsNotExist(err) {
-		t.Error(".vibe/config.yaml was not created")
+	// Check flow config exists
+	flowConfigPath := filepath.Join(tmpDir, ".flow", "config.yaml")
+	if _, err := os.Stat(flowConfigPath); os.IsNotExist(err) {
+		t.Error(".flow/config.yaml was not created")
 	}
 
-	// Check vibeignore exists
-	vibeignorePath := filepath.Join(tmpDir, ".vibeignore")
-	if _, err := os.Stat(vibeignorePath); os.IsNotExist(err) {
-		t.Error(".vibeignore was not created")
+	// Check flowignore exists
+	flowignorePath := filepath.Join(tmpDir, ".flowignore")
+	if _, err := os.Stat(flowignorePath); os.IsNotExist(err) {
+		t.Error(".flowignore was not created")
 	}
 }
 
 func TestScaffolderTemplateVariables(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "vibe-test-*")
+	tmpDir, err := os.MkdirTemp("", "flow-test-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -205,7 +205,7 @@ func TestScaffolderTemplateVariables(t *testing.T) {
 }
 
 func TestScaffolderGoTemplate(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "vibe-test-go-*")
+	tmpDir, err := os.MkdirTemp("", "flow-test-go-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -233,8 +233,8 @@ func TestScaffolderGoTemplate(t *testing.T) {
 		"Makefile",
 		".gitignore",
 		"README.md",
-		".vibe/config.yaml",
-		".vibeignore",
+		".flow/config.yaml",
+		".flowignore",
 	}
 
 	for _, expected := range expectedFiles {
@@ -252,7 +252,7 @@ func TestScaffolderGoTemplate(t *testing.T) {
 }
 
 func TestScaffolderPythonTemplate(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "vibe-test-python-*")
+	tmpDir, err := os.MkdirTemp("", "flow-test-python-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -295,7 +295,7 @@ func TestScaffolderPythonTemplate(t *testing.T) {
 }
 
 func TestScaffolderNodeTemplate(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "vibe-test-node-*")
+	tmpDir, err := os.MkdirTemp("", "flow-test-node-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -334,7 +334,7 @@ func TestScaffolderNodeTemplate(t *testing.T) {
 }
 
 func TestScaffolderRustTemplate(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "vibe-test-rust-*")
+	tmpDir, err := os.MkdirTemp("", "flow-test-rust-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -372,8 +372,8 @@ func TestScaffolderRustTemplate(t *testing.T) {
 	}
 }
 
-func TestCreateVibeConfig(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "vibe-test-config-*")
+func TestCreateFlowConfig(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "flow-test-config-*")
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
@@ -387,26 +387,26 @@ func TestCreateVibeConfig(t *testing.T) {
 
 	scaffolder := NewScaffolder(tmpDir, info)
 
-	files, err := scaffolder.CreateVibeConfig()
+	files, err := scaffolder.CreateFlowConfig()
 	if err != nil {
-		t.Fatalf("CreateVibeConfig failed: %v", err)
+		t.Fatalf("CreateFlowConfig failed: %v", err)
 	}
 
-	// Should only create vibe config files
+	// Should only create flow config files
 	if len(files) != 2 {
 		t.Errorf("expected 2 files, got %d", len(files))
 	}
 
-	// Check .vibe/config.yaml exists
-	vibeConfigPath := filepath.Join(tmpDir, ".vibe", "config.yaml")
-	if _, err := os.Stat(vibeConfigPath); os.IsNotExist(err) {
-		t.Error(".vibe/config.yaml was not created")
+	// Check .flow/config.yaml exists
+	flowConfigPath := filepath.Join(tmpDir, ".flow", "config.yaml")
+	if _, err := os.Stat(flowConfigPath); os.IsNotExist(err) {
+		t.Error(".flow/config.yaml was not created")
 	}
 
-	// Check .vibeignore exists
-	vibeignorePath := filepath.Join(tmpDir, ".vibeignore")
-	if _, err := os.Stat(vibeignorePath); os.IsNotExist(err) {
-		t.Error(".vibeignore was not created")
+	// Check .flowignore exists
+	flowignorePath := filepath.Join(tmpDir, ".flowignore")
+	if _, err := os.Stat(flowignorePath); os.IsNotExist(err) {
+		t.Error(".flowignore was not created")
 	}
 }
 

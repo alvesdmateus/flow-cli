@@ -31,11 +31,11 @@ Supported linters:
 - Rust: clippy
 
 Examples:
-  vibe fix                    # Fix all linter errors in project
-  vibe fix main.go            # Fix errors in specific file
-  vibe fix --dry-run          # Show fixes without applying
-  vibe fix --lint-only        # Only run linter, don't fix
-  vibe fix --auto             # Auto-apply all fixes without prompting`,
+  flow fix                    # Fix all linter errors in project
+  flow fix main.go            # Fix errors in specific file
+  flow fix --dry-run          # Show fixes without applying
+  flow fix --lint-only        # Only run linter, don't fix
+  flow fix --auto             # Auto-apply all fixes without prompting`,
 	RunE: runFix,
 }
 

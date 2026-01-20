@@ -29,13 +29,13 @@ This command helps you understand:
 - Complex algorithms or patterns
 
 Examples:
-  vibe explain main.go                    # Explain entire file
-  vibe explain main.go:42                 # Explain specific line
-  vibe explain main.go:10-50              # Explain line range
-  vibe explain "what does this regex do?" # Explain concept
-  vibe explain --error "panic: nil pointer dereference"
-  vibe explain --function main.go:MyFunc  # Explain specific function
-  cat error.log | vibe explain --stdin    # Explain from stdin`,
+  flow explain main.go                    # Explain entire file
+  flow explain main.go:42                 # Explain specific line
+  flow explain main.go:10-50              # Explain line range
+  flow explain "what does this regex do?" # Explain concept
+  flow explain --error "panic: nil pointer dereference"
+  flow explain --function main.go:MyFunc  # Explain specific function
+  cat error.log | flow explain --stdin    # Explain from stdin`,
 	RunE: runExplain,
 }
 
@@ -141,7 +141,7 @@ func runExplain(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("please provide something to explain. See 'vibe explain --help'")
+		return fmt.Errorf("please provide something to explain. See 'flow explain --help'")
 	}
 
 	// Display explanation

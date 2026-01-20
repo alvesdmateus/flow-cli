@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.flow.plugin</id>
     <name>Flow - AI Coding Assistant</name>
-    <vendor email="support@flow-cli.dev" url="https://github.com/mateus/flow-cli">flow-cli</vendor>
+    <vendor email="support@flow-cli.dev" url="https://github.com/alvesdmateus/flow-cli">flow-cli</vendor>
 
     <description><![CDATA[
         AI-powered coding assistant using self-hosted LLMs.
@@ -24,9 +24,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Tool Window -->
-        <toolWindow id="Vibe Chat"
+        <toolWindow id="Flow Chat"
                     secondary="true"
-                    icon="/icons/vibe.svg"
+                    icon="/icons/flow.svg"
                     anchor="right"
                     factoryClass="com.flow.plugin.ui.FlowChatToolWindowFactory"/>
 
@@ -44,43 +44,43 @@
                 implementation="com.flow.plugin.lsp.FlowLspServerSupportProvider"/>
 
         <!-- Notifications -->
-        <notificationGroup id="Vibe Notifications"
+        <notificationGroup id="Flow Notifications"
                           displayType="BALLOON"/>
     </extensions>
 
     <actions>
         <group id="FlowActions" text="Flow AI" popup="true">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            <action id="Vibe.ExplainCode"
+            <action id="Flow.ExplainCode"
                     class="com.flow.plugin.actions.ExplainCodeAction"
                     text="Explain Code"
                     description="Explain the selected code using AI"/>
-            <action id="Vibe.GenerateTests"
+            <action id="Flow.GenerateTests"
                     class="com.flow.plugin.actions.GenerateTestsAction"
                     text="Generate Tests"
                     description="Generate tests for the selected code"/>
-            <action id="Vibe.Refactor"
+            <action id="Flow.Refactor"
                     class="com.flow.plugin.actions.RefactorAction"
                     text="Refactor"
                     description="Get refactoring suggestions"/>
-            <action id="Vibe.FixError"
+            <action id="Flow.FixError"
                     class="com.flow.plugin.actions.FixErrorAction"
                     text="Fix Error"
                     description="Fix the error at cursor"/>
-            <action id="Vibe.GenerateDocs"
+            <action id="Flow.GenerateDocs"
                     class="com.flow.plugin.actions.GenerateDocsAction"
                     text="Generate Documentation"
                     description="Generate documentation for the selected code"/>
             <separator/>
-            <action id="Vibe.OpenChat"
+            <action id="Flow.OpenChat"
                     class="com.flow.plugin.actions.OpenChatAction"
                     text="Open Chat"
-                    description="Open Vibe chat window"/>
+                    description="Open Flow chat window"/>
         </group>
 
-        <action id="Vibe.RunPrompt"
+        <action id="Flow.RunPrompt"
                 class="com.flow.plugin.actions.RunPromptAction"
-                text="Run Vibe Prompt"
+                text="Run Flow Prompt"
                 description="Run a custom prompt">
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift V"/>
         </action>

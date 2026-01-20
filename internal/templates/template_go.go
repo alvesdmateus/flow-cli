@@ -9,7 +9,7 @@ var goTemplate = Template{
 		"Main package with hello world",
 		"Makefile for common tasks",
 		".gitignore for Go projects",
-		".vibe configuration",
+		".flow configuration",
 	},
 	Files: []TemplateFile{
 		{
@@ -145,9 +145,9 @@ make test
 ├── main.go          # Application entry point
 ├── go.mod           # Go module definition
 ├── Makefile         # Build automation
-├── .vibe/           # Vibe CLI configuration
+├── .flow/           # Flow CLI configuration
 │   └── config.yaml
-└── .vibeignore      # Files excluded from vibe indexing
+└── .flowignore      # Files excluded from flow indexing
 ` + "```" + `
 
 ## License
@@ -156,8 +156,8 @@ MIT
 `,
 		},
 		{
-			Path: ".vibe/config.yaml",
-			Content: `# Vibe CLI Project Configuration
+			Path: ".flow/config.yaml",
+			Content: `# Flow CLI Project Configuration
 # This file contains project-specific settings for flow-cli
 
 # Project metadata
@@ -193,8 +193,8 @@ commands:
 `,
 		},
 		{
-			Path: ".vibeignore",
-			Content: `# Files and directories to exclude from vibe indexing
+			Path: ".flowignore",
+			Content: `# Files and directories to exclude from flow indexing
 
 # Build artifacts
 bin/

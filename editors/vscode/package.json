@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mateus/flow-cli"
+    "url": "https://github.com/alvesdmateus/flow-cli"
   },
   "engines": {
     "vscode": "^1.74.0"
