@@ -55,11 +55,14 @@ func runArch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
-	// Check connection
-	ui.PrintInfo("Connecting to LLM service...")
+	// Check connection with spinner
+	spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+	spinner.Start()
 	if err := llmClient.Ping(ctx); err != nil {
+		spinner.StopWithError("Connection failed")
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
+	spinner.StopWithSuccess("Connected")
 
 	// Determine model
 	model := modelFlag
@@ -132,24 +135,47 @@ func runArch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("planning failed: %w", err)
 	}
 
-	// Display the plan
-	displayPlan(plan)
+	// Plan review loop - allows modifications
+	for {
+		// Display the plan
+		displayPlan(plan)
 
-	// Ask for approval
-	approved, err := askPlanApproval()
-	if err != nil {
-		return err
+		// Ask for approval
+		result, feedback, err := askPlanApproval()
+		if err != nil {
+			return err
+		}
+
+		switch result {
+		case planApproved:
+			// Plan approved - transition to execution
+			planner.ApprovePlan()
+			ui.PrintSuccess("Plan approved!")
+			fmt.Println()
+			goto executeplan
+
+		case planNeedsModification:
+			if feedback == "" {
+				// No feedback, show plan again
+				continue
+			}
+			// Modify the plan based on feedback
+			plan, err = planner.ModifyPlan(ctx, feedback, handler)
+			if err != nil {
+				return fmt.Errorf("failed to modify plan: %w", err)
+			}
+			fmt.Println()
+			ui.PrintSuccess("Plan has been revised based on your feedback.")
+			fmt.Println()
+			continue
+
+		case planCancelled:
+			ui.PrintInfo("Planning cancelled.")
+			return nil
+		}
 	}
 
-	if !approved {
-		ui.PrintInfo("Plan not approved. You can modify your request and try again.")
-		return nil
-	}
-
-	// Plan approved - transition to execution
-	planner.ApprovePlan()
-	ui.PrintSuccess("Plan approved!")
-	fmt.Println()
+executeplan:
 
 	// Ask if user wants to proceed to chat for execution
 	proceed, err := ui.Confirm("Would you like to start implementing the plan now?")
@@ -197,7 +223,16 @@ func displayPlan(plan *agent.Plan) {
 	ui.PrintPlanSummary(len(plan.Tasks), fileCount)
 }
 
-func askPlanApproval() (bool, error) {
+// planApprovalResult represents the result of asking for plan approval
+type planApprovalResult int
+
+const (
+	planApproved planApprovalResult = iota
+	planNeedsModification
+	planCancelled
+)
+
+func askPlanApproval() (planApprovalResult, string, error) {
 	ui.PrintPlanApprovalPrompt()
 
 	choice, err := ui.AskQuestion("What would you like to do with this plan?", []string{
@@ -206,18 +241,25 @@ func askPlanApproval() (bool, error) {
 		"Cancel planning",
 	})
 	if err != nil {
-		return false, err
+		return planCancelled, "", err
 	}
 
 	switch choice {
 	case "Approve and proceed":
-		return true, nil
+		return planApproved, "", nil
 	case "Request modifications":
-		fmt.Println("\nModification requests are not yet implemented.")
-		fmt.Println("Please restart with a more specific request.")
-		return false, nil
+		fmt.Println()
+		feedback, err := ui.PromptInput("What changes would you like to make to the plan?")
+		if err != nil {
+			return planCancelled, "", err
+		}
+		if strings.TrimSpace(feedback) == "" {
+			ui.PrintInfo("No feedback provided. Keeping the current plan.")
+			return planNeedsModification, "", nil
+		}
+		return planNeedsModification, feedback, nil
 	default:
-		return false, nil
+		return planCancelled, "", nil
 	}
 }
 
@@ -301,13 +343,29 @@ func formatTaskList(tasks []agent.PlanTask) string {
 }
 
 // ArchHandler implements agent.PlannerHandler
-type ArchHandler struct{}
+type ArchHandler struct {
+	spinner *ui.Spinner
+}
 
 func (h *ArchHandler) OnPhaseChange(phase agent.PlanPhase) {
+	// Stop any running spinner
+	if h.spinner != nil {
+		h.spinner.Stop()
+	}
 	ui.PrintPhaseChange(phase.String())
+
+	// Start a new spinner for the phase
+	h.spinner = ui.SpinnerProcessing(phase.String())
+	h.spinner.Start()
 }
 
 func (h *ArchHandler) OnQuestion(question agent.ClarifyingQuestion) (string, error) {
+	// Stop spinner for user interaction
+	if h.spinner != nil {
+		h.spinner.Stop()
+		h.spinner = nil
+	}
+
 	// Display question
 	display := ui.QuestionDisplay{
 		Question: question.Question,
@@ -318,7 +376,14 @@ func (h *ArchHandler) OnQuestion(question agent.ClarifyingQuestion) (string, err
 
 	// Get answer using multiple choice
 	if len(question.Options) > 0 {
-		return ui.AskQuestion("Select an option:", question.Options)
+		answer, err := ui.AskQuestion("Select an option:", question.Options)
+		if err != nil {
+			return "", err
+		}
+		// Restart spinner after user answers
+		h.spinner = ui.SpinnerThinking()
+		h.spinner.Start()
+		return answer, nil
 	}
 
 	// Free-form input
@@ -328,18 +393,36 @@ func (h *ArchHandler) OnQuestion(question agent.ClarifyingQuestion) (string, err
 	if err != nil {
 		return "", err
 	}
+
+	// Restart spinner after user answers
+	h.spinner = ui.SpinnerThinking()
+	h.spinner.Start()
 	return strings.TrimSpace(input), nil
 }
 
 func (h *ArchHandler) OnPlanUpdate(plan *agent.Plan) {
-	// Plan display is handled separately
+	// Stop spinner when plan is ready to display
+	if h.spinner != nil {
+		h.spinner.Stop()
+		h.spinner = nil
+	}
 }
 
 func (h *ArchHandler) OnTaskStart(task agent.PlanTask) {
+	// Stop any running spinner
+	if h.spinner != nil {
+		h.spinner.Stop()
+	}
 	fmt.Printf("\n🔧 Starting: %s\n", task.Title)
+	h.spinner = ui.SpinnerProcessing(task.Title)
+	h.spinner.Start()
 }
 
 func (h *ArchHandler) OnTaskComplete(task agent.PlanTask, success bool) {
+	if h.spinner != nil {
+		h.spinner.Stop()
+		h.spinner = nil
+	}
 	if success {
 		fmt.Printf("✅ Completed: %s\n", task.Title)
 	} else {
@@ -348,9 +431,19 @@ func (h *ArchHandler) OnTaskComplete(task agent.PlanTask, success bool) {
 }
 
 func (h *ArchHandler) OnMessage(message string) {
-	ui.PrintInfo(message)
+	// Update spinner message if running, otherwise print
+	if h.spinner != nil {
+		h.spinner.UpdateMessage(message)
+	} else {
+		ui.PrintInfo(message)
+	}
 }
 
 func (h *ArchHandler) OnError(err error) {
-	ui.PrintError(err.Error())
+	if h.spinner != nil {
+		h.spinner.StopWithError(err.Error())
+		h.spinner = nil
+	} else {
+		ui.PrintError(err.Error())
+	}
 }

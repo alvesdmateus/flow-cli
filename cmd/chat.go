@@ -52,11 +52,14 @@ func runChat(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
-	// Check connection
-	ui.PrintInfo("Connecting to LLM service...")
+	// Check connection with spinner
+	spinner := ui.SpinnerConnecting(config.GetLLMEndpoint())
+	spinner.Start()
 	if err := llmClient.Ping(ctx); err != nil {
+		spinner.StopWithError("Connection failed")
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
+	spinner.StopWithSuccess("Connected")
 
 	// Determine model
 	model := modelFlag
@@ -245,9 +248,8 @@ func handleCommand(input string, chatAgent *agent.Agent) bool {
 		return true
 
 	case "/model", "/m":
-		fmt.Println("Model selection not yet implemented in this version.")
-		fmt.Println("Restart with: flow chat --model <model_name>")
-		return true
+		return handleModelSwitch(chatAgent)
+
 
 	case "/status", "/s":
 		ctxManager := chatAgent.GetContextManager()
@@ -310,7 +312,7 @@ func printHelp() {
 │ Commands:                                               │
 │   /help, /h     - Show this help message                │
 │   /clear, /c    - Clear conversation history            │
-│   /model, /m    - Show current model info               │
+│   /model, /m    - Switch to a different model           │
 │   /status, /s   - Show conversation status              │
 │   /save         - Save current session                  │
 │   /sessions     - List saved sessions                   │
@@ -336,20 +338,91 @@ func printHelp() {
 	fmt.Println(help)
 }
 
-// ConsoleHandler implements agent.ResponseHandler for console output
-type ConsoleHandler struct{}
+// handleModelSwitch allows switching models during chat
+func handleModelSwitch(chatAgent *agent.Agent) bool {
+	ctx := context.Background()
+	llmClient := chatAgent.GetLLMClient()
 
-func (h *ConsoleHandler) OnStreamStart() {}
+	// Get available models
+	models, err := llmClient.ListModels(ctx)
+	if err != nil {
+		ui.PrintError(fmt.Sprintf("Failed to list models: %v", err))
+		return true
+	}
+
+	if len(models) == 0 {
+		ui.PrintInfo("No models available.")
+		return true
+	}
+
+	// Get current model for display
+	currentModel := chatAgent.GetContextManager().GetModel()
+
+	// Build model list with current indicator
+	modelNames := make([]string, len(models))
+	for i, m := range models {
+		if m.Name == currentModel {
+			modelNames[i] = m.Name + " (current)"
+		} else {
+			modelNames[i] = m.Name
+		}
+	}
+
+	fmt.Println()
+	selected, err := ui.SelectModel(modelNames)
+	if err != nil {
+		ui.PrintInfo("Model selection cancelled.")
+		return true
+	}
+
+	// Remove " (current)" suffix if present
+	selected = strings.TrimSuffix(selected, " (current)")
+
+	if selected == currentModel {
+		ui.PrintInfo("Already using this model.")
+		return true
+	}
+
+	// Switch the model
+	chatAgent.SetModel(selected)
+	ui.PrintSuccess(fmt.Sprintf("Switched to model: %s", selected))
+	fmt.Println()
+	return true
+}
+
+// ConsoleHandler implements agent.ResponseHandler for console output
+type ConsoleHandler struct {
+	spinner      *ui.Spinner
+	firstChunk   bool
+}
+
+func (h *ConsoleHandler) OnStreamStart() {
+	h.spinner = ui.SpinnerThinking()
+	h.spinner.Start()
+	h.firstChunk = true
+}
 
 func (h *ConsoleHandler) OnStreamChunk(chunk string) {
+	if h.firstChunk && h.spinner != nil {
+		h.spinner.Stop()
+		h.firstChunk = false
+	}
 	fmt.Print(chunk)
 }
 
 func (h *ConsoleHandler) OnStreamEnd() {
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.Stop()
+	}
 	fmt.Println()
 }
 
 func (h *ConsoleHandler) OnToolStart(name, desc string) {
+	// Stop any running spinner
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.Stop()
+		h.firstChunk = false
+	}
 	fmt.Printf("\n\033[1;33m[🔧 %s]\033[0m %s\n", name, desc)
 }
 
@@ -362,9 +435,19 @@ func (h *ConsoleHandler) OnToolEnd(name string, success bool, result string) {
 }
 
 func (h *ConsoleHandler) OnThinking(msg string) {
-	fmt.Printf("\033[90m⏳ %s\033[0m\n", msg)
+	// Update spinner message if running, otherwise just print
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.UpdateMessage(msg)
+	} else {
+		fmt.Printf("\033[90m⏳ %s\033[0m\n", msg)
+	}
 }
 
 func (h *ConsoleHandler) OnError(err error) {
-	fmt.Printf("\033[1;31mError: %s\033[0m\n", err.Error())
+	if h.spinner != nil && h.firstChunk {
+		h.spinner.StopWithError(err.Error())
+		h.firstChunk = false
+	} else {
+		fmt.Printf("\033[1;31mError: %s\033[0m\n", err.Error())
+	}
 }
