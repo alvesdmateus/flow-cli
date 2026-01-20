@@ -12,6 +12,7 @@ import (
 
 	"github.com/mateus/flow-cli/internal/config"
 	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/logging"
 	"github.com/mateus/flow-cli/internal/ui"
 )
 
@@ -37,13 +38,16 @@ func runCommand(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	prompt := strings.Join(args, " ")
+	logging.Debug("Running prompt: %s", prompt)
 
 	// Create LLM client
+	logging.Debug("Creating LLM client: provider=%s endpoint=%s", config.GetLLMProvider(), config.GetLLMEndpoint())
 	client, err := llm.NewClient(
 		config.GetLLMProvider(),
 		config.GetLLMEndpoint(),
 	)
 	if err != nil {
+		logging.Error("Failed to create LLM client: %v", err)
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
@@ -52,9 +56,11 @@ func runCommand(cmd *cobra.Command, args []string) error {
 	spinner.Start()
 	if err := client.Ping(ctx); err != nil {
 		spinner.StopWithError("Connection failed")
+		logging.Error("LLM connection failed: %v", err)
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
 	spinner.StopWithSuccess("Connected")
+	logging.Debug("LLM connection established")
 
 	// Determine which model to use
 	model := modelFlag

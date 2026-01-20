@@ -55,11 +55,20 @@ func runLSP(cmd *cobra.Command, args []string) error {
 			model = config.GetLLMModel()
 		}
 		if model == "" {
-			model = "llama3" // Default fallback
+			// Query available models instead of hardcoding
+			models, listErr := llmClient.ListModels(ctx)
+			if listErr == nil && len(models) > 0 {
+				model = models[0].Name
+				logging.Debug("Auto-selected first available model: %s", model)
+			} else {
+				logging.Debug("No models available, AI features will be limited")
+			}
 		}
 
-		handler.SetLLMClient(llmClient, model)
-		logging.Debug("LLM client configured for LSP: provider=%s model=%s", config.GetLLMProvider(), model)
+		if model != "" {
+			handler.SetLLMClient(llmClient, model)
+			logging.Debug("LLM client configured for LSP: provider=%s model=%s", config.GetLLMProvider(), model)
+		}
 	} else {
 		logging.Debug("LLM client not available: %v (AI features disabled)", err)
 	}

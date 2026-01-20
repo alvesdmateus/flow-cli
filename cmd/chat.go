@@ -15,6 +15,7 @@ import (
 	"github.com/mateus/flow-cli/internal/config"
 	flowcontext "github.com/mateus/flow-cli/internal/context"
 	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/logging"
 	"github.com/mateus/flow-cli/internal/sandbox"
 	"github.com/mateus/flow-cli/internal/search"
 	"github.com/mateus/flow-cli/internal/tools"
@@ -43,12 +44,16 @@ func runChat(cmd *cobra.Command, args []string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
+	logging.Debug("Starting chat session")
+
 	// Create LLM client
+	logging.Debug("Creating LLM client: provider=%s endpoint=%s", config.GetLLMProvider(), config.GetLLMEndpoint())
 	llmClient, err := llm.NewClient(
 		config.GetLLMProvider(),
 		config.GetLLMEndpoint(),
 	)
 	if err != nil {
+		logging.Error("Failed to create LLM client: %v", err)
 		return fmt.Errorf("failed to create LLM client: %w", err)
 	}
 
@@ -57,9 +62,11 @@ func runChat(cmd *cobra.Command, args []string) error {
 	spinner.Start()
 	if err := llmClient.Ping(ctx); err != nil {
 		spinner.StopWithError("Connection failed")
+		logging.Error("LLM connection failed: %v", err)
 		return fmt.Errorf("cannot connect to LLM service at %s: %w", config.GetLLMEndpoint(), err)
 	}
 	spinner.StopWithSuccess("Connected")
+	logging.Debug("LLM connection established")
 
 	// Determine model
 	model := modelFlag
@@ -93,10 +100,14 @@ func runChat(cmd *cobra.Command, args []string) error {
 	// Create search client (optional)
 	var searchClient search.Client
 	if config.IsSearchEnabled() {
-		searchClient, _ = search.NewClient(
+		var searchErr error
+		searchClient, searchErr = search.NewClient(
 			config.GetSearchProvider(),
 			config.GetSearchEndpoint(),
 		)
+		if searchErr != nil {
+			ui.PrintWarning(fmt.Sprintf("Search disabled: %v", searchErr))
+		}
 	}
 
 	// Create security policy

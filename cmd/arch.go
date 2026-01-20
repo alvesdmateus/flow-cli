@@ -270,10 +270,14 @@ func runPlanExecution(ctx context.Context, llmClient llm.Client, model string, p
 	// Create search client (optional)
 	var searchClient search.Client
 	if config.IsSearchEnabled() {
-		searchClient, _ = search.NewClient(
+		var searchErr error
+		searchClient, searchErr = search.NewClient(
 			config.GetSearchProvider(),
 			config.GetSearchEndpoint(),
 		)
+		if searchErr != nil {
+			ui.PrintWarning(fmt.Sprintf("Search disabled: %v", searchErr))
+		}
 	}
 
 	// Create security policy

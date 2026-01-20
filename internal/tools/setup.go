@@ -1,9 +1,12 @@
 package tools
 
 import (
+	"fmt"
+
 	"github.com/mateus/flow-cli/internal/budget"
 	"github.com/mateus/flow-cli/internal/indexing"
 	"github.com/mateus/flow-cli/internal/llm"
+	"github.com/mateus/flow-cli/internal/logging"
 	"github.com/mateus/flow-cli/internal/sandbox"
 	"github.com/mateus/flow-cli/internal/search"
 	"github.com/mateus/flow-cli/internal/ui"
@@ -27,59 +30,75 @@ type SetupOptions struct {
 func SetupRegistry(opts SetupOptions) (*Registry, error) {
 	registry := NewRegistry()
 
-	// Filesystem tools
-	_ = registry.Register(NewReadFileTool(opts.Permissions))
-	_ = registry.Register(NewWriteFileTool(opts.Permissions, ui.ShowFileDiff))
-	_ = registry.Register(NewListFilesTool(opts.Permissions))
-	_ = registry.Register(NewCreateDirectoryTool(opts.Permissions))
-	_ = registry.Register(NewDeleteFileTool(opts.Permissions))
+	// Helper to register tools and track errors
+	var registrationErrors []error
+	register := func(tool Tool) {
+		if err := registry.Register(tool); err != nil {
+			logging.Debug("Failed to register tool %s: %v", tool.Name(), err)
+			registrationErrors = append(registrationErrors, err)
+		}
+	}
+
+	// Filesystem tools (core - must succeed)
+	register(NewReadFileTool(opts.Permissions))
+	register(NewWriteFileTool(opts.Permissions, ui.ShowFileDiff))
+	register(NewListFilesTool(opts.Permissions))
+	register(NewCreateDirectoryTool(opts.Permissions))
+	register(NewDeleteFileTool(opts.Permissions))
 
 	// Edit tools
-	_ = registry.Register(NewEditFileTool(opts.Permissions, ui.ShowFileDiff))
-	_ = registry.Register(NewInsertLinesTool(opts.Permissions, ui.ShowFileDiff))
-	_ = registry.Register(NewDeleteLinesTool(opts.Permissions, ui.ShowFileDiff))
+	register(NewEditFileTool(opts.Permissions, ui.ShowFileDiff))
+	register(NewInsertLinesTool(opts.Permissions, ui.ShowFileDiff))
+	register(NewDeleteLinesTool(opts.Permissions, ui.ShowFileDiff))
 
 	// Search tools
-	_ = registry.Register(NewGrepSearchTool(opts.Permissions, opts.WorkDir))
+	register(NewGrepSearchTool(opts.Permissions, opts.WorkDir))
 	if opts.SearchClient != nil {
-		_ = registry.Register(NewWebSearchTool(opts.Permissions, opts.SearchClient))
+		register(NewWebSearchTool(opts.Permissions, opts.SearchClient))
 	}
-	_ = registry.Register(NewFetchURLTool(opts.Permissions))
+	register(NewFetchURLTool(opts.Permissions))
 
 	// Shell tools
-	_ = registry.Register(NewRunCommandTool(opts.Permissions, opts.WorkDir))
+	register(NewRunCommandTool(opts.Permissions, opts.WorkDir))
 
 	// Process tools
-	_ = registry.Register(NewCheckPortTool(opts.Permissions))
-	_ = registry.Register(NewKillProcessTool(opts.Permissions))
-	_ = registry.Register(NewStartProcessTool(opts.Permissions, opts.WorkDir))
-	_ = registry.Register(NewListProcessesTool(opts.Permissions))
+	register(NewCheckPortTool(opts.Permissions))
+	register(NewKillProcessTool(opts.Permissions))
+	register(NewStartProcessTool(opts.Permissions, opts.WorkDir))
+	register(NewListProcessesTool(opts.Permissions))
 
 	// Git tools
-	_ = registry.Register(NewGitStatusTool(opts.Permissions, opts.WorkDir))
-	_ = registry.Register(NewGitDiffTool(opts.Permissions, opts.WorkDir))
-	_ = registry.Register(NewGitLogTool(opts.Permissions, opts.WorkDir))
-	_ = registry.Register(NewGitCommitTool(opts.Permissions, opts.WorkDir))
-	_ = registry.Register(NewGitAddTool(opts.Permissions, opts.WorkDir))
-	_ = registry.Register(NewGitBranchTool(opts.Permissions, opts.WorkDir))
-	_ = registry.Register(NewGitCheckoutTool(opts.Permissions, opts.WorkDir))
+	register(NewGitStatusTool(opts.Permissions, opts.WorkDir))
+	register(NewGitDiffTool(opts.Permissions, opts.WorkDir))
+	register(NewGitLogTool(opts.Permissions, opts.WorkDir))
+	register(NewGitCommitTool(opts.Permissions, opts.WorkDir))
+	register(NewGitAddTool(opts.Permissions, opts.WorkDir))
+	register(NewGitBranchTool(opts.Permissions, opts.WorkDir))
+	register(NewGitCheckoutTool(opts.Permissions, opts.WorkDir))
 
 	// Code analysis tools
-	_ = registry.Register(NewCodeOutlineTool(opts.WorkDir))
-	_ = registry.Register(NewFindDefinitionTool(opts.WorkDir))
-	_ = registry.Register(NewFindReferencesTool(opts.WorkDir))
-	_ = registry.Register(NewListSymbolsTool(opts.WorkDir))
+	register(NewCodeOutlineTool(opts.WorkDir))
+	register(NewFindDefinitionTool(opts.WorkDir))
+	register(NewFindReferencesTool(opts.WorkDir))
+	register(NewListSymbolsTool(opts.WorkDir))
 
 	// Semantic search tools (requires indexer)
 	if opts.Indexer != nil {
-		_ = registry.Register(NewSemanticSearchTool(opts.Indexer))
-		_ = registry.Register(NewIndexStatusTool(opts.Indexer))
-		_ = registry.Register(NewReindexFileTool(opts.Indexer))
+		register(NewSemanticSearchTool(opts.Indexer))
+		register(NewIndexStatusTool(opts.Indexer))
+		register(NewReindexFileTool(opts.Indexer))
 	}
 
 	// Subagent tool (requires subagent spawner)
 	if opts.SubagentSpawner != nil {
-		_ = registry.Register(NewSpawnSubagentTool(opts.SubagentSpawner))
+		register(NewSpawnSubagentTool(opts.SubagentSpawner))
+	}
+
+	// Log summary if there were any registration errors
+	if len(registrationErrors) > 0 {
+		logging.Warn("Tool registry: %d tools failed to register", len(registrationErrors))
+		// Don't fail completely - some tools may still work
+		return registry, fmt.Errorf("%d tools failed to register", len(registrationErrors))
 	}
 
 	return registry, nil
