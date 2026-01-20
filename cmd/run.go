@@ -18,13 +18,20 @@ import (
 
 var runCmd = &cobra.Command{
 	Use:   "run [prompt]",
-	Short: "Run a single prompt and get a response",
+	Short: "Run a single prompt and get a response (no file operations)",
 	Long: `Run a single prompt against the configured LLM and display the response.
-If no model is specified and none is configured, you will be prompted to select one.
+
+NOTE: This command is for simple questions only. It cannot:
+  - Create or modify files
+  - Execute commands
+  - Maintain conversation history
+
+For interactive coding sessions with file operations, use: flow chat
 
 Examples:
   flow run "Explain what a goroutine is"
-  flow run --model llama3:8b "Write a hello world in Go"`,
+  flow run "What is the difference between a slice and an array in Go?"
+  flow run --model llama3:8b "Explain error handling in Rust"`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runCommand,
 }

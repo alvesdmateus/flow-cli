@@ -25,8 +25,20 @@ var rootCmd = &cobra.Command{
 	Long: `flow-cli is a coding assistant CLI that uses self-hosted LLMs
 to suggest, architect, plan, and create artifacts for your projects.
 
-It operates with a permission-first model, always asking for approval
-before making changes unless explicitly configured otherwise.`,
+Quick Start:
+  flow chat              Start interactive coding session (recommended)
+  flow run "question"    Ask a simple question (no file operations)
+  flow arch              Start architecture planning mode
+  flow init              Initialize a new project
+
+The 'chat' command is the main way to work with flow-cli. It provides:
+  - Interactive conversation loop
+  - File reading and writing
+  - Command execution
+  - Session persistence
+
+flow-cli operates with a permission-first model, always asking for
+approval before making changes unless explicitly configured otherwise.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Setup logging based on flags
 		if debug {
