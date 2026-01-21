@@ -49,11 +49,6 @@ var (
 			MarginTop(1).
 			MarginBottom(1)
 
-	// Tool name style
-	toolNameStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("214")).
-			Bold(true)
-
 	// Tool success indicator
 	toolSuccessStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("46")).
