@@ -15,9 +15,6 @@ linters:
     - unused
     # Security
     - gosec
-    # Style
-    - gofmt
-    - goimports
     # Bugs
     - bodyclose
     - noctx
@@ -43,6 +40,11 @@ linters:
         - G302
         - G304
         - G306
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 issues:
   max-issues-per-linter: 50
