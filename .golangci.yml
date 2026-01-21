@@ -44,9 +44,6 @@ linters:
         - G304
         - G306
 
-    goimports:
-      local-prefixes: github.com/mateus/flow-cli
-
 issues:
   max-issues-per-linter: 50
   max-same-issues: 5
