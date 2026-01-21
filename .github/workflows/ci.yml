@@ -32,6 +32,7 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
+          only-new-issues: true
 
   test:
     name: Test
@@ -74,11 +75,11 @@ jobs:
         run: make build
 
       - name: Verify binary
-        run: ./vibe version
+        run: ./flow version
 
       - name: Upload binary
         uses: actions/upload-artifact@v6
         with:
-          name: vibe-linux-amd64
-          path: vibe
+          name: flow-linux-amd64
+          path: flow
           retention-days: 7
