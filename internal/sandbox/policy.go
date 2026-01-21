@@ -21,6 +21,40 @@ const (
 	PermissionDenied
 )
 
+// PermissivityMode defines the level of user approval required
+type PermissivityMode string
+
+const (
+	// PermissivityAutoAccept - accept all changes (except denied operations)
+	PermissivityAutoAccept PermissivityMode = "auto-accept"
+	// PermissivityRevisionAlways - review every change
+	PermissivityRevisionAlways PermissivityMode = "revision-always"
+	// PermissivityRevisionBig - review significant changes (default)
+	PermissivityRevisionBig PermissivityMode = "revision-big"
+	// PermissivityRevisionArchitecture - review only architectural changes
+	PermissivityRevisionArchitecture PermissivityMode = "revision-architecture"
+)
+
+// ValidPermissivityModes returns all valid permissivity mode values
+func ValidPermissivityModes() []PermissivityMode {
+	return []PermissivityMode{
+		PermissivityAutoAccept,
+		PermissivityRevisionAlways,
+		PermissivityRevisionBig,
+		PermissivityRevisionArchitecture,
+	}
+}
+
+// IsValidPermissivityMode checks if a string is a valid permissivity mode
+func IsValidPermissivityMode(mode string) bool {
+	for _, valid := range ValidPermissivityModes() {
+		if string(valid) == mode {
+			return true
+		}
+	}
+	return false
+}
+
 // String returns a human-readable name for the permission level
 func (p PermissionLevel) String() string {
 	switch p {
@@ -82,10 +116,19 @@ type Policy struct {
 	BlockedCommands []string
 
 	// AutoApprove skips confirmation for medium-risk operations
+	// Deprecated: Use Permissivity instead
 	AutoApprove bool
+
+	// Permissivity controls the level of user approval required
+	// Options: auto-accept, revision-always, revision-big, revision-architecture
+	// Default: revision-big
+	Permissivity PermissivityMode
 
 	// AllowNetwork permits network operations (web search, fetch)
 	AllowNetwork bool
+
+	// Classification holds thresholds for change classification
+	Classification ClassificationConfig
 }
 
 // DefaultPolicy creates a policy with sensible defaults
@@ -133,8 +176,10 @@ func DefaultPolicy() *Policy {
 			"wget | sh",
 			"wget | bash",
 		},
-		AutoApprove:  false,
-		AllowNetwork: true,
+		AutoApprove:    false,
+		Permissivity:   PermissivityRevisionBig, // Default: review significant changes
+		AllowNetwork:   true,
+		Classification: DefaultClassificationConfig(),
 	}
 }
 

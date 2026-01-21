@@ -185,7 +185,24 @@ func runChat(cmd *cobra.Command, args []string) error {
 
 	// Create security policy
 	policy := sandbox.DefaultPolicy()
-	policy.AutoApprove = config.IsAutoApprove() || autoApprove
+
+	// Apply permissivity settings
+	perm := config.GetPermissivity()
+	if permissivity != "" {
+		perm = permissivity
+	}
+	if sandbox.IsValidPermissivityMode(perm) {
+		policy.Permissivity = sandbox.PermissivityMode(perm)
+	}
+	// Backward compatibility: if auto-approve flag is set, override
+	if autoApprove {
+		policy.Permissivity = sandbox.PermissivityAutoAccept
+	}
+	policy.AutoApprove = policy.Permissivity == sandbox.PermissivityAutoAccept
+
+	// Apply classification thresholds from config
+	policy.Classification.SmallLineThreshold = config.GetSmallLineThreshold()
+	policy.Classification.MediumLineThreshold = config.GetMediumLineThreshold()
 
 	// Create permission manager
 	permissions, err := sandbox.NewManager(policy, ui.RequestApproval)
@@ -269,8 +286,8 @@ func runChatLoop(ctx context.Context, chatAgent *agent.Agent) error {
 		default:
 		}
 
-		// Print prompt
-		fmt.Print("\033[1;36mYou:\033[0m ")
+		// Print prompt with mode indicator
+		fmt.Print(ui.RenderInputPrompt(ui.ModeChatNormal))
 
 		// Read input
 		input, err := reader.ReadString('\n')
@@ -294,9 +311,8 @@ func runChatLoop(ctx context.Context, chatAgent *agent.Agent) error {
 			}
 		}
 
-		// Process message
+		// Process message - no header needed in new design
 		fmt.Println()
-		fmt.Print("\033[1;35mAssistant:\033[0m ")
 
 		err = chatAgent.ProcessMessage(ctx, input, handler)
 		if err != nil {

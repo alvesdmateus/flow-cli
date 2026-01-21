@@ -442,8 +442,10 @@ func TestRenderMarkdown_CodeBlock(t *testing.T) {
 	input := "```go\nfunc main() {}\n```"
 	result := RenderMarkdown(input)
 
-	if !strings.Contains(result, "func main") {
-		t.Errorf("expected result to contain code, got '%s'", result)
+	// With syntax highlighting, keywords may be separated by ANSI codes
+	// Check that the essential parts of the code are present
+	if !strings.Contains(result, "func") || !strings.Contains(result, "main") {
+		t.Errorf("expected result to contain code keywords 'func' and 'main', got '%s'", result)
 	}
 }
 

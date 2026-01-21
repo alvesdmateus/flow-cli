@@ -233,26 +233,33 @@ func (a *Agent) parseToolCalls(response string) ([]ToolCallRequest, bool) {
 
 	var calls []ToolCallRequest
 
-	// Pattern 1: XML-style tool calls
+	// Pattern 1: XML-style tool calls (preferred format)
 	for _, toolName := range a.toolReg.List() {
 		startTag := fmt.Sprintf("<tool_call name=\"%s\">", toolName)
 		endTag := "</tool_call>"
 
-		idx := strings.Index(response, startTag)
-		if idx >= 0 {
-			start := idx + len(startTag)
-			end := strings.Index(response[start:], endTag)
-			if end >= 0 {
-				argsJSON := response[start : start+end]
-				args, err := tools.ParseArgs(argsJSON)
-				if err == nil {
-					calls = append(calls, ToolCallRequest{
-						ID:        fmt.Sprintf("call_%d", len(calls)),
-						Name:      toolName,
-						Arguments: args,
-					})
-				}
+		// Find all occurrences
+		searchStr := response
+		for {
+			idx := strings.Index(searchStr, startTag)
+			if idx < 0 {
+				break
 			}
+			start := idx + len(startTag)
+			end := strings.Index(searchStr[start:], endTag)
+			if end < 0 {
+				break
+			}
+			argsJSON := searchStr[start : start+end]
+			args, err := tools.ParseArgs(argsJSON)
+			if err == nil {
+				calls = append(calls, ToolCallRequest{
+					ID:        fmt.Sprintf("call_%d", len(calls)),
+					Name:      toolName,
+					Arguments: args,
+				})
+			}
+			searchStr = searchStr[start+end+len(endTag):]
 		}
 	}
 
@@ -287,6 +294,46 @@ func (a *Agent) parseToolCalls(response string) ([]ToolCallRequest, bool) {
 		} else if inToolBlock {
 			toolContent.WriteString(line)
 			toolContent.WriteString("\n")
+		}
+	}
+
+	// Pattern 3: Alternative XML format with single quotes
+	// <tool_call name='tool_name'>{"arg": "value"}</tool_call>
+	for _, toolName := range a.toolReg.List() {
+		startTag := fmt.Sprintf("<tool_call name='%s'>", toolName)
+		endTag := "</tool_call>"
+
+		searchStr := response
+		for {
+			idx := strings.Index(searchStr, startTag)
+			if idx < 0 {
+				break
+			}
+			start := idx + len(startTag)
+			end := strings.Index(searchStr[start:], endTag)
+			if end < 0 {
+				break
+			}
+			argsJSON := searchStr[start : start+end]
+			args, err := tools.ParseArgs(argsJSON)
+			if err == nil {
+				// Avoid duplicates
+				duplicate := false
+				for _, c := range calls {
+					if c.Name == toolName && fmt.Sprintf("%v", c.Arguments) == fmt.Sprintf("%v", args) {
+						duplicate = true
+						break
+					}
+				}
+				if !duplicate {
+					calls = append(calls, ToolCallRequest{
+						ID:        fmt.Sprintf("call_%d", len(calls)),
+						Name:      toolName,
+						Arguments: args,
+					})
+				}
+			}
+			searchStr = searchStr[start+end+len(endTag):]
 		}
 	}
 
@@ -366,32 +413,50 @@ func truncateResult(s string, maxLen int) string {
 func DefaultSystemPrompt() string {
 	return `You are flow-cli, an AI coding assistant running in a terminal.
 
-Your capabilities:
-- Read and write files in the project directory
-- Execute shell commands
-- Search the web for information
-- Manage processes (check ports, start/stop)
+CRITICAL: You MUST use tools to perform actions. DO NOT just show code - you must EXECUTE tools.
 
-Guidelines:
-1. Be concise and direct in your responses
-2. When you need to perform an action, use the appropriate tool
-3. Always explain what you're about to do before doing it
-4. If you're unsure, ask clarifying questions
-5. Format code in markdown code blocks with language specifiers
-
-To use a tool, format your response like this:
+## Tool Usage Format
+To use a tool, you MUST format it exactly like this:
 <tool_call name="tool_name">{"arg1": "value1", "arg2": "value2"}</tool_call>
 
-Available tools:
-- read_file: Read file contents
-- write_file: Write content to a file
-- list_files: List directory contents
-- create_directory: Create a directory
-- run_command: Execute a shell command
-- web_search: Search the web
-- check_port: Check if a port is in use
-- kill_process: Kill a process
-- start_process: Start a background process
+## Available Tools
+- read_file: Read file contents. Args: {"path": "file/path"}
+- write_file: Write content to a file. Args: {"path": "file/path", "content": "file content"}
+- list_files: List directory contents. Args: {"path": "directory/path"}
+- create_directory: Create a directory. Args: {"path": "directory/path"}
+- run_command: Execute a shell command. Args: {"command": "command to run"}
+- web_search: Search the web. Args: {"query": "search query"}
+- check_port: Check if a port is in use. Args: {"port": 8080}
+- kill_process: Kill a process. Args: {"pid": 1234}
+- start_process: Start a background process. Args: {"command": "command", "args": ["arg1"]}
 
-Remember: Always get user approval before making changes.`
+## IMPORTANT Rules
+1. When the user asks you to CREATE or WRITE a file, you MUST use the write_file tool
+2. When the user asks to READ a file, you MUST use the read_file tool
+3. When the user asks to RUN a command, you MUST use the run_command tool
+4. NEVER just show code without using write_file to actually create the file
+5. First explain what you will do, then IMMEDIATELY use the tool
+
+## Example: Creating a file
+User: "Create a hello.go file"
+Correct response:
+I'll create a hello.go file with a basic Go program.
+
+<tool_call name="write_file">{"path": "hello.go", "content": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"Hello, World!\")\n}"}</tool_call>
+
+## Example: Reading a file
+User: "Show me the contents of main.go"
+Correct response:
+I'll read the main.go file for you.
+
+<tool_call name="read_file">{"path": "main.go"}</tool_call>
+
+## Example: Running a command
+User: "Run the tests"
+Correct response:
+I'll run the tests.
+
+<tool_call name="run_command">{"command": "go test ./..."}</tool_call>
+
+Remember: Tool calls are REQUIRED for any file operations or commands. Just showing code without a tool call does NOTHING.`
 }

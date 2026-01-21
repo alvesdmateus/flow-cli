@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/mateus/flow-cli/internal/config"
 	"github.com/mateus/flow-cli/internal/llm"
 	"github.com/mateus/flow-cli/internal/ui"
 )
@@ -108,9 +109,16 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 	// Security settings
 	fmt.Println("Security Settings:")
 	fmt.Printf("  Project Dir:   %s\n", viper.GetString("security.project_dir"))
-	fmt.Printf("  Auto Approve:  %t\n", viper.GetBool("security.auto_approve"))
+	fmt.Printf("  Permissivity:  %s\n", config.GetPermissivity())
+	fmt.Printf("  Auto Approve:  %t (deprecated, use permissivity)\n", viper.GetBool("security.auto_approve"))
 	fmt.Printf("  Trusted Paths: %v\n", viper.GetStringSlice("security.trusted_paths"))
 	fmt.Printf("  Denied Paths:  %v\n", viper.GetStringSlice("security.denied_paths"))
+	fmt.Println()
+
+	// Classification thresholds
+	fmt.Println("Classification Thresholds:")
+	fmt.Printf("  Small Line Threshold:  %d\n", config.GetSmallLineThreshold())
+	fmt.Printf("  Medium Line Threshold: %d\n", config.GetMediumLineThreshold())
 	fmt.Println()
 
 	// Commands settings
@@ -129,8 +137,10 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	validKeys := []string{
 		"llm.provider", "llm.endpoint", "llm.model", "llm.api_key", "llm.temperature",
 		"search.enabled", "search.provider", "search.endpoint", "search.language", "search.limit",
-		"security.project_dir", "security.auto_approve",
+		"security.project_dir", "security.auto_approve", "security.permissivity",
+		"security.classification.small_line_threshold", "security.classification.medium_line_threshold",
 		"commands.allowed", "commands.blocked",
+		"indexing.enabled", "indexing.embedding_model", "indexing.auto_index", "indexing.watch_changes",
 	}
 
 	isValid := false
@@ -344,7 +354,20 @@ security:
     - ~/.azure
     - ~/.config/gcloud
 
-  # Skip confirmation prompts (use with caution)
+  # Permissivity mode controls when approval is required
+  # Options: auto-accept, revision-always, revision-big, revision-architecture
+  # - auto-accept: Accept all changes (except denied operations)
+  # - revision-always: Review every change
+  # - revision-big: Review significant changes (default)
+  # - revision-architecture: Review only architectural changes
+  permissivity: revision-big
+
+  # Classification thresholds for change size detection
+  classification:
+    small_line_threshold: 20   # Lines below this are "small"
+    medium_line_threshold: 100 # Lines below this are "medium"
+
+  # Deprecated: Use permissivity instead
   auto_approve: false
 
 # Command Execution Settings

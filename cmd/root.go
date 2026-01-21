@@ -12,11 +12,12 @@ import (
 )
 
 var (
-	cfgFile     string
-	autoApprove bool
-	verbose     bool
-	debug       bool
-	modelFlag   string
+	cfgFile        string
+	autoApprove    bool
+	permissivity   string
+	verbose        bool
+	debug          bool
+	modelFlag      string
 )
 
 var rootCmd = &cobra.Command{
@@ -25,8 +26,20 @@ var rootCmd = &cobra.Command{
 	Long: `flow-cli is a coding assistant CLI that uses self-hosted LLMs
 to suggest, architect, plan, and create artifacts for your projects.
 
-It operates with a permission-first model, always asking for approval
-before making changes unless explicitly configured otherwise.`,
+Quick Start:
+  flow chat              Start interactive coding session (recommended)
+  flow run "question"    Ask a simple question (no file operations)
+  flow arch              Start architecture planning mode
+  flow init              Initialize a new project
+
+The 'chat' command is the main way to work with flow-cli. It provides:
+  - Interactive conversation loop
+  - File reading and writing
+  - Command execution
+  - Session persistence
+
+flow-cli operates with a permission-first model, always asking for
+approval before making changes unless explicitly configured otherwise.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Setup logging based on flags
 		if debug {
@@ -35,6 +48,12 @@ before making changes unless explicitly configured otherwise.`,
 		} else if verbose {
 			logging.SetLevel(logging.LevelDebug)
 			logging.Debug("Verbose logging enabled")
+		}
+
+		// Handle --auto-approve backward compatibility
+		if autoApprove && permissivity == "" {
+			fmt.Fprintln(os.Stderr, "Warning: --auto-approve is deprecated. Use --permissivity auto-accept instead.")
+			permissivity = "auto-accept"
 		}
 	},
 }
@@ -47,12 +66,14 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.flow.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&autoApprove, "auto-approve", false, "automatically approve all actions without prompting")
+	rootCmd.PersistentFlags().BoolVar(&autoApprove, "auto-approve", false, "automatically approve all actions (deprecated: use --permissivity auto-accept)")
+	rootCmd.PersistentFlags().StringVarP(&permissivity, "permissivity", "p", "", "approval mode: auto-accept, revision-always, revision-big, revision-architecture")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug output (more detailed than verbose)")
 	rootCmd.PersistentFlags().StringVarP(&modelFlag, "model", "m", "", "model to use for LLM requests")
 
 	_ = viper.BindPFlag("security.auto_approve", rootCmd.PersistentFlags().Lookup("auto-approve"))
+	_ = viper.BindPFlag("security.permissivity", rootCmd.PersistentFlags().Lookup("permissivity"))
 }
 
 func initConfig() {
