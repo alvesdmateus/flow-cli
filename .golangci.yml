@@ -6,19 +6,14 @@ run:
 
 linters:
   enable:
-    # Default linters
     - errcheck
-    - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
-    # Security
     - gosec
-    # Bugs
     - bodyclose
     - noctx
-    # Code quality
     - unconvert
 
   settings:
