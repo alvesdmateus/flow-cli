@@ -13,7 +13,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	golang.org/x/net v0.49.0
 	gopkg.in/yaml.v3 v3.0.1
-	modernc.org/sqlite v1.44.2
+	modernc.org/sqlite v1.46.1
 )
 
 require (
